@@ -1,0 +1,24 @@
+{
+  "title" : "Example and Analogies Explainer",
+  "description" : "A template to explain topics with analogies and examples",
+  "image" : "IMAGEURL",
+  "icon" : "ICONVAL",
+  "template" : [
+    {
+      "type" : "header",
+      "context" : "lorem ipsum"
+    },
+    {
+      "type" : "textbox",
+      "context" : "lorem ipsum"
+    },
+    {
+      "type" : "textbox",
+      "context" : "lorem ipsum"
+    },
+    {
+      "type" : "selector",
+      "context" : ["easy", "medium", "hard"]
+    }
+  ]
+}
