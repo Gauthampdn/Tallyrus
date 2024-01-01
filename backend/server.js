@@ -9,6 +9,10 @@ const MongoStore = require('connect-mongo');
 const templateRoutes = require("./routes/templates")
 const openaiRoutes = require("./routes/openai")
 const authRoutes = require("./routes/auth")
+const classroomRoutes = require("./routes/classroom")
+const assignmentRoutes = require("./routes/assignment")
+
+
 const session = require('express-session');
 const passport = require("passport");
 
@@ -21,7 +25,7 @@ const app = express()
 app.use(express.json()) // to get req body
 
 app.use(cors({
-  origin: 'https://pergi.app',
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 
@@ -35,6 +39,8 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
 }));
 
+
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -47,6 +53,8 @@ app.use((req, res, next) => {
 app.use("/auth", authRoutes)
 app.use("/api/templates", templateRoutes)
 app.use("/openai", openaiRoutes)
+app.use("/classroom", classroomRoutes)
+app.use("/assignments", assignmentRoutes)
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)

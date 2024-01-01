@@ -19,18 +19,27 @@ export const AuthContextProvider = ({ children }) => {
     user: null
   })
 
-  useEffect(() => { // check if we have the JWT token is present when we load for the first time
-    const user = JSON.parse(localStorage.getItem("user"))
+  useEffect(() => { 
 
-    if(user){
-      dispatch({type: "LOGIN", payload: user})
-    }
+    const fetchUser = async () => {
 
+      const response = await fetch("http://localhost:4000/auth/googleUser", {
+        credentials: 'include',
+        mode: 'cors'
+      });
+      const json = await response.json();
+
+      if (response.ok) {
+        dispatch({ type: "LOGIN", payload: json });
+      }
+    };
+
+    fetchUser();
 
   }, []) // '[]' is so that only fire the funciton once when the component first renders
 
+  console.log("AuthContext State is: ", state)
 
-  console.log("AuthContext State: ", state)
 
 
   return(

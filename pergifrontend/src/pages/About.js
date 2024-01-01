@@ -1,7 +1,6 @@
 import React from 'react';
 import Cards from "../components/Cards";
-import '../styles/About.css';
-import '../styles/Header.css';
+
 
 import Header from '../components/Header';
 

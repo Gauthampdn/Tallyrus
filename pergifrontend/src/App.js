@@ -7,6 +7,9 @@ import Login from "./pages/Login";
 import Create from "./pages/Create";
 import Library from "./pages/Library";
 import About from "./pages/About";
+import Mail from "./pages/Mail";
+import Classroom from "pages/Classroom";
+import CreateA from "components/CreateA";
 
 
 function App() {
@@ -15,31 +18,45 @@ function App() {
 
 
   return (
-    <div className="App">
+    <div class="">
 
       <BrowserRouter>
         <div className="pages">
           <Routes>
             <Route
-            path="/"
-            element = {user ? <Home/> : <Navigate to= "/login" />}
+              path="/"
+              element={user ? <Home /> : <Navigate to="/login" />}
             />
             <Route
-            path="about"
-            element = {<About/>}
+              path="about"
+              element={<About />}
             />
             <Route
-            path="/login"
-            element = {!user ? <Login/> :  <Navigate to= "/" />}
+              path="/login"
+              element={!user ? <Login /> : <Navigate to="/" />}
             />
             <Route
-            path="/create"
-            element = {<Create/> }
+              path="/create"
+              element={<Create />}
             />
             <Route
-            path="/library"
-            element = {<Library/> }
+              path="/library"
+              element={<Library />}
             />
+            <Route
+              path="/mail"
+              element={<Mail />}
+            />
+            <Route
+              path="/classroom/:id"
+              element={<Classroom />}
+            />
+            <Route
+              path="/createassignment"
+              element={<CreateA />}
+            />
+
+
           </Routes>
         </div>
       </BrowserRouter>

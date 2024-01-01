@@ -20,7 +20,11 @@ const userSchema = new Schema({
   name: {
     type: String,
     required: true
-  }
+  },
+  authority: {
+    type: String,
+    enum: ['teacher', 'student']
+  },
 })
 
 module.exports = mongoose.model("User", userSchema)

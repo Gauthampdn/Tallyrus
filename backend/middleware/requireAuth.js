@@ -5,7 +5,7 @@ const requireAuth = async (req, res, next) => {
     next()
   } else {
     console.log("user not authenticated" + req.user)
-    res.status(401).json({ error: "Unauthorized access to templates" });
+    res.status(401).json({ error: "Unauthorized access since you are not logged in" });
   }
 }
 

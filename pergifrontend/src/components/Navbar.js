@@ -1,56 +1,53 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 import { useLogout } from "../hooks/useLogout";
 import { useAuthContext } from "../hooks/useAuthContext";
 
 
+
 const Navbar = ({ resetTemplate }) => {
-
-  const { logout } = useLogout()
-  const { user } = useAuthContext()
-
-
+  const { logout } = useLogout();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
 
-  const handleCreateClick = () => {
-    navigate('/create');
-  };
-
   const handleClick = () => {
-    logout()
+    logout();
   }
 
   return (
-
-    <header>
-      <div className="navbar">
-        <nav>
-          {user && (
-            <div className="user-info">
-              <img src={user.picture} alt={user.name} className="user-image" />
-              <div className="user-details">
-                <span>Welcome,</span>
-                <span>{user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}</span>
-              </div>
-            </div>
-          )}
-          {user && (
-            <div className="buttons-container">
-              <button onClick={handleClick}>Logout</button>
-              <button onClick={handleCreateClick}>Create</button>
-              <button onClick={resetTemplate}>Chat</button>
-
-            </div>
-          )}
-          {!user && (
-            <div>
-              {/* Possibly content for non-logged-in users */}
-            </div>
-          )}
-        </nav>
+    <header className="p-4 flex justify-between items-center bg-slate-700 text-white">
+      
+      {user && (<div onClick={() => navigate('/')}>
+        <span className="block font-bold">
+          Account Type:
+        </span>
+        <span className="block font-medium">
+          {user.authority}
+        </span>
       </div>
+      )}
+
+
+
+      {user && (
+        <div className="user-info flex items-center">
+          <img src={user.picture} alt={user.name} className="user-image rounded-full h-10 w-10 object-cover mr-3" />
+          <div className="mr-4">
+            <span className="block text-sm">Welcome,</span>
+            <span className="block font-bold">
+              {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}
+            </span>
+          </div>
+
+          <button
+            onClick={handleClick}
+            className="bg-white hover:bg-slate-100 text-black font-bold py-2 px-4 rounded"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+
     </header>
-
-
   );
 }
 
