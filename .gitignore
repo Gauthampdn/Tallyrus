@@ -1,3 +1,4 @@
 backend/.env
 backend/node_modules/
 frontend/.env
+pergifrontend/.env
