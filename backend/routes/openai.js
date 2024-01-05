@@ -4,7 +4,9 @@ const router = express.Router()
 
 const { 
   completion,
-  test
+  test,
+  extractText,
+  trialtextex
 } = require("../controllers/openaiController")
 
 
@@ -14,6 +16,8 @@ router.post("/completion", completion)
 
 router.get("/test", test)
 
+router.post("/extext", extractText)
 
+router.get("/textex", trialtextex)
 
 module.exports = router

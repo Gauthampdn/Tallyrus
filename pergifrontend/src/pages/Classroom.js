@@ -8,17 +8,71 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import CreateA from "components/CreateA";
+import { useAssignmentsContext } from "hooks/useAssignmentsContext";
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+
 
 
 const Classroom = () => {
   const navigate = useNavigate();
 
-  const { id } = useParams(); // This is how you access the classroom ID from the URL
-  const [assignments, setAssignments] = useState([]);
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const { user, dispatch } = useAuthContext();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const { templates, dispatch } = useAssignmentsContext();
+  const { user } = useAuthContext();
 
+  const { id } = useParams(); // This is how you access the classroom ID from the URL
+
+  const [allAssignments, setAllAssignments] = useState([]);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [file, setFile] = useState(null); // State to hold the selected file
+
+
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]); // Update the state with the selected file
+  };
+
+
+  const handleSubmit = async (assignmentId) => {
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`http://localhost:4000/files/upload/${assignmentId}`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log(data); // Logging the response
+    } catch (error) {
+      console.error("There was a problem with the file upload:", error);
+    }
+  };
 
   const handleGoback = () => {
     navigate("/");
@@ -31,14 +85,16 @@ const Classroom = () => {
         {
           credentials: 'include',
           mode: 'cors'
-        });
+        }
+      );
 
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
+
       const data = await response.json();
-      setAssignments(data);
+      setAllAssignments(data);
       if (data.length > 0) {
         setSelectedAssignment(data[0]); // Select the first assignment by default
       }
@@ -48,58 +104,159 @@ const Classroom = () => {
 
   };
 
+  const deleteAssignment = async (assignmentId) => {
+    try {
+      const response = await fetch(`http://localhost:4000/assignments/${assignmentId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Remove the deleted assignment from the state
+      setAllAssignments(allAssignments.filter(assignment => assignment._id !== assignmentId));
+      toast("Assignment has been deleted.");
+
+      // Optionally, deselect the assignment if it was the one being viewed
+      if (selectedAssignment && selectedAssignment._id === assignmentId) {
+        setSelectedAssignment(null);
+      }
+    } catch (error) {
+      console.error("There was a problem with the delete operation:", error);
+    }
+  };
+
   useEffect(() => {
     fetchAssignments();
 
   }, [user]); // This effect should run when the component mounts and whenever the ID changes.
 
+
+
   return (
-    <div className="flex flex-col h-screen bg-gray-300"> {/* Use flex-col to stack navbar and content */}
+    <div className="flex flex-col h-screen bg-gray-300">
       <Navbar />
 
-      <div className="flex flex-grow overflow-hidden"> {/* Use flex-grow to fill the remaining height */}
+      <div className="flex flex-grow overflow-hidden">
         <aside className="w-1/5 bg-gray-300 p-4 overflow-auto">
           <Button className="mb-4" onClick={handleGoback}>Go to Classrooms</Button>
           <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
           <ul>
-            {assignments.map((assignment) => (
-              <li key={assignment._id} className="mb-2 text-sm font-semibold">
+            {allAssignments.map((eachassignment) => (
+              <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                 <button
-                  className={` p-2 rounded-lg ${selectedAssignment?._id === assignment._id ? 'shadow-[0_0_0_2px] shadow-slate-700 bg-slate-700 text-white' : ''}`}
-                  onClick={() => setSelectedAssignment(assignment)}
+                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'shadow-[0_0_0_2px] shadow-slate-700 bg-slate-700 text-white' : ''}`}
+                  onClick={() => setSelectedAssignment(eachassignment)}
                 >
-                  {assignment.name}
+                  {eachassignment.name}
                 </button>
               </li>
             ))}
           </ul>
-          <Button className="p-2 bg-slate-600" onClick={() => setShowCreateForm(true)}>Add Assignment</Button>
+          {user && user.authority === "teacher" && (
+            <Button className="p-2 bg-slate-600" onClick={() => setShowCreateForm(true)}>
+              Add Assignment
+            </Button>
+          )}
         </aside>
+
         <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-5">
           {showCreateForm ? (
             <CreateA classId={id} closeForm={() => setShowCreateForm(false)} />
           ) : selectedAssignment ? (
-            <>
-              <div className="flex justify-between">
-                <h1 className="text-2xl font-bold ">{selectedAssignment.name}</h1>
-                <span className="font-bold text-sm">Due: {new Date(selectedAssignment.dueDate).toLocaleDateString()}</span>
+            <div className="flex flex-col h-full">
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h1 className="text-2xl font-bold">{selectedAssignment.name}</h1>
+                    <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm">Due: {new Date(selectedAssignment.dueDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg">Rubric:</h2>
+                  <p className="text-sm">{selectedAssignment.rubric}</p>
+                </div>
+
+                {user && user.authority === "student" && (
+                  <div className="mt-4 grid w-full max-w-sm items-center gap-1.5">
+
+                    {selectedAssignment.submissions.map(submission => (
+                      <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
+                        <p><strong>Name:</strong> {submission.studentName}</p>
+                        <p><strong>Email:</strong> {submission.studentEmail}</p>
+                        <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                        <p><strong>Status:</strong> {submission.status}</p>
+                        <p><strong>Feedback:</strong> {submission.feedback}</p>
+                        <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                      </div>
+                    ))}
+                    <Label htmlFor="pdf">PDF</Label>
+                    <Input id="pdf" type="file" onChange={handleFileChange} />
+                    <Button onClick={() => handleSubmit(selectedAssignment._id) }>Submit</Button>
+                  </div>
+
+                )}
+
+                {user && user.authority === "teacher" && (
+                  <>
+                    <div className="flex-1 overflow-auto max-h-[400px]">
+                      <h2 className="text-2xl font-bold mb-4">Submissions</h2>
+                      {selectedAssignment.submissions.map(submission => (
+                        <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
+                          <p><strong>Name:</strong> {submission.studentName}</p>
+                          <p><strong>Email:</strong> {submission.studentEmail}</p>
+                          <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                          <p><strong>Status:</strong> {submission.status}</p>
+                          <p><strong>Feedback:</strong> {submission.feedback}</p>
+                          <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="self-end mt-4">
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Button variant="destructive"> Delete Assignment </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the assignment as well as all submissions.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </>
+                )}
+
               </div>
-              <p className="my-4 font-semibold text-sm w-[600px]">{selectedAssignment.description}</p>
-              <h2 className="font-bold text-lg">Rubric:</h2>
-              <p className="text-sm">{selectedAssignment.rubric}</p>
-            </>
+
+
+            </div>
           ) : (
-            <div className="mt-80 grid w-full max-w-sm items-center gap-1.5">
-              {/* Assuming Label and Input are your custom components and correctly imported */}
-              <Label htmlFor="picture">Picture</Label>
-              <Input className="bg-slate-100 transition duration-100 ease-in-out hover:bg-slate-200" id="picture" type="file" />
+            <div> {/* Placeholder for when no assignment is selected */}
+              <p>Select an assignment to view details</p>
             </div>
           )}
         </main>
-
       </div>
+      <Toaster />
     </div>
   );
-};
 
+}
 export default Classroom

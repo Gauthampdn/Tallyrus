@@ -11,6 +11,7 @@ const openaiRoutes = require("./routes/openai")
 const authRoutes = require("./routes/auth")
 const classroomRoutes = require("./routes/classroom")
 const assignmentRoutes = require("./routes/assignment")
+const filesRoutes = require("./routes/files")
 
 
 const session = require('express-session');
@@ -55,6 +56,8 @@ app.use("/api/templates", templateRoutes)
 app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)
+app.use("/files", filesRoutes)
+
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)

@@ -1,6 +1,9 @@
 // components/CreateA.js
 
 import React, { useState } from 'react';
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
+
 
 const CreateA = ({ classId, closeForm }) => {
 
@@ -40,7 +43,9 @@ const CreateA = ({ classId, closeForm }) => {
 
       // Handle successful submission
       console.log('Assignment created:', await response.json());
+      toast("Assignment has been created.");
       closeForm();
+
     } catch (error) {
       // Handle errors
       console.error('There was an issue submitting the form:', error);
