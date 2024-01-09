@@ -53,7 +53,7 @@ const extractText = async (req, res) => {
     try {
         // Check if req.files is undefined or req.files.file is not present
         // Proceed with file processing
-        const result = await getTextFromPDF("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T02-13-20.145Z-CHI%2010%20rough%20draft%20%283%29.pdf");
+        const result = await getTextFromPDF("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T07-31-34.283Z-CHI+10+rough+draft+(3).pdf");
         console.log(result)
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",

@@ -11,6 +11,8 @@ import CreateA from "components/CreateA";
 import { useAssignmentsContext } from "hooks/useAssignmentsContext";
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 
 import {
   AlertDialog,
@@ -37,9 +39,12 @@ const Classroom = () => {
 
   const [allAssignments, setAllAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [file, setFile] = useState(null); // State to hold the selected file
 
+
+  const handleCreateA = () => {
+    navigate(`/createassignment/${id}`);
+  };
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]); // Update the state with the selected file
@@ -147,6 +152,10 @@ const Classroom = () => {
         <aside className="w-1/5 bg-gray-300 p-4 overflow-auto">
           <Button className="mb-4" onClick={handleGoback}>Go to Classrooms</Button>
           <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
+
+
+
+
           <ul>
             {allAssignments.map((eachassignment) => (
               <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
@@ -160,99 +169,126 @@ const Classroom = () => {
             ))}
           </ul>
           {user && user.authority === "teacher" && (
-            <Button className="p-2 bg-slate-600" onClick={() => setShowCreateForm(true)}>
+            <Button className="p-2 bg-slate-600" onClick={handleCreateA}>
               Add Assignment
             </Button>
           )}
         </aside>
 
         <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-5">
-          {showCreateForm ? (
-            <CreateA classId={id} closeForm={() => setShowCreateForm(false)} />
-          ) : selectedAssignment ? (
-            <div className="flex flex-col h-full">
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-2xl font-bold">{selectedAssignment.name}</h1>
-                    <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm">Due: {new Date(selectedAssignment.dueDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <div>
+          { selectedAssignment ? (
+
+
+            <div>
+              <h1 className="text-2xl font-bold">{selectedAssignment.name}</h1>
+              <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
+              <div className="flex flex-row w-full">
+
+
+
+                <div className="flex-1">
                   <h2 className="font-bold text-lg">Rubric:</h2>
                   <p className="text-sm">{selectedAssignment.rubric}</p>
                 </div>
 
-                {user && user.authority === "student" && (
-                  <div className="mt-4 grid w-full max-w-sm items-center gap-1.5">
 
-                    {selectedAssignment.submissions.map(submission => (
-                      <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
-                        <p><strong>Name:</strong> {submission.studentName}</p>
-                        <p><strong>Email:</strong> {submission.studentEmail}</p>
-                        <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-                        <p><strong>Status:</strong> {submission.status}</p>
-                        <p><strong>Feedback:</strong> {submission.feedback}</p>
-                        <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                {user && (user.authority === "student" || user.authority === "teacher") && (
+                  <div className="flex-1">
+                    {user.authority === "student" && (
+                      <div className="mt-4 grid w-full max-w-sm items-center gap-1.5 bg-slate-300">
+                        {selectedAssignment.submissions.map(submission => (
+                          <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
+
+
+
+
+                            <p><strong>Name:</strong> {submission.studentName}</p>
+                            <p><strong>Email:</strong> {submission.studentEmail}</p>
+                            <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                            <p><strong>Status:</strong> {submission.status}</p>
+                            <p><strong>Feedback:</strong> {submission.feedback}</p>
+                            <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+
+
+
+
+                          </div>
+
+                        ))}
+                        <Label htmlFor="pdf">PDF</Label>
+                        <Input id="pdf" type="file" onChange={handleFileChange} />
+                        <Button onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
                       </div>
-                    ))}
-                    <Label htmlFor="pdf">PDF</Label>
-                    <Input id="pdf" type="file" onChange={handleFileChange} />
-                    <Button onClick={() => handleSubmit(selectedAssignment._id) }>Submit</Button>
-                  </div>
+                    )}
+                    {user.authority === "teacher" && (
 
-                )}
 
-                {user && user.authority === "teacher" && (
-                  <>
-                    <div className="flex-1 overflow-auto max-h-[400px]">
-                      <h2 className="text-2xl font-bold mb-4">Submissions</h2>
-                      {selectedAssignment.submissions.map(submission => (
-                        <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
-                          <p><strong>Name:</strong> {submission.studentName}</p>
-                          <p><strong>Email:</strong> {submission.studentEmail}</p>
-                          <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-                          <p><strong>Status:</strong> {submission.status}</p>
-                          <p><strong>Feedback:</strong> {submission.feedback}</p>
-                          <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                      <>
+                        <ScrollArea className="h-[400px] w-full overflow-auto">
+                          <div className="p-4">
+                            <div className="flex h-5 items-center space-x-8 text-sm">
+                              <p className="text-lg font-bold">Name</p>
+                              <Separator orientation="vertical" />
+
+                              <p className="text-lg font-bold">Status</p>
+                              <Separator orientation="vertical" />
+
+                              <p className="text-lg font-bold"> Link</p>
+                            </div>
+                          </div>
+                          <div className="p-4">
+
+                            {selectedAssignment.submissions.map((submission, index) => (
+                              <React.Fragment key={submission._id}>
+                                <div className="mb-2">
+                                  <div className="flex h-5 items-center space-x-8 text-sm">
+                                    <p> {submission.studentName}</p>
+                                    <Separator orientation="vertical" />
+
+                                    <p> {submission.status}</p>
+                                    <Separator orientation="vertical" />
+
+                                    <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Submission</a>
+                                  </div>
+                                </div>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </ScrollArea>
+
+                        <div className="self-end mt-4">
+                          <AlertDialog>
+                            <AlertDialogTrigger>
+                              <Button variant="destructive">Delete Assignment</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the assignment as well as all submissions.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
-                      ))}
-                    </div>
-                    <div className="self-end mt-4">
-                      <AlertDialog>
-                        <AlertDialogTrigger>
-                          <Button variant="destructive"> Delete Assignment </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the assignment as well as all submissions.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </>
+                      </>
+                    )}
+                  </div>
                 )}
-
               </div>
-
-
             </div>
+
           ) : (
-            <div> {/* Placeholder for when no assignment is selected */}
+            <div>
               <p>Select an assignment to view details</p>
             </div>
           )}
         </main>
+
       </div>
       <Toaster />
     </div>

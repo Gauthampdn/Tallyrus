@@ -1,11 +1,18 @@
 // components/CreateA.js
 
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { useParams, useNavigate } from "react-router-dom";
 
 
-const CreateA = ({ classId, closeForm }) => {
+
+const CreateA = () => {
+
+  const navigate = useNavigate();
+  const { id } = useParams(); // This is how you access the classroom ID from the URL
+
+
 
   const [formData, setFormData] = useState({
     rubric: '',
@@ -24,7 +31,7 @@ const CreateA = ({ classId, closeForm }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const body = { ...formData, classId };
+    const body = { ...formData, classId:id };
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/make`, {
@@ -44,7 +51,7 @@ const CreateA = ({ classId, closeForm }) => {
       // Handle successful submission
       console.log('Assignment created:', await response.json());
       toast("Assignment has been created.");
-      closeForm();
+      navigate(`/classroom/${id}`);
 
     } catch (error) {
       // Handle errors

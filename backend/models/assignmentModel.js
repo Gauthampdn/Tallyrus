@@ -20,7 +20,7 @@ const submissionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'submitted', 'graded'],
+    enum: ['open', 'submitted', 'graded'],  // make open, 
     default: 'open' // Optional: you can set a default status
   },
   feedback: {

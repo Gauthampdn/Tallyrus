@@ -52,7 +52,11 @@ function App() {
               element={<Classroom />}
             />
             <Route
-              path="/createassignment"
+              path="/createassignment/:id"
+              element={<CreateA />}
+            />
+            <Route
+              path="/submission/:id"
               element={<CreateA />}
             />
 
