@@ -10,6 +10,7 @@ import About from "./pages/About";
 import Mail from "./pages/Mail";
 import Classroom from "pages/Classroom";
 import CreateA from "components/CreateA";
+import Pdftest from "pages/Pdftest";
 
 
 function App() {
@@ -58,6 +59,10 @@ function App() {
             <Route
               path="/submission/:id"
               element={<CreateA />}
+            />
+            <Route
+              path="/pdftest"
+              element={<Pdftest/>}
             />
 
 
