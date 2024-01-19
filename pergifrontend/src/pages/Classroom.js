@@ -13,6 +13,8 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import ReactMarkdown from 'react-markdown';
+
 
 import {
   AlertDialog,
@@ -49,6 +51,30 @@ const Classroom = () => {
   const handleFileChange = (event) => {
     setFile(event.target.files[0]); // Update the state with the selected file
   };
+
+
+  const handleGradeAll = async (assignmentId) => {  
+    
+    try {
+      const response = await fetch(`http://localhost:4000/openai/gradeall/${assignmentId}`, {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log(data); // Logging the response
+    } catch (error) {
+      console.error("There was a problem with the file upload:", error);
+    }
+
+  }
+
+
 
 
   const handleSubmit = async (assignmentId) => {
@@ -100,6 +126,7 @@ const Classroom = () => {
 
       const data = await response.json();
       setAllAssignments(data);
+      console.log(data)
       if (data.length > 0) {
         setSelectedAssignment(data[0]); // Select the first assignment by default
       }
@@ -176,7 +203,7 @@ const Classroom = () => {
         </aside>
 
         <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-5">
-          { selectedAssignment ? (
+          {selectedAssignment ? (
 
 
             <div>
@@ -206,7 +233,7 @@ const Classroom = () => {
                             <p><strong>Email:</strong> {submission.studentEmail}</p>
                             <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
                             <p><strong>Status:</strong> {submission.status}</p>
-                            <p><strong>Feedback:</strong> {submission.feedback}</p>
+                            <ReactMarkdown>{submission.feedback}</ReactMarkdown>
                             <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
 
 
@@ -259,7 +286,7 @@ const Classroom = () => {
                         <div className="self-end mt-4">
                           <AlertDialog>
                             <AlertDialogTrigger>
-                              <Button variant="destructive">Delete Assignment</Button>
+                              <Button variant="destructive">Delete the Assignment</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -274,6 +301,9 @@ const Classroom = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                        </div>
+                        <div>
+                          <Button onClick={() => handleGradeAll(selectedAssignment._id)} >Grade all</Button>
                         </div>
                       </>
                     )}

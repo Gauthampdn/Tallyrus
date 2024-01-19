@@ -1,4 +1,9 @@
 const OpenAI = require('openai');
+const mongoose = require("mongoose");
+const Classroom = require("../models/classroomModel");
+const User = require("../models/userModel");
+const Assignment = require("../models/assignmentModel");
+
 require("dotenv").config();
 
 const pdfParse = require("pdf-parse");
@@ -36,12 +41,7 @@ async function getTextFromPDF(pdfPath) {
 //     });
 // };
 
-const trialtextex = async (req, res) => {
-    getTextFromPDF("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T02-13-20.145Z-CHI%2010%20rough%20draft%20%283%29.pdf").then(text => {
-        console.log(text);
-        res.send(text);
-    });
-};
+
 
 
 const openai = new OpenAI({
@@ -49,10 +49,101 @@ const openai = new OpenAI({
 });
 
 
+/*
+do it like this:
+parse thru each  submission on the front end and then  
+
+*/
+
+
+const gradeall = async (req, res) => {
+    const assignmentId = req.params.id;
+
+    if (req.user.authority !== "teacher") {
+        return res.status(403).json({ error: "Only teachers can grade assignments" });
+    }
+
+    try {
+        // Fetch the assignment by ID
+        const assignment = await Assignment.findById(assignmentId);
+
+        if (!assignment) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
+
+        console.log('assignment found')
+
+        // Iterate through each submission
+        for (let submission of assignment.submissions) {
+            // Check if the submission is not already graded
+            if (submission.status !== 'graded') {
+                // Extract and grade the text from the submission's PDF
+                const extractedText = await getTextFromPDF(submission.pdfURL);
+
+                if (!extractedText) {
+                    return res.status(400).json({ error: "couldn't extract text" });
+                }
+
+                console.log(extractedText);
+                console.log(assignment.rubric);
+
+
+                const gradingResponse = await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    max_tokens: 1000,
+                    messages: [ {
+                        "role": "assistant", "content": `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score. 
+    
+                        This is how each grading rubric should be formatted:
+                        
+                        """
+                        **Criteria Name**:
+                        **Comments/suggestions**:
+                        **Score**: **(score)/subtotal**
+                        """
+                        
+                        Also give the total scores at the end in this format:
+                        
+                        ***TOTALSCORE***:
+                        
+                        Grade for a middle school level, and do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100.
+    
+                        `
+    
+                    },
+                    { "role": "assistant", "content": assignment.rubric },
+                        { "role": "user", "content": extractedText }
+                    ]
+                });
+
+                if (!gradingResponse) {
+                    return res.status(400).json({ error: "couldn't grade text" });
+                }
+
+                submission.feedback = gradingResponse.choices[0].message.content; // Assuming gradingResponse contains the feedback
+                submission.status = 'graded';
+            }
+            await assignment.save();
+
+        }
+
+        res.json({ message: "All submissions graded successfully" });
+    } catch (error) {
+        console.error("Error grading assignments:", error);
+        res.status(500).send('Error grading assignments');
+    }
+};
+
+
+
+
+
+
 const extractText = async (req, res) => {
     try {
         // Check if req.files is undefined or req.files.file is not present
         // Proceed with file processing
+
         const result = await getTextFromPDF("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T07-31-34.283Z-CHI+10+rough+draft+(3).pdf");
         console.log(result)
         const response = await openai.chat.completions.create({
@@ -80,7 +171,7 @@ const extractText = async (req, res) => {
 
                 },
                 {
-                "role": "assistant", "content": `
+                    "role": "assistant", "content": `
                 Rubric:\n
                 Content and Depth of Analysis (25 points),\n
                 Structure and Organization (25 points),\n
@@ -133,5 +224,5 @@ module.exports = {
     completion,
     test,
     extractText,
-    trialtextex
+    gradeall
 }

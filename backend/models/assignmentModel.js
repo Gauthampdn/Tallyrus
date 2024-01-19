@@ -20,11 +20,12 @@ const submissionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'submitted', 'graded'],  // make open, 
+    enum: ['open', 'submitted', 'graded', 'regrade'],  // make open, 
     default: 'open' // Optional: you can set a default status
   },
   feedback: {
     type: String,
+    default: 'NOT GRADED YET' // Optional: you can set a default status
   },
   pdfURL: {
     type: String,

@@ -6,7 +6,7 @@ const {
   completion,
   test,
   extractText,
-  trialtextex
+  gradeall
 } = require("../controllers/openaiController")
 
 
@@ -18,6 +18,7 @@ router.get("/test", test)
 
 router.post("/extext", extractText)
 
-router.get("/textex", trialtextex)
+router.get("/gradeall/:id", gradeall)
+
 
 module.exports = router
