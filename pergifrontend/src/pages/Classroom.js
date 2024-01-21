@@ -53,8 +53,8 @@ const Classroom = () => {
   };
 
 
-  const handleGradeAll = async (assignmentId) => {  
-    
+  const handleGradeAll = async (assignmentId) => {
+
     try {
       const response = await fetch(`http://localhost:4000/openai/gradeall/${assignmentId}`, {
         method: 'GET',
@@ -226,18 +226,25 @@ const Classroom = () => {
                         {selectedAssignment.submissions.map(submission => (
                           <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
 
-
-
-
                             <p><strong>Name:</strong> {submission.studentName}</p>
                             <p><strong>Email:</strong> {submission.studentEmail}</p>
                             <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
                             <p><strong>Status:</strong> {submission.status}</p>
                             <ReactMarkdown>{submission.feedback}</ReactMarkdown>
                             <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
-
-
-
+                            <div className="flex-1">
+                              <h2 className="font-bold text-lg">Submission:</h2>
+                              {submission.pdfURL ? (
+                                <iframe
+                                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(submission.pdfURL)}&embedded=true`}
+                                  width="100%"
+                                  height="600px"
+                                  style={{ border: 'black' }}
+                                ></iframe>
+                              ) : (
+                                < p>No file selected</p>
+                              )}
+                            </div>
 
                           </div>
 
