@@ -3,7 +3,8 @@ const router = express.Router()
 
 const { 
   getClassroomsForUser,
-  createClassroom
+  createClassroom,
+  joinClassroomByCode
 } = require("../controllers/classroomController")
 
 const requireAuth = require("../middleware/requireAuth")
@@ -14,6 +15,8 @@ router.use(requireAuth) // requires authentication and then calls next. if no au
 router.get("/", getClassroomsForUser)
 
 router.post("/createclass", createClassroom)
+
+router.patch("/join", joinClassroomByCode);
 
 
 module.exports = router

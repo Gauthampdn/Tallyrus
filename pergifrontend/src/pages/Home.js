@@ -2,8 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext } from "../hooks/useAuthContext";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
-
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+//import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,13 +27,60 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from "sonner"
+
+const joinFormSchema = z.object({
+  joinCode: z.string().min(1, {
+    message: "Please enter a join code: ",
+  }),
+});
 
 
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const form = useForm({
+    resolver: zodResolver(joinFormSchema),
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom/join`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include authentication headers if needed
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify({ joinCode: data.joinCode })
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to join classroom');
+      }
+  
+      const result = await response.json();
+      console.log(result);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error joining classroom:', error);
+    }
+  };
   const { user } = useAuthContext();
   const [currClassrooms, setCurrClassrooms] = useState([]); // Renamed to plural
 
@@ -29,6 +90,18 @@ const Home = () => {
 
   const handleNavigateToCreate = () => {
     navigate('/create');
+  };
+
+  const handleNavigateToJoin = () => {
+    console.log("NIGGA");
+    setIsModalOpen(true);
+  };
+  const handleJoinClassContinue = () => {
+    navigate('/join'); // Navigate after confirming
+  };
+
+  const handleJoinClassCancel = () => {
+    setIsModalOpen(false); // Close the modal
   };
 
   useEffect(() => {
@@ -55,8 +128,47 @@ const Home = () => {
       <Navbar />
       <div className="flex justify-between items-center m-8">
         <h1 className='text-3xl font-bold'>Here are your Classrooms!</h1>
-        <Button className='text-md font-bold bg-slate-600' onClick={handleNavigateToCreate}>CREATE CLASS +</Button>
+        {user && user.authority === "teacher" && (
+            <Button className='text-md font-bold bg-slate-600' onClick={handleNavigateToCreate}>CREATE CLASS +</Button>
+          )}
+            {user && user.authority === "student" && (
+          <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button className='text-md font-bold bg-slate-600'>JOIN CLASS +</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Join Class</AlertDialogTitle>
+            </AlertDialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                  control={form.control}
+                  name="joinCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Join Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter class join code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <Button type="submit">Join</Button>
+                </AlertDialogFooter>
+              </form>
+            </Form>
+          </AlertDialogContent>
+        </AlertDialog>
+        )}
+        
+        
       </div>
+
+
       <div className='flex m-4'>
         {currClassrooms.map((classroom) => (
           <Card key={classroom._id} className="w-[350px] bg-slate-100 m-4 text-slate-700">

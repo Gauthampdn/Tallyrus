@@ -133,10 +133,43 @@ const deleteClassroom = async (req, res) => {
   res.status(200).json({ message: "Classroom deleted" });
 };
 
+// Add a student to a classroom by join code
+const joinClassroomByCode = async (req, res) => {
+  console.log("joining");
+  const { joinCode } = req.body;
+  const student_id = req.user.id;
+
+  if (req.user.authority !== "student") {
+    return res.status(403).json({ error: "Only students can join classrooms" });
+  }
+
+  try {
+    const classroom = await Classroom.findOne({ joincode: joinCode });
+
+    if (!classroom) {
+      return res.status(404).json({ error: "Classroom not found with provided join code" });
+    }
+
+    // Check if student is already in the classroom
+    if (classroom.students.includes(student_id)) {
+      return res.status(400).json({ error: "Student already in the classroom" });
+    }
+
+    // Add student to the classroom
+    classroom.students.push(student_id);
+    await classroom.save();
+
+    res.status(200).json({ message: "Joined classroom successfully", classroom });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getClassroomsForUser,
   getClassroom,
   createClassroom,
   updateClassroom,
-  deleteClassroom
+  deleteClassroom,
+  joinClassroomByCode
 };
