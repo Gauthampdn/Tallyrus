@@ -4,14 +4,24 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import ReactMarkdown from 'react-markdown';
 import Navbar from "components/Navbar";
 import { Button } from "@/components/ui/button"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
+
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { cn } from "@/lib/utils";
 
 const Assignment = () => {
   const navigate = useNavigate();
@@ -20,6 +30,8 @@ const Assignment = () => {
 
   const [assignment, setAssignment] = useState(null);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const fetchAssignments = async () => {
     try {
@@ -50,10 +62,19 @@ const Assignment = () => {
 
 
   // Function to handle selection change
-  const handleSelectionChange = (selectedId) => {
+  const handleSelectSubmission = (selectedId) => {
     const selected = assignment.submissions.find(sub => sub._id === selectedId);
     setSelectedSubmission(selected);
+    setOpen(false);
   };
+
+  const getSubmissionLabel = (submission) => {
+    return `${submission.studentName} - ${new Date(submission.dateSubmitted).toLocaleDateString()} - ${submission.studentEmail}`;
+  };
+
+  const filteredSubmissions = assignment ? assignment.submissions.filter(submission => 
+    getSubmissionLabel(submission).toLowerCase().includes(searchText.toLowerCase())
+  ) : [];
 
   return (
     <div>
@@ -63,22 +84,75 @@ const Assignment = () => {
       {assignment ? (
         <div style={{ width: '90%' }} className="mx-auto">
           {/* Dropdown Select for Submissions */}
-          <Select onValueChange={handleSelectionChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Submission" />
-            </SelectTrigger>
-            <SelectContent>
-              {assignment.submissions.map(submission => (
-                <SelectItem
-                  key={submission._id}
-                  value={submission._id}
-                >
-                  {submission.studentName} - {submission.studentEmail}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-[200px] justify-between"
+              >
+                {selectedSubmission
+                  ? getSubmissionLabel(selectedSubmission)
+                  : "Select Submission..."}
+                <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+              <div style={{ position: 'relative', width: '100%' }}>
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      pointerEvents: 'none',
+                      fontSize: '14px',
+                      color: '#aaa', // Lighter font color
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search submission..."
+                    className="h-9"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{
+                      padding: '10px 20px',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.075)',
+                      fontSize: '16px',
+                      paddingLeft: '40px', // Adjust to avoid overlapping with the icon
+                    }}
+                  />
+                </div>
+                {filteredSubmissions.length === 0 && <CommandEmpty>No submission found.</CommandEmpty>}
+                <CommandGroup>
+                  {filteredSubmissions.map((submission) => (
+                    <CommandItem
+                      key={submission._id}
+                      value={submission._id}
+                      onSelect={() => handleSelectSubmission(submission._id)}
+                    >
+                      {getSubmissionLabel(submission)}
+                      <CheckIcon
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          selectedSubmission && submission._id === selectedSubmission._id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <br></br>
           {/* Display selected submission details */}
           {selectedSubmission && (
             <div className="flex flex-col md:flex-row">
