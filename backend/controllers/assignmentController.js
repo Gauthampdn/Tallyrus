@@ -170,6 +170,5 @@ module.exports = {
   getAssignments,
   createAssignment,
   deleteAssignment,
-  createSubmission,
   getSubmissions
 };
