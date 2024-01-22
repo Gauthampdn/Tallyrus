@@ -79,6 +79,11 @@ const uploadFile = async (req, res, next) => {
     return res.status(403).json({ error: "Only students can submit assignments" });
   }
 
+  const pdfURL = req.body.pdfURL;
+    if (!pdfURL || !pdfURL.endsWith('.pdf')) {
+      return res.status(400).json({ error: "Only PDF submissions are allowed" });
+    }
+
   try {
     console.log("in try")
 
