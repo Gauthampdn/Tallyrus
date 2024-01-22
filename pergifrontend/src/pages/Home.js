@@ -93,7 +93,7 @@ const Home = () => {
   };
 
   const handleNavigateToJoin = () => {
-    console.log("NIGGA");
+    
     setIsModalOpen(true);
   };
   const handleJoinClassContinue = () => {
