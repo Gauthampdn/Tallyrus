@@ -28,7 +28,7 @@ const getAssignments = async (req, res) => {  // returns all the assignments in 
     }
 
     if (!classroom) {
-      return res.status(400).json({ error: "You do not have access to this class" });
+      return res.status(400).json({ error: "cant find this classroom" });
     }
 
 

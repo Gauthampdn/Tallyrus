@@ -69,7 +69,16 @@ const uploadFile = async (req, res, next) => {
 
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded.' });
+  
   }
+
+  const pdfURL = req.file.location;
+  
+  console.log("the pdfurl is:", pdfURL)
+    if (!pdfURL || !pdfURL.endsWith('.pdf')) {
+      console.log("the file is not a pdf")
+      return res.status(400).json({ error: "Only PDF submissions are allowed" });
+    }
   
   console.log(req.file.location);
 
@@ -79,10 +88,7 @@ const uploadFile = async (req, res, next) => {
     return res.status(403).json({ error: "Only students can submit assignments" });
   }
 
-  const pdfURL = req.body.pdfURL;
-    if (!pdfURL || !pdfURL.endsWith('.pdf')) {
-      return res.status(400).json({ error: "Only PDF submissions are allowed" });
-    }
+
 
   try {
     console.log("in try")

@@ -130,6 +130,11 @@ const Classroom = () => {
     navigate("/");
   };
 
+  const handleNavtoSubs = () => {
+    navigate(`/assignment/${selectedAssignment._id}`);
+};
+
+
   const fetchAssignments = async () => {
 
     try {
@@ -230,6 +235,8 @@ const Classroom = () => {
             <div>
               <h1 className="text-2xl font-bold">{selectedAssignment.name}</h1>
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
+              <Button onClick={handleNavtoSubs} className="p-2 bg-yellow-700">All Submissions</Button>
+
               <div className="flex flex-row w-full">
 
 
@@ -292,8 +299,8 @@ const Classroom = () => {
                             </div>
                           </div>
                           <div className="p-4">
-
                             {selectedAssignment.submissions.map((submission, index) => (
+                              
                               <React.Fragment key={submission._id}>
                                 <div className="mb-2">
                                   <div className="flex h-5 items-center space-x-8 text-sm">
