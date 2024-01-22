@@ -6,7 +6,6 @@ const Assignment = require("../models/assignmentModel");
 
 require("dotenv").config();
 
-const pdfParse = require("pdf-parse");
 
 async function loadPdfJsLib() {
     const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
@@ -74,7 +73,10 @@ const gradeall = async (req, res) => {
         console.log('assignment found')
 
         // Iterate through each submission
+
         for (let submission of assignment.submissions) {
+            console.log('GRADING AN ASSIGNMENT NOW')
+
             // Check if the submission is not already graded
             if (submission.status !== 'graded') {
                 // Extract and grade the text from the submission's PDF
@@ -126,6 +128,8 @@ const gradeall = async (req, res) => {
             await assignment.save();
 
         }
+        console.log('GRADING DONE')
+
 
         res.json({ message: "All submissions graded successfully" });
     } catch (error) {

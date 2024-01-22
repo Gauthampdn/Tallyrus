@@ -72,7 +72,7 @@ const createAssignment = async (req, res) => {
   try {
     // Check if the user is a teacher in the specified classroom
     const classroom = await Classroom.findOne({ _id: classId, teachers: user_id });
-    
+
     if (!classroom) {
       return res.status(400).json({ error: "Not authorized to create assignments in this class" });
     }
@@ -139,10 +139,10 @@ const createSubmission = async (req, res) => {
 
   try {
 
-    if(!mongoose.Types.ObjectId.isValid(assignmentId)){
-      return res.status(404).json({error: "No such Template and invalid ID"});
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(404).json({ error: "No such Template and invalid ID" });
     }
-    
+
     // Find the assignment
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
@@ -176,9 +176,46 @@ const createSubmission = async (req, res) => {
 };
 
 
+
+
+const getSubmissions = async (req, res) => {
+  const assignmentId = req.params.id;
+  const user_id = req.user.id;
+
+
+  if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+    return res.status(404).json({ error: "No such Template and invalid ID" });
+  }
+  
+  const assignment = await Assignment.findById(assignmentId);
+
+  
+
+  if (!assignment) {
+    return res.status(404).json({ error: "Assignment not found" });
+  }
+
+  if (req.user.authority === 'student') {
+    // Filter submissions to only include the user's submissions
+    const userSubmissions = assignment.submissions.filter(sub => sub.studentId === user_id);
+
+    const modifiedAssignment = {
+      ...assignment.toObject(), // Convert the assignment to a plain object
+      submissions: userSubmissions
+    };
+
+    return res.status(200).json(modifiedAssignment);
+  }
+
+  res.status(200).json(assignment);
+}
+
+
+
 module.exports = {
   getAssignments,
   createAssignment,
   deleteAssignment,
-  createSubmission
+  createSubmission,
+  getSubmissions
 };

@@ -10,8 +10,7 @@ import About from "./pages/About";
 import Mail from "./pages/Mail";
 import Classroom from "pages/Classroom";
 import CreateA from "components/CreateA";
-import Pdftest from "pages/Pdftest";
-
+import Assignemnt from "pages/Assignment";
 
 function App() {
 
@@ -61,11 +60,10 @@ function App() {
               element={<CreateA />}
             />
             <Route
-              path="/pdftest"
-              element={<Pdftest/>}
+              path="/assignment/:id"
+              element={<Assignemnt />}
             />
-
-
+            
           </Routes>
         </div>
       </BrowserRouter>

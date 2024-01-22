@@ -5,7 +5,8 @@ const {
   getAssignments,
   createAssignment,
   deleteAssignment,
-  createSubmission // import the createSubmission function
+  createSubmission,
+  getSubmissions // import the createSubmission function
 } = require("../controllers/assignmentController")
 
 const requireAuth = require("../middleware/requireAuth")
@@ -23,5 +24,8 @@ router.delete("/:id", deleteAssignment)
 
 // Submit an assignment - assuming ":id" is the assignment ID
 router.post("/submit/:id", createSubmission) // new route for submitting assignments
+
+router.get("/submissions/:id", getSubmissions) // new route for submitting assignments
+
 
 module.exports = router
