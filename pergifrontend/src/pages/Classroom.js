@@ -14,6 +14,8 @@ import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import ReactMarkdown from 'react-markdown';
+import { useToast } from "@/components/ui/use-toast";
+
 
 
 import {
@@ -33,6 +35,7 @@ import {
 
 const Classroom = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { templates, dispatch } = useAssignmentsContext();
   const { user } = useAuthContext();
@@ -47,9 +50,29 @@ const Classroom = () => {
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
   };
-
+  const doToast = ()=> {
+    console.log("nigga balsl");
+    
+    toast({
+      variant: "destructive",
+      title: "Invalid file type",
+      description: "Please select a PDF file.",
+    });
+    
+  }
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]); // Update the state with the selected file
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      // Check if the selected file is a PDF
+      if (selectedFile.type === "application/pdf") {
+        setFile(selectedFile); // Update the state with the selected file
+      } else {
+        // Show toast notification
+        doToast();
+        // Clear the input field
+        event.target.value = null;
+      }
+    }
   };
 
 
@@ -325,9 +348,9 @@ const Classroom = () => {
             </div>
           )}
         </main>
-
+        <Toaster />
       </div>
-      <Toaster />
+     
     </div>
   );
 
