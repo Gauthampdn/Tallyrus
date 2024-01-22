@@ -250,7 +250,7 @@ const Classroom = () => {
 
                         ))}
                         <Label htmlFor="pdf">PDF</Label>
-                        <Input id="pdf" type="file" onChange={handleFileChange} />
+                        <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
                         <Button onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
                       </div>
                     )}
