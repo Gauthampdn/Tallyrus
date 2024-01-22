@@ -5,7 +5,6 @@ const {
   getAssignments,
   createAssignment,
   deleteAssignment,
-  createSubmission,
   getSubmissions // import the createSubmission function
 } = require("../controllers/assignmentController")
 
@@ -22,8 +21,6 @@ router.post("/make", createAssignment)
 // Delete an assignment
 router.delete("/:id", deleteAssignment)
 
-// Submit an assignment - assuming ":id" is the assignment ID
-router.post("/submit/:id", createSubmission) // new route for submitting assignments
 
 router.get("/submissions/:id", getSubmissions) // new route for submitting assignments
 

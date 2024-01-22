@@ -128,52 +128,6 @@ const deleteAssignment = async (req, res) => {
 // NOW HERE ARE ALL THE SUBMISSION BASED ONES:
 
 
-const createSubmission = async (req, res) => {
-  const assignmentId = req.params.id;
-  const user_id = req.user.id;
-
-  // Check if the user is a student
-  if (req.user.authority !== "student") {
-    return res.status(403).json({ error: "Only students can submit assignments" });
-  }
-
-  try {
-
-    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      return res.status(404).json({ error: "No such Template and invalid ID" });
-    }
-
-    // Find the assignment
-    const assignment = await Assignment.findById(assignmentId);
-    if (!assignment) {
-      return res.status(404).json({ error: "Assignment not found" });
-    }
-
-    // Check if the user is a student in the classroom of the assignment
-    const classroom = await Classroom.findOne({ _id: assignment.classId, students: user_id });
-    if (!classroom) {
-      return res.status(403).json({ error: "Not authorized to submit to this assignment" });
-    }
-
-    // Create a new submission
-    const newSubmission = {
-      studentName: req.user.name,
-      studentId: user_id,
-      studentEmail: req.user.email,
-      dateSubmitted: new Date(),
-      status: 'submitted',
-      pdfURL: req.body.pdfURL
-    };
-
-    // Add the submission to the assignment
-    assignment.submissions.push(newSubmission);
-    await assignment.save();
-
-    res.status(201).json(newSubmission);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 
 
@@ -186,7 +140,7 @@ const getSubmissions = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
     return res.status(404).json({ error: "No such Template and invalid ID" });
   }
-  
+
   const assignment = await Assignment.findById(assignmentId);
 
   
