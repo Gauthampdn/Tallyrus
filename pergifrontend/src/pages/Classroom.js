@@ -50,9 +50,7 @@ const Classroom = () => {
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
   };
-  const doToast = ()=> {
-    console.log("nigga balsl");
-    
+  const doToast = ()=> {    
     toast({
       variant: "destructive",
       title: "Invalid file type",
