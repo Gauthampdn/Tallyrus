@@ -39,7 +39,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from "@/components/ui/use-toast";
+
 import { toast } from "sonner"
 
 const joinFormSchema = z.object({
@@ -51,6 +53,8 @@ const joinFormSchema = z.object({
 
 
 const Home = () => {
+  const { toast } = useToast();
+
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(true);
   const form = useForm({
@@ -69,11 +73,16 @@ const Home = () => {
         mode: 'cors',
         body: JSON.stringify({ joinCode: data.joinCode })
       });
-  
+
       if (!response.ok) {
+        toast({
+          variant: "destructive",
+          title: "Can't Join",
+          description: "Please make sure that you put in the right code.",
+        });
         throw new Error('Failed to join classroom');
       }
-  
+
       const result = await response.json();
       console.log(result);
       window.location.reload();
@@ -93,7 +102,7 @@ const Home = () => {
   };
 
   const handleNavigateToJoin = () => {
-    
+
     setIsModalOpen(true);
   };
   const handleJoinClassContinue = () => {
@@ -129,43 +138,43 @@ const Home = () => {
       <div className="flex justify-between items-center m-8">
         <h1 className='text-3xl font-bold'>Here are your Classrooms!</h1>
         {user && user.authority === "teacher" && (
-            <Button className='text-md font-bold bg-slate-600' onClick={handleNavigateToCreate}>CREATE CLASS +</Button>
-          )}
-            {user && user.authority === "student" && (
-          <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button className='text-md font-bold bg-slate-600'>JOIN CLASS +</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Join Class</AlertDialogTitle>
-            </AlertDialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="joinCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Join Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter class join code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <Button type="submit">Join</Button>
-                </AlertDialogFooter>
-              </form>
-            </Form>
-          </AlertDialogContent>
-        </AlertDialog>
+          <Button className='text-md font-bold bg-slate-600' onClick={handleNavigateToCreate}>CREATE CLASS +</Button>
         )}
-        
-        
+        {user && user.authority === "student" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className='text-md font-bold bg-slate-600'>JOIN CLASS +</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Join Class</AlertDialogTitle>
+              </AlertDialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <FormField
+                    control={form.control}
+                    name="joinCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Join Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter class join code" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <Button type="submit">Join</Button>
+                  </AlertDialogFooter>
+                </form>
+              </Form>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+
       </div>
 
 
@@ -185,7 +194,7 @@ const Home = () => {
           </Card>
         ))}
       </div>
-      <Toaster/>
+      <Toaster />
     </div>
   );
 }
