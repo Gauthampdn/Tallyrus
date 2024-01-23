@@ -178,9 +178,9 @@ const Home = () => {
       </div>
 
 
-      <div className='flex m-4'>
+      <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
-          <Card key={classroom._id} className="w-[350px] bg-slate-100 m-4 text-slate-700">
+          <Card key={classroom._id} className=" min-w-1/4 w-1/4 h-[300px] bg-slate-100 m-4 text-slate-700">
             <CardHeader>
               <CardTitle className="text-xl font-bold ">{classroom.title}</CardTitle>
             </CardHeader>

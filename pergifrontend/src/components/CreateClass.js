@@ -6,12 +6,15 @@ import Navbar from "./Navbar";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner"
-import { toast } from "sonner"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/components/ui/use-toast";
+
 
 
 
 const CreateClass = () => {
+  const { toast } = useToast();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [responseContent, setResponseContent] = useState(''); // State to store the response content
@@ -38,7 +41,10 @@ const CreateClass = () => {
         throw new Error('Network response was not ok');
       }
       navigate('/');
-      toast("Classroom has been deleted.");
+      toast({
+        title: "Class Created",
+        description: "The class is created",
+      })
 
     } catch (error) {
       console.error("There was a problem with the POST operation:", error);
@@ -46,28 +52,6 @@ const CreateClass = () => {
     }
   };
 
-
-  const handleFetch = async () => {
-    console.log("doing thing")
-    try {
-      const response = await fetch('http://localhost:4000/openai/extext', {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const responseData = await response.json();
-      console.log(responseData.choices[0])
-      setResponseContent(responseData.choices[0].message.content);
-    } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
-      // Optionally, handle the error state in the UI
-    }
-  };
 
   const handleGoback = () => {
     navigate("/");
@@ -104,11 +88,7 @@ const CreateClass = () => {
           </Button>
         </form>
       </div>
-      <Button className="mb-4" onClick={handleFetch}>Fetch Data</Button>
-      <div className="responsecont">
-        <ReactMarkdown className='w-[1000px]'>{responseContent}</ReactMarkdown>
-      </div>
-      <p>TEXT HERE</p>
+
       <Toaster />
     </div>
 
