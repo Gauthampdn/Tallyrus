@@ -96,8 +96,6 @@ const Classroom = () => {
   }
 
 
-
-
   const handleSubmit = async (assignmentId) => {
     if (!file) {
       console.log("No file selected");
@@ -121,6 +119,11 @@ const Classroom = () => {
 
       const data = await response.json();
       console.log(data); // Logging the response
+      toast({
+        title: "Congratulations!",
+        description: "You submitted your PDF successfully.",
+      });
+
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
@@ -258,21 +261,8 @@ const Classroom = () => {
                             <p><strong>Email:</strong> {submission.studentEmail}</p>
                             <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
                             <p><strong>Status:</strong> {submission.status}</p>
-                            <ReactMarkdown>{submission.feedback}</ReactMarkdown>
                             <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
-                            <div className="flex-1">
-                              <h2 className="font-bold text-lg">Submission:</h2>
-                              {submission.pdfURL ? (
-                                <iframe
-                                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(submission.pdfURL)}&embedded=true`}
-                                  width="100%"
-                                  height="600px"
-                                  style={{ border: 'black' }}
-                                ></iframe>
-                              ) : (
-                                < p>No file selected</p>
-                              )}
-                            </div>
+
 
                           </div>
 

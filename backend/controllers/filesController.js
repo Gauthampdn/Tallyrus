@@ -69,17 +69,17 @@ const uploadFile = async (req, res, next) => {
 
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded.' });
-  
+
   }
 
   const pdfURL = req.file.location;
-  
+
   console.log("the pdfurl is:", pdfURL)
-    if (!pdfURL || !pdfURL.endsWith('.pdf')) {
-      console.log("the file is not a pdf")
-      return res.status(400).json({ error: "Only PDF submissions are allowed" });
-    }
-  
+  if (!pdfURL || !pdfURL.endsWith('.pdf')) {
+    console.log("the file is not a pdf")
+    return res.status(400).json({ error: "Only PDF submissions are allowed" });
+  }
+
   console.log(req.file.location);
 
 
@@ -87,8 +87,6 @@ const uploadFile = async (req, res, next) => {
     console.log("not a student");
     return res.status(403).json({ error: "Only students can submit assignments" });
   }
-
-
 
   try {
     console.log("in try")
@@ -115,32 +113,37 @@ const uploadFile = async (req, res, next) => {
 
     console.log("passes all checks")
 
-    // Create a new submission
-    const newSubmission = {
-      studentName: req.user.name,
-      studentId: user_id,
-      studentEmail: req.user.email,
-      dateSubmitted: new Date(),
-      status: 'submitted',
-      pdfURL: req.file.location
-    };
+    const submissionIndex = assignment.submissions.findIndex(sub => sub.studentId === user_id);
 
-    // Add the submission to the assignment
-    assignment.submissions.push(newSubmission);
+    let submission;
+    if (submissionIndex !== -1) {
+      // Update existing submission
+      submission = assignment.submissions[submissionIndex];
+      submission.dateSubmitted = new Date();
+      submission.pdfURL = req.file.location;
+      assignment.submissions[submissionIndex] = submission;
+
+    } else {
+      // Create a new submission
+      submission = {
+        studentName: req.user.name,
+        studentId: user_id,
+        studentEmail: req.user.email,
+        dateSubmitted: new Date(),
+        status: 'submitted',
+        pdfURL: req.file.location
+      };
+      assignment.submissions.push(submission);
+    }
+
     await assignment.save();
 
-    console.log(newSubmission)
-
-    res.status(201).json(newSubmission);
+    res.status(201).json(submission);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 
 };
-
-
-
-
 
 
 
@@ -169,11 +172,22 @@ const downloadFile = async (req, res) => {
 };
 
 
+
+
 const deleteFile = async (req, res) => {
   const filename = req.params.filename;
-  await s3.deleteObject({ Bucket: BUCKET, Key: filename });
+  try {
+    await s3.deleteObject({ Bucket: BUCKET, Key: filename });
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send('Error deleting file.');
+  }
   res.send('File Deleted Successfully');
 };
+
+
+
 
 module.exports = {
   uploadFile,

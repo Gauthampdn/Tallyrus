@@ -70,7 +70,7 @@ const Login = () => {
 
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div>
-          <h1 className="text-3xl font-bold  text-white">Pergi</h1>
+          <h1 className="text-3xl font-bold  text-white">Tallyrus</h1>
         </div>
         <div className="mb-10">
           <blockquote className="italic text-white">
@@ -83,7 +83,7 @@ const Login = () => {
 
       <div className="basis-1/2 flex flex-col justify-center items-center p-10 bg-white">
         <div className="w-full max-w-md">
-          <h2 className="text-4xl font-extrabold text-center mb-6">Welcome to Pergi!</h2>
+          <h2 className="text-4xl font-extrabold text-center mb-6">Welcome to Tallyrus!</h2>
           <p className="text-sm text-center mb-6">Log in or automatically sign up using your Google account</p>
 
           <div className="my-4 flex items-center justify-center">
