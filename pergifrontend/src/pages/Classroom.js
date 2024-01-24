@@ -15,6 +15,25 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import ReactMarkdown from 'react-markdown';
 import { useToast } from "@/components/ui/use-toast";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlusCircle, faMinusCircle, faSave} from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import './Classroom.css';
+
+
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+//import { Form } from '@/components/ui';
+
 
 
 
@@ -30,7 +49,55 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+const rubricValueSchema = z.object({
+  point: z.number(),
+  description: z.string(),
+});
 
+const rubricSchema = z.object({
+  rubrics: z.array(z.object({
+    name: z.string(),
+    values: z.array(rubricValueSchema)
+  }))
+});
+
+
+const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric }) => {
+  
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `rubrics.${rubricIndex}.values`,
+  });
+
+  return (
+    <div key={rubricField.id} className="flex items-center">
+    <div className="flex-1">
+      <div className="flex items-center justify-between">
+        <Input {...register(`rubrics.${rubricIndex}.name`)} placeholder="Topic" />
+        <Button type="button" onClick={() => append({ point: 0, description: '' })} className="my-plus-button-small">
+          <FontAwesomeIcon icon={faPlusCircle} />
+        </Button>
+      </div>
+
+      {fields.map((field, index) => (
+        <div key={field.id} className="flex items-center justify-between">
+          <Input {...register(`rubrics.${rubricIndex}.values.${index}.point`)} type="number" placeholder="Point" />
+          <Input {...register(`rubrics.${rubricIndex}.values.${index}.description`)} placeholder="Description" />
+          <Button type="button" onClick={() => remove(index)} className="my-minus-button-small">
+            <FontAwesomeIcon icon={faMinusCircle} />
+          </Button>
+        </div>
+      ))}
+    </div>
+
+    <Button type="button" onClick={() => removeRubric(rubricIndex)} className="ml-2 my-minus-button-big">
+      <FontAwesomeIcon icon={faMinusCircle} />
+    </Button>
+  </div>
+);
+  
+  
+};
 
 
 const Classroom = () => {
@@ -46,7 +113,27 @@ const Classroom = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [file, setFile] = useState(null); // State to hold the selected file
 
+  const { control, register, handleRubricSubmit } = useForm({
+    resolver: zodResolver(rubricSchema),
+    defaultValues: {
+      rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
+    }
+  });
 
+
+  const { fields: rubricFields, append: appendRubric, remove: removeRubric } = useFieldArray({
+    control,
+    name: "rubrics",
+  });
+
+
+
+  const onSubmit = data => {
+    // Handle form submission
+    console.log(data);
+  };
+ 
+ 
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
   };
@@ -246,7 +333,30 @@ const Classroom = () => {
 
                 <div className="flex-1">
                   <h2 className="font-bold text-lg">Rubric:</h2>
-                  {/* <p className="text-sm">{selectedAssignment.rubric}</p> */}
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Dynamically add rubric fields */}
+        
+        {rubricFields.map((rubricField, rubricIndex) => (
+          
+          <RubricField
+            key={rubricField.id}
+            control={control}
+            register={register}
+            rubricIndex={rubricIndex}
+            rubricField={rubricField}
+            removeRubric={removeRubric}
+          />
+        ))}
+        <div className="flex items-center">
+        <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
+        <FontAwesomeIcon icon={faPlusCircle} />
+        </Button>
+
+        <Button type="submit" className="my-save-button-big"><FontAwesomeIcon icon={faSave} /></Button>
+        </div>
+      </form>
+
+
                 </div>
 
 
@@ -350,4 +460,4 @@ const Classroom = () => {
   );
 
 }
-export default Classroom
+export default Classroom;
