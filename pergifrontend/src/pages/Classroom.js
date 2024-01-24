@@ -205,8 +205,8 @@ const Classroom = () => {
       <Navbar />
 
       <div className="flex flex-grow overflow-hidden">
-        <aside className="w-1/5 bg-gray-300 p-4 overflow-auto">
-          <Button className="mb-4" onClick={handleGoback}>Go to Classrooms</Button>
+        <aside className=" rounded-3xl m-5 mr-0 w-1/5 bg-blue-500 p-4 overflow-auto text-white">
+          <Button className="mb-4" onClick={handleGoback}>back</Button>
           <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
 
 
@@ -216,7 +216,7 @@ const Classroom = () => {
             {allAssignments.map((eachassignment) => (
               <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                 <button
-                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'shadow-[0_0_0_2px] shadow-slate-700 bg-slate-700 text-white' : ''}`}
+                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-blue-600' : ''}`}
                   onClick={() => setSelectedAssignment(eachassignment)}
                 >
                   {eachassignment.name}
@@ -226,7 +226,7 @@ const Classroom = () => {
           </ul>
           {user && user.authority === "teacher" && (
             <Button className="p-2 bg-slate-600" onClick={handleCreateA}>
-              Add Assignment
+              + New
             </Button>
           )}
         </aside>
@@ -253,7 +253,7 @@ const Classroom = () => {
                 {user && (user.authority === "student" || user.authority === "teacher") && (
                   <div className="flex-1">
                     {user.authority === "student" && (
-                      <div className="mt-4 grid w-full max-w-sm items-center gap-1.5 bg-slate-300">
+                      <div className="mt-4 grid w-full max-w-sm items-center gap-1.5 ">
                         {selectedAssignment.submissions.map(submission => (
                           <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
 
