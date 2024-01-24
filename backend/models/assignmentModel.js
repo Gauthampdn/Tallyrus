@@ -2,6 +2,25 @@ const mongoose = require("mongoose")
 
 const Schema = mongoose.Schema
 
+const rubricValueSchema = new Schema({
+  point: {
+    type: Number,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  }
+});
+
+const rubricSchema = new Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  values: [rubricValueSchema]
+});
+
 
 const submissionSchema = new Schema({
   studentName: {
@@ -49,7 +68,7 @@ const assignmentSchema = new Schema({
     type: Date
   },
   rubric: {  // the rubric we can store as schema type to?? ill do that
-    type: String,
+    type: [rubricSchema],
   },
   submissions: {
     type: [submissionSchema], // multiple submissions in an assignment
