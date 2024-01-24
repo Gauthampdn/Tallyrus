@@ -73,6 +73,8 @@ const uploadFile = async (req, res, next) => {
   }
 
   const pdfURL = req.file.location;
+  const pdfKey = req.file.key;
+
 
   console.log("the pdfurl is:", pdfURL)
   if (!pdfURL || !pdfURL.endsWith('.pdf')) {
@@ -80,7 +82,7 @@ const uploadFile = async (req, res, next) => {
     return res.status(400).json({ error: "Only PDF submissions are allowed" });
   }
 
-  console.log(req.file.location);
+  console.log(req.file);
 
 
   if (req.user.authority !== "student") {
@@ -121,6 +123,8 @@ const uploadFile = async (req, res, next) => {
       submission = assignment.submissions[submissionIndex];
       submission.dateSubmitted = new Date();
       submission.pdfURL = req.file.location;
+      submission.pdfKey = req.file.key;
+
       assignment.submissions[submissionIndex] = submission;
 
     } else {
@@ -131,7 +135,8 @@ const uploadFile = async (req, res, next) => {
         studentEmail: req.user.email,
         dateSubmitted: new Date(),
         status: 'submitted',
-        pdfURL: req.file.location
+        pdfURL: req.file.location,
+        pdfKey: req.file.key
       };
       assignment.submissions.push(submission);
     }
@@ -176,6 +181,7 @@ const downloadFile = async (req, res) => {
 
 const deleteFile = async (req, res) => {
   const filename = req.params.filename;
+
   try {
     await s3.deleteObject({ Bucket: BUCKET, Key: filename });
   }

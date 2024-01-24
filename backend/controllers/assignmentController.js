@@ -3,6 +3,40 @@ const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 
+
+const aws = require('aws-sdk');
+const {
+  S3
+} = require('@aws-sdk/client-s3');
+
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+
+require('dotenv').config();
+
+aws.config.update({
+  secretAccessKey: process.env.AWSS3_SECRETKEY,
+  accessKeyId: process.env.AWSS3_ACCESSKEY,
+  region: process.env.AWSS3_BUCKETREGION
+});
+
+const BUCKET = process.env.AWSS3_BUCKETNAME;
+
+const s3 = new S3({
+  credentials: {
+    secretAccessKey: process.env.AWSS3_SECRETKEY,
+    accessKeyId: process.env.AWSS3_ACCESSKEY
+  },
+
+  region: process.env.AWSS3_BUCKETREGION
+});
+
+
+//-----------------------------------------------------------------------------------------------------------------------
+
+
+
+
 const getAssignments = async (req, res) => {  // returns all the assignments in a class when you /assignments/CLASSID if you are in the class
   const classId = req.params.id;
   const user_id = req.user.id;
@@ -56,7 +90,7 @@ const getAssignments = async (req, res) => {  // returns all the assignments in 
 
 
 const createAssignment = async (req, res) => {
-  const { rubric, name, description, classId, dueDate } = req.body;
+  const { name, description, classId, dueDate } = req.body;
   const user_id = req.user.id;
 
   // Check user's authority
@@ -79,7 +113,7 @@ const createAssignment = async (req, res) => {
 
     // Create a new assignment
     const assignment = await Assignment.create({
-      rubric,
+      rubric: [],
       name,
       description,
       classId,
@@ -97,6 +131,7 @@ const createAssignment = async (req, res) => {
 const deleteAssignment = async (req, res) => {
   const assignmentId = req.params.id; // ID of the assignment to be deleted
   const user_id = req.user.id; // ID of the user making the request
+  console.log("trying to delete", assignmentId)
 
   // Check if the user is a teacher
   if (req.user.authority !== "teacher") {
@@ -116,13 +151,37 @@ const deleteAssignment = async (req, res) => {
       return res.status(403).json({ error: "Not authorized to delete this assignment" });
     }
 
+    console.log("pass all checks")
+
+
+    // Delete associated files from S3
+    for (const submission of assignment.submissions) {
+      if (submission.pdfURL) {
+        const filename = submission.pdfKey
+        console.log(filename)
+        try {
+          await s3.deleteObject({ Bucket: BUCKET, Key: filename });
+        }
+        catch (error) {
+          console.error(error);
+          res.status(500).send('Error deleting file.');
+        }
+      }
+    }
+    console.log("deleted all files")
+
+
     // Delete the assignment
     await Assignment.findByIdAndDelete(assignmentId);
-    res.status(200).json({ message: "Assignment deleted successfully" });
+    console.log("deleted assignment")
+
+
+    res.status(200).json({ message: "Assignment and associated files deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 // NOW HERE ARE ALL THE SUBMISSION BASED ONES:
@@ -143,7 +202,7 @@ const getSubmissions = async (req, res) => {
 
   const assignment = await Assignment.findById(assignmentId);
 
-  
+
 
   if (!assignment) {
     return res.status(404).json({ error: "Assignment not found" });

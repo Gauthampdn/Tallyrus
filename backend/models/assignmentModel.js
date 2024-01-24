@@ -5,18 +5,15 @@ const Schema = mongoose.Schema
 const rubricValueSchema = new Schema({
   point: {
     type: Number,
-    required: true
   },
   description: {
     type: String,
-    required: true
   }
 });
 
 const rubricSchema = new Schema({
   name: {
     type: String,
-    required: true
   },
   values: [rubricValueSchema]
 });
@@ -48,7 +45,11 @@ const submissionSchema = new Schema({
   },
   pdfURL: {
     type: String,
+  },
+  pdfKey: {
+    type: String,
   }
+
 });
 
 
