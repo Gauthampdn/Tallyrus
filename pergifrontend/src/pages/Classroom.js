@@ -246,7 +246,7 @@ const Classroom = () => {
 
                 <div className="flex-1">
                   <h2 className="font-bold text-lg">Rubric:</h2>
-                  <p className="text-sm">{selectedAssignment.rubric}</p>
+                  {/* <p className="text-sm">{selectedAssignment.rubric}</p> */}
                 </div>
 
 

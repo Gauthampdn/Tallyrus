@@ -15,7 +15,7 @@ const CreateA = () => {
 
 
   const [formData, setFormData] = useState({
-    rubric: '',
+    rubric: [],
     name: '',
     description: '',
     dueDate: ''
