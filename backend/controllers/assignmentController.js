@@ -226,6 +226,7 @@ const getSubmissions = async (req, res) => {
 // In assignmentController:
 
 const updateAssignmentRubric = async (req, res) => {
+  if (req.user.authority === 'teacher') {
   console.log("NEW ASSIGNMENT RUBRIC UPDATE");
   const { id } = req.params;
   const { rubric } = req.body;
@@ -251,6 +252,10 @@ const updateAssignmentRubric = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+}
+else{
+  console.log("NOT TEACHER");
+}
 };
 
 

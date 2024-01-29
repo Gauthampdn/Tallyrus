@@ -20,9 +20,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusCircle, faMinusCircle, faSave} from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import { flexRender } from "@tanstack/react-table";
+
 import './Classroom.css';
+import {
+  useReactTable,
+  getCoreRowModel,
+  ColumnDef,
+} from "@tanstack/react-table";
 
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import {
   Form,
@@ -97,6 +111,58 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
   
   
 };
+const RubricTable = ({ rubric }) => {
+  // Removed TypeScript type annotation
+  const columns = React.useMemo(
+    () => [
+      {
+        accessorKey: 'point',
+        header: 'Point',
+      },
+      {
+        accessorKey: 'description',
+        header: 'Description',
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: rubric.values,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <div>
+      <h3>{rubric.name}</h3>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
 
 
 const Classroom = () => {
@@ -134,9 +200,10 @@ const Classroom = () => {
     const formData = getValues(); // This will get all form values
     setSubmittedData(formData);
     console.log(formData);
+    console.log(submittedData);
     setIsModalOpen(false); // Close the modal
     // Call the function to update the rubric in the backend
-    handleRubricFormSubmit();
+    handleRubricFormSubmit(formData);
   };
   
   
@@ -153,15 +220,16 @@ const Classroom = () => {
   };
 
 
-  const handleRubricFormSubmit = async () => {
-    if (selectedAssignment && submittedData) {
+  const handleRubricFormSubmit = async (formData) => {
+    console.log('backend', selectedAssignment, formData);
+    if (selectedAssignment && formData) {
       try {
         const response = await fetch(`http://localhost:4000/assignments/${selectedAssignment._id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ rubric: submittedData.rubrics }),
+          body: JSON.stringify({ rubric: formData.rubrics }),
           credentials: 'include',
           mode: 'cors',
         });
@@ -172,6 +240,7 @@ const Classroom = () => {
   
         const updatedAssignment = await response.json();
         console.log(updatedAssignment); // Logging the updated assignment
+        setSelectedAssignment({ ...selectedAssignment, rubric: formData.rubrics }); // Update the state with the new rubric
         toast({
           title: "Rubric Updated",
           description: "The rubric has been successfully updated.",
@@ -179,6 +248,9 @@ const Classroom = () => {
       } catch (error) {
         console.error("There was a problem with the update:", error);
       }
+    }
+    else{
+      console.log('invalid');
     }
   };
   
@@ -415,10 +487,20 @@ const Classroom = () => {
 
 
 
-                <div className="flex-1">
-              <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
+                <div className="flex-1">{user && user.authority === "teacher" && (
+                  <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
               {rubricButtonText}
               </Button>
+               ) }
+               {user && user.authority === "student" && (
+                <div>
+                 <h1>Rubric:</h1>
+                 <br></br>
+                 </div>
+              
+
+               ) }
+              
 
 
       {/* Modal for the form */}
@@ -460,16 +542,9 @@ const Classroom = () => {
 
       {/* Display the submitted data on the main page */}
       {selectedAssignment.rubric && (
-                <div>
-                  {selectedAssignment.rubric.map((rubric, index) => (
-                    <div key={index}>
-                      <h3>{rubric.name}</h3>
-                      {rubric.values.map((value, idx) => (
-                        <p key={idx}>{value.point} - {value.description}</p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                selectedAssignment.rubric.map((rubric, index) => (
+                  <RubricTable key={index} rubric={rubric} />
+                ))
               )}
 
 
