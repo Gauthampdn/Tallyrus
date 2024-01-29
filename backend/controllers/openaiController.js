@@ -53,7 +53,29 @@ do it like this:
 parse thru each  submission on the front end and then  
 
 */
-
+function rubricToString(submittedData) {
+    let rubricString = '';
+  
+    // Check if submittedData has rubrics
+    if (submittedData && submittedData.rubrics) {
+      submittedData.rubrics.forEach((rubric, rubricIndex) => {
+        rubricString += `Rubric ${rubricIndex + 1}: ${rubric.name}\n`;
+        // Check if this rubric has values (points and descriptions)
+        if (rubric.values && rubric.values.length) {
+          rubric.values.forEach((value, valueIndex) => {
+            rubricString += `  - Point ${valueIndex + 1}: ${value.point}, Description: ${value.description}\n`;
+          });
+        } else {
+          rubricString += '  No values specified.\n';
+        }
+        rubricString += '\n'; // Add extra newline for separating rubrics
+      });
+    } else {
+      rubricString = 'No rubric data available.';
+    }
+  
+    return rubricString;
+  }
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
@@ -89,6 +111,8 @@ const gradeall = async (req, res) => {
                 console.log(extractedText);
                 console.log(assignment.rubric);
 
+                const newrubric = rubricToString(assignment.rubric);
+
 
                 const gradingResponse = await openai.chat.completions.create({
                     model: "gpt-3.5-turbo",
@@ -100,8 +124,8 @@ const gradeall = async (req, res) => {
                         
                         """
                         **Criteria Name**:
-                        **Comments/suggestions**:
                         **Score**: **(score)/subtotal**
+                        **Comments/suggestions**:
                         """
                         
                         Also give the total scores at the end in this format:
@@ -113,7 +137,7 @@ const gradeall = async (req, res) => {
                         `
     
                     },
-                    { "role": "assistant", "content": assignment.rubric },
+                    { "role": "assistant", "content": newrubric },
                         { "role": "user", "content": extractedText }
                     ]
                 });

@@ -431,7 +431,7 @@ useEffect(() => {
                   <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
     Save Rubric
 </Button>
-<Button onClick={handleCloseModal} className="my-close-button-big">Close Rubric Editor</Button>
+<Button onClick={handleCloseModal} variant="destructive">Close Rubric Editor</Button>
 
                 </div>
               </form>
