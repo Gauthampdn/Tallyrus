@@ -109,8 +109,10 @@ const Classroom = () => {
   const [allAssignments, setAllAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [file, setFile] = useState(null); // State to hold the selected file
+  const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
 
-  const { control, register, handleRubricSubmit } = useForm({
+
+  const { control, register, getValues } = useForm({
     resolver: zodResolver(rubricSchema),
     defaultValues: {
       rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
@@ -126,6 +128,16 @@ const Classroom = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [submittedData, setSubmittedData] = useState(null); // State to store submitted data
   
+  const handleRubricSubmission = () => {
+    const formData = getValues(); // This will get all form values
+    setSubmittedData(formData);
+    console.log(formData);
+    setIsModalOpen(false); // Close the modal
+    // Call the function to update the rubric in the backend
+    handleRubricFormSubmit();
+  };
+  
+  
 
 
   // Function to open the modal
@@ -139,13 +151,55 @@ const Classroom = () => {
   };
 
 
-  const onSubmit = data => {
-    // Handle form submission
-    setSubmittedData(data);
-    console.log(data);
-    setIsModalOpen(false); // Close the modal
-
+  const handleRubricFormSubmit = async () => {
+    if (selectedAssignment && submittedData) {
+      try {
+        const response = await fetch(`http://localhost:4000/assignments/${selectedAssignment._id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ rubric: submittedData.rubrics }),
+          credentials: 'include',
+          mode: 'cors',
+        });
+  
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+  
+        const updatedAssignment = await response.json();
+        console.log(updatedAssignment); // Logging the updated assignment
+        toast({
+          title: "Rubric Updated",
+          description: "The rubric has been successfully updated.",
+        });
+      } catch (error) {
+        console.error("There was a problem with the update:", error);
+      }
+    }
   };
+  
+  const onSubmit = data => {
+    const formData = getValues(); // This assumes you have a function to get form data
+    setSubmittedData(formData);
+    console.log(formData);
+    setIsModalOpen(false); // Close the modal
+  };
+  
+  useEffect(() => {
+    if (submittedData) {
+        handleRubricFormSubmit(); // Update the rubric in the backend
+    }
+}, [submittedData]);
+
+useEffect(() => {
+  if (selectedAssignment?.rubric?.length > 0) {
+    setRubricButtonText("Edit Rubric");
+  } else {
+    setRubricButtonText("Add Rubric");
+  }
+}, [selectedAssignment]);
  
  
   const handleCreateA = () => {
@@ -346,17 +400,19 @@ const Classroom = () => {
 
 
                 <div className="flex-1">
-                <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
-                Add Rubric
-                </Button>
+              <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
+              {rubricButtonText}
+              </Button>
+
 
       {/* Modal for the form */}
       {isModalOpen && (
         <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-h-[80vh] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
             <AlertDialogHeader>
               <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <ScrollArea className="max-h-[60vh] overflow-auto my-4">
+              <form  className="space-y-8">
                 {/* Form content here */}
                 {rubricFields.map((rubricField, rubricIndex) => (
                   <RubricField
@@ -372,10 +428,16 @@ const Classroom = () => {
                   <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
                     Add New Topic
                   </Button>
-                  <Button type="submit" className="my-save-button-big">Save Rubric</Button>
+                  <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
+    Save Rubric
+</Button>
+<Button onClick={handleCloseModal} className="my-close-button-big">Close Rubric Editor</Button>
+
                 </div>
               </form>
+              </ScrollArea>
             </AlertDialogHeader>
+            <ScrollArea className="max-h-[60vh] overflow-auto p-2"></ScrollArea>
           </AlertDialogContent>
         </AlertDialog>
       )}

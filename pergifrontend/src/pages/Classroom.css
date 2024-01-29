@@ -41,7 +41,26 @@
   margin: 1em;
   color: black;
 }
+.my-close-button-big{
+  background-color: red;
+  width: 10em;
+  align-items: right;
+  border: solid black;
+  box-shadow: none;
+  outline: black;
+  cursor: pointer;
+  margin: 1em;
+  color: rgb(255, 255, 255);
+}
 
+.my-close-button-big:hover{
+  background-color: rgb(247, 247, 247);
+  box-shadow: none;
+  border: solid black;
+  cursor: pointer;
+  margin: 1em;
+  color: rgb(0, 0, 0);
+}
 
 
 .my-plus-button:hover {
