@@ -49,6 +49,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+
+
 const rubricValueSchema = z.object({
   point: z.number(),
   description: z.string(),
@@ -112,7 +114,7 @@ const Classroom = () => {
   const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
 
 
-  const { control, register, getValues } = useForm({
+  const { control, register, getValues,reset } = useForm({
     resolver: zodResolver(rubricSchema),
     defaultValues: {
       rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
@@ -187,19 +189,33 @@ const Classroom = () => {
     setIsModalOpen(false); // Close the modal
   };
   
-  useEffect(() => {
-    if (submittedData) {
-        handleRubricFormSubmit(); // Update the rubric in the backend
+  const handleSelectAssignment = (assignment) => {
+    setSelectedAssignment(assignment);
+    if (assignment && assignment.rubric) {
+      setRubricButtonText("Edit Rubric");
+      reset({ rubrics: assignment.rubric }); // Load existing rubric data into the form
+    } else {
+      setRubricButtonText("Add Rubric");
+      reset({ rubrics: [{ name: '', values: [{ point: 0, description: '' }] }] });
     }
-}, [submittedData]);
+  };
 
-useEffect(() => {
-  if (selectedAssignment?.rubric?.length > 0) {
-    setRubricButtonText("Edit Rubric");
-  } else {
-    setRubricButtonText("Add Rubric");
-  }
-}, [selectedAssignment]);
+  useEffect(() => {
+    fetchAssignments();
+  }, [user]); // Only re-run when the user changes
+
+  useEffect(() => {
+    // If there's a selected assignment, check for rubric
+    if (selectedAssignment) {
+      if (selectedAssignment.rubric) {
+        setRubricButtonText("Edit Rubric");
+        reset({ rubrics: selectedAssignment.rubric });
+      } else {
+        setRubricButtonText("Add Rubric");
+        reset({ rubrics: [{ name: '', values: [{ point: 0, description: '' }] }] });
+      }
+    }
+  }, [selectedAssignment, reset]);
  
  
   const handleCreateA = () => {
@@ -372,7 +388,7 @@ useEffect(() => {
               <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                 <button
                   className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-blue-600' : ''}`}
-                  onClick={() => setSelectedAssignment(eachassignment)}
+                  onClick={() => handleSelectAssignment(eachassignment)}
                 >
                   {eachassignment.name}
                 </button>
@@ -443,21 +459,18 @@ useEffect(() => {
       )}
 
       {/* Display the submitted data on the main page */}
-      {submittedData && (
-        <div>
-          <h2>Submitted Data:</h2>
-          {/* Display the submitted data here */}
-          {/* For example, you can iterate over the rubrics and display them */}
-          {submittedData.rubrics.map((rubric, index) => (
-            <div key={index}>
-              <h3>{rubric.name}</h3>
-              {rubric.values.map((value, idx) => (
-                <p key={idx}>{value.point} - {value.description}</p>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
+      {selectedAssignment.rubric && (
+                <div>
+                  {selectedAssignment.rubric.map((rubric, index) => (
+                    <div key={index}>
+                      <h3>{rubric.name}</h3>
+                      {rubric.values.map((value, idx) => (
+                        <p key={idx}>{value.point} - {value.description}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
 
 
                 </div>

@@ -6,6 +6,8 @@ import Navbar from "components/Navbar";
 import { Button } from "@/components/ui/button"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import './assignments.css';
+
 
 
 import {
@@ -90,7 +92,8 @@ const Assignment = () => {
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="w-[200px] justify-between"
+                className="command-item-text"
+                
               >
                 {selectedSubmission
                   ? getSubmissionLabel(selectedSubmission)
@@ -138,12 +141,15 @@ const Assignment = () => {
                       key={submission._id}
                       value={submission._id}
                       onSelect={() => handleSelectSubmission(submission._id)}
+                      className="command-item" // This is for any styling specific to the entire item
                     >
-                      {getSubmissionLabel(submission)}
+                      <div className="command-item-text" title={getSubmissionLabel(submission)}>
+                        {getSubmissionLabel(submission)}
+                      </div>
                       <CheckIcon
                         className={cn(
                           "ml-auto h-4 w-4",
-                          selectedSubmission && submission._id === selectedSubmission._id ? "opacity-100" : "opacity-0"
+                          selectedSubmission && submission._id === selectedSubmission._id ? "opacity-100" : "opacity-``0"
                         )}
                       />
                     </CommandItem>
