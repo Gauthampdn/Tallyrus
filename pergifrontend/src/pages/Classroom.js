@@ -70,31 +70,28 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
   });
 
   return (
-    <div key={rubricField.id} className="flex items-center">
-    <div className="flex-1">
-      <div className="flex items-center justify-between">
-        <Input {...register(`rubrics.${rubricIndex}.name`)} placeholder="Topic" />
-        <Button type="button" onClick={() => append({ point: 0, description: '' })} className="my-plus-button-small">
-          <FontAwesomeIcon icon={faPlusCircle} />
-        </Button>
-      </div>
-
+    <div key={rubricField.id} className="rubric-card">
+    <div className="rubric-header">
+      <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
+        <FontAwesomeIcon icon={faPlusCircle} />
+      </Button>
+      <Input {...register(`rubrics.${rubricIndex}.name`)} placeholder="Topic" className="topic-input"/>
+      <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
+        <FontAwesomeIcon icon={faMinusCircle} />
+      </Button>
+    </div>
+  
       {fields.map((field, index) => (
-        <div key={field.id} className="flex items-center justify-between">
-          <Input {...register(`rubrics.${rubricIndex}.values.${index}.point`)} type="number" placeholder="Point" />
-          <Input {...register(`rubrics.${rubricIndex}.values.${index}.description`)} placeholder="Description" />
-          <Button type="button" onClick={() => remove(index)} className="my-minus-button-small">
+        <div key={field.id} className="flex items-center justify-between my-field rubric-item">
+          <Button type="button" onClick={() => remove(index)} className="my-minus-button rubric-button">
             <FontAwesomeIcon icon={faMinusCircle} />
           </Button>
+          <Input {...register(`rubrics.${rubricIndex}.values.${index}.point`)} type="number" placeholder="0" className="point-input rubric-input flex-grow" />
+          <Input {...register(`rubrics.${rubricIndex}.values.${index}.description`)} placeholder="Description" className="description-input rubric-input flex-grow" />
         </div>
       ))}
     </div>
-
-    <Button type="button" onClick={() => removeRubric(rubricIndex)} className="ml-2 my-minus-button-big">
-      <FontAwesomeIcon icon={faMinusCircle} />
-    </Button>
-  </div>
-);
+  );
   
   
 };
@@ -126,11 +123,28 @@ const Classroom = () => {
     name: "rubrics",
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [submittedData, setSubmittedData] = useState(null); // State to store submitted data
+  
+
+
+  // Function to open the modal
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
 
   const onSubmit = data => {
     // Handle form submission
+    setSubmittedData(data);
     console.log(data);
+    setIsModalOpen(false); // Close the modal
+
   };
  
  
@@ -332,29 +346,56 @@ const Classroom = () => {
 
 
                 <div className="flex-1">
-                  <h2 className="font-bold text-lg">Rubric:</h2>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Dynamically add rubric fields */}
-        
-        {rubricFields.map((rubricField, rubricIndex) => (
-          
-          <RubricField
-            key={rubricField.id}
-            control={control}
-            register={register}
-            rubricIndex={rubricIndex}
-            rubricField={rubricField}
-            removeRubric={removeRubric}
-          />
-        ))}
-        <div className="flex items-center">
-        <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
-        <FontAwesomeIcon icon={faPlusCircle} />
-        </Button>
+                <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
+                Add Rubric
+                </Button>
 
-        <Button type="submit" className="my-save-button-big"><FontAwesomeIcon icon={faSave} /></Button>
+      {/* Modal for the form */}
+      {isModalOpen && (
+        <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                {/* Form content here */}
+                {rubricFields.map((rubricField, rubricIndex) => (
+                  <RubricField
+                    key={rubricField.id}
+                    control={control}
+                    register={register}
+                    rubricIndex={rubricIndex}
+                    rubricField={rubricField}
+                    removeRubric={removeRubric}
+                  />
+                ))}
+                <div className="flex items-center">
+                  <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
+                    Add New Topic
+                  </Button>
+                  <Button type="submit" className="my-save-button-big">Save Rubric</Button>
+                </div>
+              </form>
+            </AlertDialogHeader>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Display the submitted data on the main page */}
+      {submittedData && (
+        <div>
+          <h2>Submitted Data:</h2>
+          {/* Display the submitted data here */}
+          {/* For example, you can iterate over the rubrics and display them */}
+          {submittedData.rubrics.map((rubric, index) => (
+            <div key={index}>
+              <h3>{rubric.name}</h3>
+              {rubric.values.map((value, idx) => (
+                <p key={idx}>{value.point} - {value.description}</p>
+              ))}
+            </div>
+          ))}
         </div>
-      </form>
+      )}
 
 
                 </div>

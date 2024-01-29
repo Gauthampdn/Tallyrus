@@ -1,106 +1,110 @@
-.my-minus-button-small {
-    background-color: white;
-    color: grey;
-    margin-left: 20px;
-    border: transparent; /*Optional, for better visibility */
-    box-shadow: none; /* No shadow */
-    /* Other styles... */
-  }
-  
-  .my-minus-button-small:hover {
-    background-color: white;
-    color: red;
-    box-shadow: none; /* No shadow */
-  }
+/* Adjusted styles for the buttons and inputs */
+.my-plus-button, .my-minus-button {
+  background-color: white;
+  color: black;
+  box-shadow: none;
+  cursor: pointer;
+}
 
-  .my-plus-button-small {
-    background-color: white;
-    color: grey;
-    margin-top: 10px;
-    margin-left: 20px;
-    border: transparent; /*Optional, for better visibility */
-    box-shadow: none; /* No shadow */
-    /* Other styles... */
-  }
-  
-  .my-plus-button-small:hover {
-    background-color: white;
-    color: rgb(0, 0, 0);
-    box-shadow: none; /* No shadow */
-  }
+.my-plus-button-big{
+  background-color: white;
+  box-shadow: none;
+  border: solid black;
+  cursor: pointer;
+  margin: 1em;
+  color: black;
+}
 
-  .my-plus-button-big {
-    background-color: white;
-    color: grey;
-    margin-top: 10px;
-    margin-left: 5em;
-    border: transparent; /*Optional, for better visibility */
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-    /* Other styles... */
-  }
-  
-  .my-plus-button-big:hover {
-    background-color: white;
-    color: rgb(0, 0, 0);
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-  }
+.my-plus-button-big:hover{
+  background-color: black;
+  box-shadow: none;
+  outline: black;
+  cursor: pointer;
+  margin: 1em;
+  color: white;
+}
 
-  .my-save-button-big {
-    background-color: white;
-    color: grey;
-    margin-top: 10px;
-    margin-left: 8.5em;
-    border: transparent; /*Optional, for better visibility */
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-    /* Other styles... */
-  }
-  
-  .my-save-button-big:hover {
-    background-color: white;
-    color: rgb(0, 0, 0);
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-  }
+.my-save-button-big{
+  background-color: black;
+  box-shadow: none;
+  outline: black;
+  cursor: pointer;
+  margin: 1em;
+  color: white;
+}
 
-  .my-minus-button-big {
-    background-color: white;
-    color: grey;
-    margin-left: 20px;
-    border: transparent; /*Optional, for better visibility */
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-    /* Other styles... */
-  }
-  
-  .my-minus-button-big:hover {
-    background-color: white;
-    color: red;
-    box-shadow: none; /* No shadow */
-    font-size: 30px;
-  }
-  
-  .my-field {
-    margin-bottom: 10px; /* Adjust as needed */
-  }
+.my-save-button-big:hover{
+  background-color: white;
+  box-shadow: none;
+  border: solid black;
+  cursor: pointer;
+  margin: 1em;
+  color: black;
+}
 
-  .flex-grow {
-    flex-grow: 1;
-  }
+
+
+.my-plus-button:hover {
+  color: black;
+  background-color: white;
+}
+
+.my-minus-button:hover {
+  color: red;
+  background-color: white;
+}
+
+.rubric-card {
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
   
-  /* To align the button in the middle vertically */
-  .flex.items-center {
-    align-items: center;
-  }
+}
+
+.rubric-header {
+  display: flex;
+  align-items: center; /* Vertically centers the flex children (buttons) */
+  justify-content: center; /* Horizontally centers the flex children (buttons and input) */
+  margin-bottom: 10px;
   
-  /* To space out the elements and align the button to the right */
-  .flex.justify-between {
-    justify-content: space-between;
-  }
-  
-  /* To align the big button to the right */
-  .flex.justify-end {
-    justify-content: flex-end;
-  }
+}
+.plus-button{
+  background-color: white;
+  color: black;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+
+  background-color: white;
+
+}
+
+.minus-button {
+  background-color: white;
+  color: black;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  background-color: white;
+}
+
+.plus-button:hover {
+  color: lightgreen;
+  background-color: white;
+}
+
+.minus-button:hover {
+  color: red;
+  background-color: white;
+}
+
+.topic-input {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  flex-grow: 1; /* Makes input take up the remaining space */
+}
