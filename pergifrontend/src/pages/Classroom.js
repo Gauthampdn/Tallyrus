@@ -554,7 +554,7 @@ const Classroom = () => {
                   {/* Modal for the form */}
                   {isModalOpen && (
                     <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                      <AlertDialogContent className="max-h-[80vh] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
+                      <AlertDialogContent className="max-h-[80vh] max-w-[60vw] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
                           <ScrollArea className="max-h-[60vh] overflow-auto my-4">
