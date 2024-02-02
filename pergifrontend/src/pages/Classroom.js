@@ -577,11 +577,15 @@ const Classroom = () => {
       )}
 
       {/* Display the submitted data on the main page */}
-      {selectedAssignment.rubric && (
-                selectedAssignment.rubric.map((rubric, index) => (
-                  <RubricTable key={index} rubric={rubric} />
-                ))
-              )}
+      {selectedAssignment && selectedAssignment.rubric && (
+  <div className="rubric-view-section">
+    <ScrollArea className="scrollable-rubric-view" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      {selectedAssignment.rubric.map((rubric, index) => (
+        <RubricTable key={index} rubric={rubric} />
+      ))}
+    </ScrollArea>
+  </div>
+)}
 
 
                 </div>
