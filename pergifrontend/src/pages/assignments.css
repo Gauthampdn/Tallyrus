@@ -3,3 +3,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+.markdownstyling p {
+  margin-bottom: 15px;
+}

@@ -49,7 +49,14 @@ import {
 //import { Form } from '@/components/ui';
 
 
-
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 import {
   AlertDialog,
@@ -109,7 +116,7 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
           <FontAwesomeIcon icon={faPlusCircle} />
         </Button>
         {/* Replace textarea with input for topic */}
-        <input 
+        <input
           {...register(`rubrics.${rubricIndex}.name`)}
           placeholder="Topic"
           className="topic-input"
@@ -137,7 +144,7 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
             placeholder="Description"
             className="description-input rubric-input flex-grow"
             style={{ resize: 'none', height: 'auto' }}
-            // Remove the style for resizing and height adjustment
+          // Remove the style for resizing and height adjustment
           />
         </div>
       ))}
@@ -491,7 +498,7 @@ const Classroom = () => {
       <Navbar />
 
       <div className="flex flex-grow overflow-hidden">
-        <aside className=" rounded-3xl m-5 mr-0 w-1/5 bg-green-700 p-4 overflow-auto text-white">
+        <aside className=" rounded-3xl m-3 mr-0 w-1/5 bg-green-700 p-4 overflow-auto text-white">
           <Button className="mb-4" onClick={handleGoback}>back</Button>
           <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
 
@@ -517,7 +524,7 @@ const Classroom = () => {
           )}
         </aside>
 
-        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-5">
+        <main className="w-4/5 p-10 pb-0 overflow-auto bg-white rounded-3xl m-3">
           {selectedAssignment ? (
 
 
@@ -575,7 +582,7 @@ const Classroom = () => {
                                 <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
                                   Save Rubric
                                 </Button>
-                                <Button onClick={handleCloseModal} style={{margin: "2em"}} variant="destructive">Cancel</Button>
+                                <Button onClick={handleCloseModal} style={{ margin: "2em" }} variant="destructive">Cancel</Button>
 
                               </div>
                             </form>
@@ -585,16 +592,16 @@ const Classroom = () => {
                     </AlertDialog>
                   )}
 
-      {/* Display the submitted data on the main page */}
-      {selectedAssignment && selectedAssignment.rubric && (
-  <div className="rubric-view-section">
-    <ScrollArea className="scrollable-rubric-view" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-      {selectedAssignment.rubric.map((rubric, index) => (
-        <RubricTable key={index} rubric={rubric} />
-      ))}
-    </ScrollArea>
-  </div>
-)}
+                  {/* Display the submitted data on the main page */}
+                  {selectedAssignment && selectedAssignment.rubric && (
+                    <div className="rubric-view-section">
+                      <ScrollArea className="scrollable-rubric-view" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {selectedAssignment.rubric.map((rubric, index) => (
+                          <RubricTable key={index} rubric={rubric} />
+                        ))}
+                      </ScrollArea>
+                    </div>
+                  )}
 
 
                 </div>
@@ -603,23 +610,27 @@ const Classroom = () => {
                 {user && (user.authority === "student" || user.authority === "teacher") && (
                   <div className="flex-1">
                     {user.authority === "student" && (
-                      <div className="mt-4 grid w-full max-w-sm items-center gap-1.5 ">
-                        {selectedAssignment.submissions.map(submission => (
-                          <div key={submission._id} className="p-2 mb-2 border rounded shadow-sm">
-
-                            <p><strong>Name:</strong> {submission.studentName}</p>
-                            <p><strong>Email:</strong> {submission.studentEmail}</p>
-                            <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-                            <p><strong>Status:</strong> {submission.status}</p>
-                            <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
-
-
-                          </div>
-
+                      <div className="m-10 grid w-full items-center gap-1.5">
+                        {selectedAssignment.submissions.map((submission) => (
+                          <Card key={submission._id} className="max-w-sm mb-2">
+                            <CardHeader>
+                              <CardTitle> <strong> Name: </strong> {submission.studentName}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p><strong>Email:</strong> {submission.studentEmail}</p>
+                              <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                              <p><strong>Status:</strong> {submission.status}</p>
+                            </CardContent>
+                            <CardFooter>
+                              <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                            </CardFooter>
+                          </Card>
                         ))}
-                        <Label htmlFor="pdf">PDF</Label>
-                        <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
-                        <Button onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                        <div className="max-w-sm">
+                          <Label htmlFor="pdf">Upload your PDF</Label>
+                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
+                          <Button className="mt-8 " onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                        </div>
                       </div>
                     )}
                     {user.authority === "teacher" && (
@@ -658,26 +669,26 @@ const Classroom = () => {
                           </div>
                         </ScrollArea>
                         <div className="flex justify-end items-center space-x-4 mt-4">
-  <AlertDialog>
-    <AlertDialogTrigger asChild>
-      <Button variant="destructive">Delete Assignment</Button>
-    </AlertDialogTrigger>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-        <AlertDialogDescription>
-          This action cannot be undone. This will permanently delete the assignment as well as all submissions.
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel>Cancel</AlertDialogCancel>
-        <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive">Delete Assignment</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the assignment as well as all submissions.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
 
-  <Button onClick={() => handleGradeAll(selectedAssignment._id)}>Grade all</Button>
-</div>
+                          <Button onClick={() => handleGradeAll(selectedAssignment._id)}>Grade all</Button>
+                        </div>
                       </>
                     )}
                   </div>

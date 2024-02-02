@@ -74,26 +74,30 @@ const Assignment = () => {
     return `${submission.studentName} - ${new Date(submission.dateSubmitted).toLocaleDateString()} - ${submission.studentEmail}`;
   };
 
-  const filteredSubmissions = assignment ? assignment.submissions.filter(submission => 
+  const filteredSubmissions = assignment ? assignment.submissions.filter(submission =>
     getSubmissionLabel(submission).toLowerCase().includes(searchText.toLowerCase())
   ) : [];
 
   return (
     <div>
       <Navbar />
-      <h1 className="text-2xl font-bold p-4">{assignment?.name}</h1>
-      <Button className="mb-4" onClick={handleGoback}>Go to Classrooms</Button>
+      <div className="m-1 flex justify-between">
+        <h1 className="text-2xl font-extrabold p-4 underline">{assignment?.name}</h1>
+        <Button className="m-4" onClick={handleGoback}>Go to Classrooms</Button>
+
+      </div>
+
       {assignment ? (
-        <div style={{ width: '90%' }} className="mx-auto">
+        <div style={{ width: '97%' }} className="mx-auto">
           {/* Dropdown Select for Submissions */}
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover open={open} onOpenChange={setOpen}  >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="command-item-text"
-                
+                className="command-item-text mb-4"
+
               >
                 {selectedSubmission
                   ? getSubmissionLabel(selectedSubmission)
@@ -103,7 +107,7 @@ const Assignment = () => {
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0">
               <Command>
-              <div style={{ position: 'relative', width: '100%' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
                   <FontAwesomeIcon
                     icon={faSearch}
                     style={{
@@ -158,8 +162,9 @@ const Assignment = () => {
               </Command>
             </PopoverContent>
           </Popover>
-          <br></br>
+
           {/* Display selected submission details */}
+
           {selectedSubmission && (
             <div className="flex flex-col md:flex-row">
               {/* PDF Viewer Column */}
@@ -184,7 +189,7 @@ const Assignment = () => {
                 <p className="pb-2"><strong>Status:</strong> {selectedSubmission.status}</p>
                 <hr />
                 <p className="pb-2"></p>
-                <ReactMarkdown>{selectedSubmission.feedback}</ReactMarkdown>
+                <ReactMarkdown className="markdownstyling">{selectedSubmission.feedback}</ReactMarkdown>
               </div>
             </div>
           )}
@@ -192,7 +197,7 @@ const Assignment = () => {
       ) : (
         <p>Select an assignment to view details</p>
       )}
-      
+
     </div>
   );
 }
