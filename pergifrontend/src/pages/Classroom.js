@@ -558,7 +558,7 @@ const Classroom = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
                           <ScrollArea className="max-h-[60vh] overflow-auto my-4">
-                            <form className="space-y-8">
+                            <form className="space-y-8 max-w-[56vw]">
                               {rubricFields.map((rubricField, rubricIndex) => (
                                 <RubricField
                                   key={rubricField.id}
@@ -582,7 +582,6 @@ const Classroom = () => {
                             </form>
                           </ScrollArea>
                         </AlertDialogHeader>
-                        <ScrollArea className="max-h-[60vh] overflow-auto p-2"></ScrollArea>
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
