@@ -19,7 +19,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlusCircle, faMinusCircle, faSave} from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
 import { flexRender } from "@tanstack/react-table";
 
 import './Classroom.css';
@@ -79,7 +79,7 @@ const rubricSchema = z.object({
 
 
 const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric }) => {
-  
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: `rubrics.${rubricIndex}.values`,
@@ -144,9 +144,11 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
       ))}
     </div>
   );
-  
-  
+
+
 };
+
+
 const RubricTable = ({ rubric }) => {
   // Removed TypeScript type annotation
   const columns = React.useMemo(
@@ -170,8 +172,8 @@ const RubricTable = ({ rubric }) => {
   });
 
   return (
-    <div>
-      <h3>{rubric.name}</h3>
+    <div className="mb-5">
+      <h3 className="font-bold text-md">{rubric.name}</h3>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -184,6 +186,7 @@ const RubricTable = ({ rubric }) => {
             </TableRow>
           ))}
         </TableHeader>
+
         <TableBody>
           {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
@@ -216,7 +219,7 @@ const Classroom = () => {
   const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
 
 
-  const { control, register, getValues,reset } = useForm({
+  const { control, register, getValues, reset } = useForm({
     resolver: zodResolver(rubricSchema),
     defaultValues: {
       rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
@@ -231,7 +234,7 @@ const Classroom = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [submittedData, setSubmittedData] = useState(null); // State to store submitted data
-  
+
   const handleRubricSubmission = () => {
     const formData = getValues(); // This will get all form values
     setSubmittedData(formData);
@@ -241,8 +244,8 @@ const Classroom = () => {
     // Call the function to update the rubric in the backend
     handleRubricFormSubmit(formData);
   };
-  
-  
+
+
 
 
   // Function to open the modal
@@ -269,11 +272,11 @@ const Classroom = () => {
           credentials: 'include',
           mode: 'cors',
         });
-  
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-  
+
         const updatedAssignment = await response.json();
         console.log(updatedAssignment); // Logging the updated assignment
         setSelectedAssignment({ ...selectedAssignment, rubric: formData.rubrics }); // Update the state with the new rubric
@@ -285,18 +288,18 @@ const Classroom = () => {
         console.error("There was a problem with the update:", error);
       }
     }
-    else{
+    else {
       console.log('invalid');
     }
   };
-  
+
   const onSubmit = data => {
     const formData = getValues(); // This assumes you have a function to get form data
     setSubmittedData(formData);
     console.log(formData);
     setIsModalOpen(false); // Close the modal
   };
-  
+
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
     if (assignment && assignment.rubric) {
@@ -324,18 +327,18 @@ const Classroom = () => {
       }
     }
   }, [selectedAssignment, reset]);
- 
- 
+
+
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
   };
-  const doToast = ()=> {    
+  const doToast = () => {
     toast({
       variant: "destructive",
       title: "Invalid file type",
       description: "Please select a PDF file.",
     });
-    
+
   }
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -368,6 +371,11 @@ const Classroom = () => {
 
       const data = await response.json();
       console.log(data); // Logging the response
+      toast({
+        title: "Grading Now!",
+        description: "Our systems are grading all assignments check back in a bit.",
+      });
+
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
@@ -414,7 +422,7 @@ const Classroom = () => {
 
   const handleNavtoSubs = () => {
     navigate(`/assignment/${selectedAssignment._id}`);
-};
+  };
 
 
   const fetchAssignments = async () => {
@@ -484,7 +492,7 @@ const Classroom = () => {
       <Navbar />
 
       <div className="flex flex-grow overflow-hidden">
-        <aside className=" rounded-3xl m-5 mr-0 w-1/5 bg-blue-500 p-4 overflow-auto text-white">
+        <aside className=" rounded-3xl m-5 mr-0 w-1/5 bg-green-700 p-4 overflow-auto text-white">
           <Button className="mb-4" onClick={handleGoback}>back</Button>
           <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
 
@@ -495,7 +503,7 @@ const Classroom = () => {
             {allAssignments.map((eachassignment) => (
               <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                 <button
-                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-blue-600' : ''}`}
+                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-green-600' : ''}`}
                   onClick={() => handleSelectAssignment(eachassignment)}
                 >
                   {eachassignment.name}
@@ -515,66 +523,69 @@ const Classroom = () => {
 
 
             <div>
-              <h1 className="text-2xl font-bold">{selectedAssignment.name}</h1>
+              <div className="flex justify-between">
+                <h1 className="text-2xl font-bold underline">{selectedAssignment.name}</h1>
+
+
+                <div>
+                  {user && user.authority === "teacher" && (
+                    <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
+                      {rubricButtonText}
+                    </Button>
+                  )}
+                  <Button onClick={handleNavtoSubs} className="p-2 bg-slate-700">All Submissions</Button>
+                </div>
+
+              </div>
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
-              <Button onClick={handleNavtoSubs} className="p-2 bg-yellow-700">All Submissions</Button>
+
 
               <div className="flex flex-row w-full">
 
 
 
-                <div className="flex-1">{user && user.authority === "teacher" && (
-                  <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
-              {rubricButtonText}
-              </Button>
-               ) }
-               {user && user.authority === "student" && (
-                <div>
-                 <h1>Rubric:</h1>
-                 <br></br>
-                 </div>
-              
+                <div className="flex-1">
 
-               ) }
-              
+                  <div>
+                    <h1 className="font-bold underline text-lg">Rubric:</h1>
+                    <br></br>
+                  </div>
 
+                  {/* Modal for the form */}
+                  {isModalOpen && (
+                    <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <AlertDialogContent className="max-h-[80vh] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
+                          <ScrollArea className="max-h-[60vh] overflow-auto my-4">
+                            <form className="space-y-8">
+                              {rubricFields.map((rubricField, rubricIndex) => (
+                                <RubricField
+                                  key={rubricField.id}
+                                  control={control}
+                                  register={register}
+                                  rubricIndex={rubricIndex}
+                                  rubricField={rubricField}
+                                  removeRubric={removeRubric}
+                                />
+                              ))}
+                              <div className="flex items-center">
+                                <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
+                                  Add New Topic
+                                </Button>
+                                <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
+                                  Save Rubric
+                                </Button>
+                                <Button onClick={handleCloseModal} variant="destructive">Cancel</Button>
 
-      {/* Modal for the form */}
-      {isModalOpen && (
-        <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <AlertDialogContent className="max-h-[80vh] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
-              <ScrollArea className="max-h-[60vh] overflow-auto my-4">
-              <form  className="space-y-8">
-                {/* Form content here */}
-                {rubricFields.map((rubricField, rubricIndex) => (
-                  <RubricField
-                    key={rubricField.id}
-                    control={control}
-                    register={register}
-                    rubricIndex={rubricIndex}
-                    rubricField={rubricField}
-                    removeRubric={removeRubric}
-                  />
-                ))}
-                <div className="flex items-center">
-                  <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
-                    Add New Topic
-                  </Button>
-                  <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
-    Save Rubric
-</Button>
-<Button onClick={handleCloseModal} variant="destructive">Close Rubric Editor</Button>
-
-                </div>
-              </form>
-              </ScrollArea>
-            </AlertDialogHeader>
-            <ScrollArea className="max-h-[60vh] overflow-auto p-2"></ScrollArea>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+                              </div>
+                            </form>
+                          </ScrollArea>
+                        </AlertDialogHeader>
+                        <ScrollArea className="max-h-[60vh] overflow-auto p-2"></ScrollArea>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
 
       {/* Display the submitted data on the main page */}
       {selectedAssignment && selectedAssignment.rubric && (
@@ -617,7 +628,7 @@ const Classroom = () => {
 
 
                       <>
-                        <ScrollArea className="h-[400px] w-full overflow-auto">
+                        <ScrollArea className="ml-20 h-[400px] w-full overflow-auto">
                           <div className="p-4">
                             <div className="flex h-5 items-center space-x-8 text-sm">
                               <p className="text-lg font-bold">Name</p>
@@ -631,7 +642,7 @@ const Classroom = () => {
                           </div>
                           <div className="p-4">
                             {selectedAssignment.submissions.map((submission, index) => (
-                              
+
                               <React.Fragment key={submission._id}>
                                 <div className="mb-2">
                                   <div className="flex h-5 items-center space-x-8 text-sm">
@@ -686,7 +697,7 @@ const Classroom = () => {
         </main>
         <Toaster />
       </div>
-     
+
     </div>
   );
 

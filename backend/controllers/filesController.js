@@ -124,6 +124,8 @@ const uploadFile = async (req, res, next) => {
       submission.dateSubmitted = new Date();
       submission.pdfURL = req.file.location;
       submission.pdfKey = req.file.key;
+      submission.status = "submitted";
+      submission.feedback = 'NOT GRADED YET';
 
       assignment.submissions[submissionIndex] = submission;
 

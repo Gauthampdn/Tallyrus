@@ -181,7 +181,9 @@ const Assignment = () => {
                 <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
                 <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
                 <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> {selectedSubmission.status}</p>
+                <p className="pb-2"><strong>Status:</strong> {selectedSubmission.status}</p>
+                <hr />
+                <p className="pb-2"></p>
                 <ReactMarkdown>{selectedSubmission.feedback}</ReactMarkdown>
               </div>
             </div>
