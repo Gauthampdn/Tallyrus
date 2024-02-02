@@ -226,36 +226,37 @@ const getSubmissions = async (req, res) => {
 // In assignmentController:
 
 const updateAssignmentRubric = async (req, res) => {
-  if (req.user.authority === 'teacher') {
-  console.log("NEW ASSIGNMENT RUBRIC UPDATE");
-  const { id } = req.params;
-  const { rubric } = req.body;
 
-  try {
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid assignment ID" });
-    }
-
-    // Update the rubric of the assignment
-    const updatedAssignment = await Assignment.findByIdAndUpdate(
-      id,
-      { $set: { rubric } },
-      { new: true }  // Return the updated document
-    );
-
-    if (!updatedAssignment) {
-      return res.status(404).json({ error: "Assignment not found" });
-    }
-
-    res.status(200).json(updatedAssignment);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can update assignments rubrics" });
   }
-}
-else{
-  console.log("NOT TEACHER");
-}
+
+    console.log("NEW ASSIGNMENT RUBRIC UPDATE");
+    const { id } = req.params;
+    const { rubric } = req.body;
+
+    try {
+      // Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid assignment ID" });
+      }
+
+      // Update the rubric of the assignment
+      const updatedAssignment = await Assignment.findByIdAndUpdate(
+        id,
+        { $set: { rubric } },
+        { new: true }  // Return the updated document
+      );
+
+      if (!updatedAssignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+
+      res.status(200).json(updatedAssignment);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+
 };
 
 

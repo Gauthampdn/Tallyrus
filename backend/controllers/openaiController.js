@@ -118,16 +118,18 @@ const gradeall = async (req, res) => {
                         This is how each grading rubric should be formatted:
                         
                         """
-                        **Criteria Name**:
+                        **Criteria Name**: Name of the Criteria
+
                         **Score**: **(score)/subtotal**
-                        **Comments/suggestions**:
+
+                        **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
                         """
                         
                         Also give the total scores at the end in this format:
                         
-                        ***TOTALSCORE***:
+                        ***TOTALSCORE***: **(score)/total**
                         
-                        Grade for a middle school level, and do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100.
+                        Do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100. Also you can give scores between 2  levels of achievement, for instance if only 20 points and 10 points are specified you should give points between this range if deserved.
     
                         `
     
