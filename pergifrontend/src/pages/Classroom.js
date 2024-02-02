@@ -569,14 +569,14 @@ const Classroom = () => {
                                   removeRubric={removeRubric}
                                 />
                               ))}
-                              <div className="flex items-center">
+                              <div className="flex justify-end items-center space-x-4">
                                 <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
                                   Add New Topic
                                 </Button>
                                 <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
                                   Save Rubric
                                 </Button>
-                                <Button onClick={handleCloseModal} variant="destructive">Cancel</Button>
+                                <Button onClick={handleCloseModal} style={{margin: "2em"}} variant="destructive">Cancel</Button>
 
                               </div>
                             </form>
