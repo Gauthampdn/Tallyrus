@@ -84,14 +84,35 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
     control,
     name: `rubrics.${rubricIndex}.values`,
   });
+  const adjustTextareaHeight = (element) => {
+    if (element) {
+      element.style.height = "auto"; // Reset height to ensure accurate scrollHeight measurement
+      element.style.height = `${element.scrollHeight}px`; // Adjust height based on content
+    }
+  };
+
+  // Adjust all textareas on initial render and when fields change
+  useEffect(() => {
+    fields.forEach((field, index) => {
+      // Adjust both point and description textareas
+      adjustTextareaHeight(document.getElementById(`point-${rubricIndex}-${index}`));
+      adjustTextareaHeight(document.getElementById(`description-${rubricIndex}-${index}`));
+    });
+  }, [fields]);
+
+
 
   return (
     <div key={rubricField.id} className="rubric-card">
-    <div className="rubric-header">
+    <div className="rubric-header flex items-center">
       <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
         <FontAwesomeIcon icon={faPlusCircle} />
       </Button>
-      <Input {...register(`rubrics.${rubricIndex}.name`)} placeholder="Topic" className="topic-input"/>
+      <textarea {...register(`rubrics.${rubricIndex}.name`)} 
+      style={{ resize: 'none', height: '3em' }} // Prevent manual resizing
+      placeholder="Topic" 
+      className="topic-input"
+      />
       <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
         <FontAwesomeIcon icon={faMinusCircle} />
       </Button>
@@ -102,8 +123,23 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
           <Button type="button" onClick={() => remove(index)} className="my-minus-button rubric-button">
             <FontAwesomeIcon icon={faMinusCircle} />
           </Button>
-          <Input {...register(`rubrics.${rubricIndex}.values.${index}.point`)} type="number" placeholder="0" className="point-input rubric-input flex-grow" />
-          <Input {...register(`rubrics.${rubricIndex}.values.${index}.description`)} placeholder="Description" className="description-input rubric-input flex-grow" />
+          <div className="input-wrapper">
+          <textarea
+              {...register(`rubrics.${rubricIndex}.values.${index}.point`)}
+              type="number"
+              placeholder="0"
+              className="point-input rubric-input flex-grow"
+              style={{ resize: 'none', height: '1.9em' }}
+            />
+          </div>
+          <textarea
+            {...register(`rubrics.${rubricIndex}.values.${index}.description`)}
+            id={`description-${rubricIndex}-${index}`}
+            placeholder="Description"
+            className="description-input rubric-input flex-grow"
+            style={{ resize: 'none', height: 'auto' }}
+            onChange={(e) => adjustTextareaHeight(e.target)}
+          />
         </div>
       ))}
     </div>
