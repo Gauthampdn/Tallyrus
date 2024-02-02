@@ -659,29 +659,27 @@ const Classroom = () => {
                             ))}
                           </div>
                         </ScrollArea>
+                        <div className="flex justify-end items-center space-x-4 mt-4">
+  <AlertDialog>
+    <AlertDialogTrigger asChild>
+      <Button variant="destructive">Delete Assignment</Button>
+    </AlertDialogTrigger>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+        <AlertDialogDescription>
+          This action cannot be undone. This will permanently delete the assignment as well as all submissions.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 
-                        <div className="self-end mt-4">
-                          <AlertDialog>
-                            <AlertDialogTrigger>
-                              <Button variant="destructive">Delete the Assignment</Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete the assignment as well as all submissions.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                        <div>
-                          <Button onClick={() => handleGradeAll(selectedAssignment._id)} >Grade all</Button>
-                        </div>
+  <Button onClick={() => handleGradeAll(selectedAssignment._id)}>Grade all</Button>
+</div>
                       </>
                     )}
                   </div>
