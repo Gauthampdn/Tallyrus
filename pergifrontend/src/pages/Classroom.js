@@ -104,41 +104,40 @@ const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric
 
   return (
     <div key={rubricField.id} className="rubric-card">
-    <div className="rubric-header flex items-center">
-      <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
-        <FontAwesomeIcon icon={faPlusCircle} />
-      </Button>
-      <textarea {...register(`rubrics.${rubricIndex}.name`)} 
-      style={{ resize: 'none', height: '3em' }} // Prevent manual resizing
-      placeholder="Topic" 
-      className="topic-input"
-      />
-      <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
-        <FontAwesomeIcon icon={faMinusCircle} />
-      </Button>
-    </div>
-  
+      <div className="rubric-header flex items-center">
+        <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
+          <FontAwesomeIcon icon={faPlusCircle} />
+        </Button>
+        {/* Replace textarea with input for topic */}
+        <input 
+          {...register(`rubrics.${rubricIndex}.name`)}
+          placeholder="Topic"
+          className="topic-input"
+        />
+        <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
+          <FontAwesomeIcon icon={faMinusCircle} />
+        </Button>
+      </div>
+
       {fields.map((field, index) => (
         <div key={field.id} className="flex items-center justify-between my-field rubric-item">
           <Button type="button" onClick={() => remove(index)} className="my-minus-button rubric-button">
             <FontAwesomeIcon icon={faMinusCircle} />
           </Button>
           <div className="input-wrapper">
-          <textarea
+            <input
               {...register(`rubrics.${rubricIndex}.values.${index}.point`)}
               type="number"
               placeholder="0"
               className="point-input rubric-input flex-grow"
-              style={{ resize: 'none', height: '1.9em' }}
             />
           </div>
           <textarea
             {...register(`rubrics.${rubricIndex}.values.${index}.description`)}
-            id={`description-${rubricIndex}-${index}`}
             placeholder="Description"
             className="description-input rubric-input flex-grow"
             style={{ resize: 'none', height: 'auto' }}
-            onChange={(e) => adjustTextareaHeight(e.target)}
+            // Remove the style for resizing and height adjustment
           />
         </div>
       ))}
