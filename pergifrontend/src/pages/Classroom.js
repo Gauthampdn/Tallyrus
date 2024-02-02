@@ -524,7 +524,7 @@ const Classroom = () => {
           )}
         </aside>
 
-        <main className="w-4/5 p-10 pb-0 overflow-auto bg-white rounded-3xl m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-3">
           {selectedAssignment ? (
 
 
