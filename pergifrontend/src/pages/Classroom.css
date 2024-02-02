@@ -1,5 +1,11 @@
 /* Adjusted styles for the buttons and inputs */
-.my-plus-button, .my-minus-button {
+.my-plus-button{
+  background-color: white;
+  color: black;
+  box-shadow: none;
+  cursor: pointer;
+}
+.my-minus-button {
   background-color: white;
   color: black;
   box-shadow: none;
@@ -97,7 +103,7 @@
   border: none;
   box-shadow: none;
   cursor: pointer;
-
+  padding-top: 1.2em;
   background-color: white;
 
 }
@@ -112,6 +118,7 @@
 }
 
 .plus-button:hover {
+
   color: lightgreen;
   background-color: white;
 }
@@ -122,8 +129,70 @@
 }
 
 .topic-input {
-  border: 1px solid #ddd;
+  border: white;
+  outline: none;
   border-radius: 5px;
-  padding: 10px;
+  box-shadow: none;
+  padding: 1em;
+  margin: 0.5em;
   flex-grow: 1; /* Makes input take up the remaining space */
+}
+.topic-input:focus {
+  outline: none;
+  border-bottom: 2px solid #0056b3;
+  
+}
+.point-input {
+  box-shadow: none;
+  border: none;
+  outline: none;
+  padding: 1em;
+  background-color: transparent;
+  width: 4em;
+  margin: 0.1em;
+  /* Add a small padding-bottom to reduce the gap if needed */
+}
+
+.point-input:focus {
+  border: none;
+  border-bottom: 2px solid #0056b3;
+}
+.rubric-input {
+  box-shadow: none;
+  border: none;
+  outline: none;
+  padding: 5px 10px;
+  background-color: transparent;
+  width: 4em;
+  margin: 0.1em;
+  /* Add a small padding-bottom to reduce the gap if needed */
+  padding-bottom: 2px;
+}
+
+.rubric-input:focus {
+  border: none;
+  border-bottom: 2px solid #0056b3;
+}
+.input-wrapper {
+  border: none;
+  outline: none;
+  display: inline-block;
+  margin: 0.5em;
+  position: relative;
+}
+
+.input-wrapper::after {
+  border: none;
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0; /* Initially set to 0 */
+  height: 2px;
+  transition: width 0.3s;
+}
+
+.input-wrapper:focus-within::after {
+  border: none;
+  width: 100%; /* Expand underline to full width on focus */
 }
