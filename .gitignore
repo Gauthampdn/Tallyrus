@@ -1,5 +1,6 @@
 backend/.env
 backend/node_modules/
 frontend/.env
+frontend/node_modules/
 pergifrontend/.env
 pergifrontend/node_modules/
