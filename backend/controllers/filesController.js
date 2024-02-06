@@ -119,6 +119,18 @@ const uploadFile = async (req, res, next) => {
 
     let submission;
     if (submissionIndex !== -1) {
+      // Existing submission found, delete the existing file from S3
+      const existingPdfKey = assignment.submissions[submissionIndex].pdfKey;
+      if (existingPdfKey) {
+        try {
+          await s3.deleteObject({ Bucket: BUCKET, Key: existingPdfKey });
+          console.log(`Successfully deleted existing file: ${existingPdfKey}`);
+        } catch (error) {
+          console.error(`Error deleting existing file: ${existingPdfKey}`, error);
+          return res.status(500).json({ error: "Failed to delete the existing submission file." });
+        }
+      }
+    
       // Update existing submission
       submission = assignment.submissions[submissionIndex];
       submission.dateSubmitted = new Date();
@@ -126,9 +138,9 @@ const uploadFile = async (req, res, next) => {
       submission.pdfKey = req.file.key;
       submission.status = "submitted";
       submission.feedback = 'NOT GRADED YET';
-
+    
       assignment.submissions[submissionIndex] = submission;
-
+    
     } else {
       // Create a new submission
       submission = {
@@ -142,6 +154,7 @@ const uploadFile = async (req, res, next) => {
       };
       assignment.submissions.push(submission);
     }
+    
 
     await assignment.save();
 
