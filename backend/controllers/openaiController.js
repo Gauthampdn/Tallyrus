@@ -68,7 +68,7 @@ function rubricToString(rubrics) {
 
     return rubricString;
 }
-  
+
 
 
 
@@ -110,15 +110,16 @@ const gradeall = async (req, res) => {
 
                 console.log(newrubric);
                 const gradingResponse = await openai.chat.completions.create({
-                    model: "gpt-3.5-turbo",
-                    max_tokens: 1000,
-                    messages: [ {
+                    model: "gpt-3.5-turbo-0125",
+                    max_tokens: 1500,
+                    messages: [{
                         "role": "assistant", "content": `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score. 
-    
-                        This is how each grading rubric should be formatted:
+                        Give extremely indepth paragraphs of feedback, comments and suggestions on each criteria on what was done well, what could be improved and suggestions and tips on how to improve. And use examples on how it can be better and/or how it can be rewritten/rephrased.
+
+                        Now this is how each grading rubric should be formatted:
                         
                         """
-                        **Criteria Name**: Name of the Criteria
+                        **Criteria Name**: **Name of the Criteria**
 
                         **Score**: **(score)/subtotal**
 
@@ -127,14 +128,31 @@ const gradeall = async (req, res) => {
                         
                         Also give the total scores at the end in this format:
                         
-                        ***TOTALSCORE***: **(score)/total**
+                        ***TOTALSCORE***: ***(score)/total***
                         
-                        Do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100. Also you can give scores between 2  levels of achievement, for instance if only 20 points and 10 points are specified you should give points between this range if deserved.
-    
+                        Do not grade too harshly. Try to make scores fall between 100 to 80, closer to 100. Also you can give scores between 2  levels of achievement, for instance if only 20 points and 10 points are specified you should give points between this range if deserved.
+                        
+                        Here is an examples:
+
+
+                        **Criteria Name**: **Clarity of Thesis**
+
+                        **Score**: **23/25**
+
+                        **Comments/suggestions**: The thesis statement in your essay is exceptionally clear, concise, and well-defined. It effectively introduces the topic of the challenging life of young Mexican American men in "Always Running" and highlights the key factors influencing gang involvement, such as the role of a racist police force and the positive impact of mentorship, particularly Chente Ramírez. The thesis sets a strong foundation for the rest of the essay, providing a clear roadmap for the subsequent analysis.
+
+                        **Criteria Name**: **Analysis**
+
+                        **Score**: **24/25**
+
+                        **Comments/suggestions**: Your analysis in the essay is thorough, insightful, and well-supported by evidence from the text. You delve deep into Rodriguez's portrayal of the police force as oppressors, examining specific examples from the book to illustrate the systemic issues of racism and brutality within law enforcement. Furthermore, your analysis of the psychological factors driving gang involvement, the impact of mentorship, and the contrasting approaches to power and strength presented by Rodriguez and Chente Ramírez is well-developed and thought-provoking. Your essay effectively connects these analyses to the broader societal structures and challenges the reader to rethink their perceptions.
+
+                        ***TOTALSCORE***: ***47/50***
+
                         `
-    
+
                     },
-                    { "role": "assistant", "content": newrubric },
+                    { "role": "user", "content": newrubric },
                     { "role": "user", "content": extractedText }
                     ]
                 });

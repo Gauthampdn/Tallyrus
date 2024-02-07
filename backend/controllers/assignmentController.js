@@ -223,6 +223,11 @@ const getSubmissions = async (req, res) => {
   res.status(200).json(assignment);
 }
 
+
+
+
+
+
 // In assignmentController:
 
 const updateAssignmentRubric = async (req, res) => {
