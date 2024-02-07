@@ -500,7 +500,7 @@ const Classroom = () => {
       <div className="flex flex-grow overflow-hidden">
         <aside className=" rounded-3xl m-3 mr-0 w-1/5 bg-green-700 p-4 overflow-auto text-white">
           <Button className="mb-4" onClick={handleGoback}>back</Button>
-          <h2 className="font-bold text-2xl mb-4">ASSIGNMENTS</h2>
+          <h2 className="font-extrabold text-xl mb-4 underline">All Assignments</h2>
 
 
 
@@ -530,7 +530,7 @@ const Classroom = () => {
 
             <div>
               <div className="flex justify-between">
-                <h1 className="text-2xl font-bold underline">{selectedAssignment.name}</h1>
+                <h1 className="text-2xl font-extrabold underline">{selectedAssignment.name}</h1>
 
 
                 <div>

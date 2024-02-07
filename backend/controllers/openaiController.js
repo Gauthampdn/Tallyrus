@@ -135,7 +135,7 @@ const gradeall = async (req, res) => {
     
                     },
                     { "role": "assistant", "content": newrubric },
-                        { "role": "user", "content": extractedText }
+                    { "role": "user", "content": extractedText }
                     ]
                 });
 
