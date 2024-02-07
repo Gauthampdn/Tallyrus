@@ -4,7 +4,8 @@ const router = express.Router()
 const { 
   getClassroomsForUser,
   createClassroom,
-  joinClassroomByCode
+  joinClassroomByCode,
+  deleteClassroom
 } = require("../controllers/classroomController")
 
 const requireAuth = require("../middleware/requireAuth")
@@ -17,6 +18,9 @@ router.get("/", getClassroomsForUser)
 router.post("/createclass", createClassroom)
 
 router.patch("/join", joinClassroomByCode);
+
+router.delete("/:id", deleteClassroom)
+
 
 
 module.exports = router

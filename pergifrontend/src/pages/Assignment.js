@@ -59,8 +59,14 @@ const Assignment = () => {
   }, [user]);
 
   const handleGoback = () => {
-    navigate("/");
+    if (assignment && assignment.classId) {
+      navigate(`/classroom/${assignment.classId}`);
+    } else {
+      // Handle the case where assignment or classId is not available
+      navigate('/'); // or any other fallback route you prefer
+    }
   };
+  
 
 
   // Function to handle selection change
@@ -83,7 +89,7 @@ const Assignment = () => {
       <Navbar />
       <div className="m-1 flex justify-between">
         <h1 className="text-2xl font-extrabold p-4 underline">{assignment?.name}</h1>
-        <Button className="m-4" onClick={handleGoback}>Go to Classrooms</Button>
+        <Button className="m-4" onClick={handleGoback}>Go Back</Button>
 
       </div>
 

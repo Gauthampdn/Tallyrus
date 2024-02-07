@@ -1,6 +1,39 @@
 const mongoose = require("mongoose");
 const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
+const Assignment = require("../models/assignmentModel");
+
+
+
+const aws = require('aws-sdk');
+const {
+  S3
+} = require('@aws-sdk/client-s3');
+
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+
+require('dotenv').config();
+
+aws.config.update({
+  secretAccessKey: process.env.AWSS3_SECRETKEY,
+  accessKeyId: process.env.AWSS3_ACCESSKEY,
+  region: process.env.AWSS3_BUCKETREGION
+});
+
+const BUCKET = process.env.AWSS3_BUCKETNAME;
+
+const s3 = new S3({
+  credentials: {
+    secretAccessKey: process.env.AWSS3_SECRETKEY,
+    accessKeyId: process.env.AWSS3_ACCESSKEY
+  },
+
+  region: process.env.AWSS3_BUCKETREGION
+});
+
+//-----------------------------------------------------------------------------------------------------------------------
+
 
 // Get all classrooms for a user
 const getClassroomsForUser = async (req, res) => {
@@ -25,6 +58,9 @@ const getClassroomsForUser = async (req, res) => {
   }
 };
 
+
+
+
 // Get a single classroom by ID
 const getClassroom = async (req, res) => {
   const { id } = req.params;
@@ -42,7 +78,8 @@ const getClassroom = async (req, res) => {
   res.status(200).json(classroom);
 };
 
-// Create a new classroom
+
+
 
 const createClassroom = async (req, res) => {
   const { title, description } = req.body;
@@ -95,7 +132,12 @@ const createClassroom = async (req, res) => {
   }
 };
 
-// Update a classroom
+
+
+
+
+
+
 const updateClassroom = async (req, res) => {
   const { id } = req.params;
 
@@ -116,22 +158,74 @@ const updateClassroom = async (req, res) => {
   }
 };
 
-// Delete a classroom
+
+
+
+
+
 const deleteClassroom = async (req, res) => {
-  const { id } = req.params;
+  const classroomId = req.params.id; // ID of the classroom to be deleted
+  const user_id = req.user.id; // ID of the user making the request
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: "Invalid ID" });
+  console.log("Trying to delete classroom", classroomId);
+
+  // Check if the user is a teacher
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can delete classrooms" });
   }
 
-  const classroom = await Classroom.findByIdAndDelete(id);
+  try {
+    // Find the classroom
+    const classroom = await Classroom.findById(classroomId);
+    if (!classroom) {
+      return res.status(404).json({ error: "Classroom not found" });
+    }
 
-  if (!classroom) {
-    return res.status(404).json({ error: "Classroom not found" });
+    // Check if the user is a teacher in the classroom
+    if (!classroom.teachers.includes(user_id)) {
+      return res.status(403).json({ error: "Not authorized to delete this classroom" });
+    }
+
+    // Find and delete all assignments associated with the classroom
+    const assignments = await Assignment.find({ classId: classroomId });
+    for (const assignment of assignments) {
+      // Delete associated files from S3 for each assignment
+      for (const submission of assignment.submissions) {
+        if (submission.pdfURL) {
+          const filename = submission.pdfKey;
+          console.log("Deleting file:", filename);
+          try {
+            await s3.deleteObject({ Bucket: BUCKET, Key: filename })
+          } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Error in Deleting file" });
+            // Note: Consider accumulating errors and continuing rather than stopping on the first error
+          }
+          console.log("Deleted file:", filename);
+
+        }
+      }
+      // Delete the assignment
+      await Assignment.findByIdAndDelete(assignment._id);
+      console.log("Deleted assignment:", assignment._id);
+    }
+
+    // Delete the classroom
+    await Classroom.findByIdAndDelete(classroomId);
+    console.log("Deleted classroom:", classroomId);
+
+    res.status(200).json({ message: "Classroom and associated assignments deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting classroom:", error);
+    res.status(500).json({ error: error.message });
   }
-
-  res.status(200).json({ message: "Classroom deleted" });
 };
+  
+
+
+
+
+
 
 // Add a student to a classroom by join code
 const joinClassroomByCode = async (req, res) => {

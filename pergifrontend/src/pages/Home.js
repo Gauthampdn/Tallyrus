@@ -6,6 +6,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
+
 import {
   Form,
   FormControl,
@@ -15,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+
 import { Input } from "@/components/ui/input"
 
 //import { Button } from "@/components/ui/button"
@@ -42,7 +44,21 @@ import {
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from "@/components/ui/use-toast";
 
-import { toast } from "sonner"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 const joinFormSchema = z.object({
   joinCode: z.string().min(1, {
@@ -132,6 +148,49 @@ const Home = () => {
     }
   }, [user]);
 
+  const handleEditClassroom = async () => {
+
+  }
+
+  const handleDeleteClassroom = async (classroomId) => {
+    try {
+      // Make a DELETE request to the backend API to delete the specified classroom
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom/${classroomId}`, {
+        method: 'DELETE',
+        credentials: 'include', // Make sure cookies are sent with the request if needed for authentication
+        mode: 'cors', // Ensure CORS policy is handled correctly
+      });
+  
+      if (!response.ok) {
+        // Handle non-OK responses here
+        throw new Error('Failed to delete classroom');
+      }
+  
+      // Successfully deleted the classroom
+      console.log('Classroom deleted successfully:', classroomId);
+      
+      // Optionally, show a success message to the user
+      toast({
+        variant: "positive",
+        title: "Classroom Deleted",
+        description: "The classroom was successfully deleted.",
+      });
+  
+      // Refresh the classroom list or remove the deleted classroom from the state
+      // to reflect the changes in the UI without reloading the page
+      setCurrClassrooms(currClassrooms.filter(classroom => classroom._id !== classroomId));
+    } catch (error) {
+      console.error('Error deleting classroom:', error);
+      // Optionally, show an error message to the user
+      toast({
+        variant: "destructive",
+        title: "Error Deleting Classroom",
+        description: "There was an error deleting the classroom. Please try again.",
+      });
+    }
+  };
+  
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -180,20 +239,41 @@ const Home = () => {
 
       <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
-          <Card key={classroom._id} className=" min-w-1/4 w-1/4 h-[300px] bg-slate-100 m-4 text-slate-700">
+          <Card key={classroom._id} className="min-w-1/4 w-1/4 h-[300px] bg-slate-100 m-4 text-slate-700">
             <CardHeader>
-              <CardTitle className="text-xl font-bold ">{classroom.title}</CardTitle>
+              <div className='flex justify-between'>
+                <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="material-symbols-outlined">apps</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onSelect={() => handleEditClassroom(classroom._id)}>
+                        Edit Classroom
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)}>
+                        Delete Classroom
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
             </CardHeader>
             <CardContent>
               <CardDescription>{classroom.description}</CardDescription>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <span className="text-sm font-bold ">Class Code: {classroom.joincode}</span>
+              <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
               <Button onClick={() => handleGoToClass(classroom._id)}>Go to Class</Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+
       <Toaster />
     </div>
   );
