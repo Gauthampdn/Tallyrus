@@ -20,6 +20,9 @@ require('dotenv').config();
 // JS SDK v3 does not support global configuration.
 // Codemod has attempted to pass values to each service client in this file.
 // You may need to update clients outside of this file, if they use global config.
+// JS SDK v3 does not support global configuration.
+// Codemod has attempted to pass values to each service client in this file.
+// You may need to update clients outside of this file, if they use global config.
 aws.config.update({
   secretAccessKey: process.env.AWSS3_SECRETKEY,
   accessKeyId: process.env.AWSS3_ACCESSKEY,
