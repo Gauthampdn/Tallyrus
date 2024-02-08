@@ -77,7 +77,7 @@ const Login = () => {
             “I used to spend countless hours grading assignments before
             and now I'm able to give students their papers graded back within hours”
           </blockquote>
-          <p className="mt-4  text-white">- Nig</p>
+          <p className="mt-4  text-white">- teacher</p>
         </div>
       </div>
 
