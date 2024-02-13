@@ -223,6 +223,8 @@ const Classroom = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [file, setFile] = useState(null); // State to hold the selected file
   const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
+  const [feedback, setFeedback] = useState('');
+
 
 
   const { control, register, getValues, reset } = useForm({
@@ -387,6 +389,63 @@ const Classroom = () => {
     }
 
   }
+  async function getTextFromPdf(file) {
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+    const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.entry.js');
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+    const fileReader = new FileReader();
+    return new Promise((resolve, reject) => {
+        fileReader.onload = async (event) => {
+            const typedArray = new Uint8Array(event.target.result);
+            try {
+                const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+                let text = '';
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    text += textContent.items.map(item => item.str).join(' ');
+                }
+                resolve(text);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        fileReader.readAsArrayBuffer(file);
+    });
+}
+
+  const handleGrade = async (assignmentId) => {
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+
+    try {
+        const text = await getTextFromPdf(file);
+        const response = await fetch(`http://localhost:4000/openai/gradesubmission/${assignmentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Include any other headers your backend requires
+            },
+            body: JSON.stringify({ text }),
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
+        setFeedback(data.feedback);
+    } catch (error) {
+        console.error("There was a problem with extracting or sending the text:", error);
+    }
+};
+
 
 
   const handleSubmit = async (assignmentId) => {
@@ -630,6 +689,21 @@ const Classroom = () => {
                           <Label htmlFor="pdf">Upload your PDF</Label>
                           <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
                           <Button className="mt-8 " onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                          <br></br>
+                          <br></br>
+                          <Button
+        className="submit-button"
+        onClick={() => handleGrade(selectedAssignment._id)}
+        disabled={!file} // Disable the button if no file is selected
+    >
+        See Potential Grade
+    </Button>
+    <div className="feedback-container">
+    <h2>Feedback</h2>
+    <div className="feedback-box">
+        {feedback ? <p>{feedback}</p> : <p>No feedback available yet.</p>}
+    </div>
+</div>
                         </div>
                       </div>
                     )}

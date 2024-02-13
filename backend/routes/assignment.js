@@ -6,7 +6,6 @@ const {
   createAssignment,
   deleteAssignment,
   getSubmissions,
-  updateAssignmentRubric
    // import the createSubmission function
 } = require("../controllers/assignmentController")
 
@@ -28,8 +27,6 @@ router.get("/submissions/:id", getSubmissions) // new route for submitting assig
 
 // In assignment router:
 
-// Patch an assignment (e.g., update the rubric)
-router.patch("/:id", updateAssignmentRubric);
 
 
 

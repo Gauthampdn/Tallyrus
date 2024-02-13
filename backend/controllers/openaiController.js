@@ -4,6 +4,7 @@ const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 
+
 require("dotenv").config();
 
 
@@ -177,6 +178,53 @@ const gradeall = async (req, res) => {
     }
 };
 
+const gradeSubmission = async (req, res) => {
+    const { assignmentId } = req.params;
+    const { text } = req.body; // Extracted text from the PDF sent from the frontend
+
+    if (!text) {
+        return res.status(400).json({ error: "No text provided" });
+    }
+
+    try {
+        const assignment = await Assignment.findById(assignmentId);
+
+        if (!assignment) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
+
+        // Assuming you have a function or method to convert the assignment rubric to a string format
+        const rubricString = rubricToString(assignment.rubric);
+
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo-0125",
+            max_tokens: 1500,
+            messages: [
+                {
+                    "role": "assistant",
+                    "content": `You are a Grader...` // Instructions for grading based on the rubric
+                },
+                {
+                    "role": "user",
+                    "content": rubricString
+                },
+                {
+                    "role": "user",
+                    "content": text // The actual text extracted from the PDF
+                }
+            ]
+        });
+
+        const feedback = gradingResponse.choices[0].message.content;
+
+        res.json({ feedback });
+    } catch (error) {
+        console.error("Error grading submission:", error);
+        res.status(500).send('Error grading submission');
+    }
+};
+
+
 
 
 
@@ -267,5 +315,6 @@ module.exports = {
     completion,
     test,
     extractText,
-    gradeall
+    gradeall,
+    gradeSubmission
 }
