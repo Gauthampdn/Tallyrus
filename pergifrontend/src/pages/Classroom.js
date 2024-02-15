@@ -701,7 +701,7 @@ const Classroom = () => {
     <div className="feedback-container">
     <h2>Feedback</h2>
     <div className="feedback-box">
-        {feedback ? <p>{feedback}</p> : <p>No feedback available yet.</p>}
+        {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
     </div>
 </div>
                         </div>
