@@ -69,7 +69,11 @@ const CreateA = () => {
       navigate(`/classroom/${id}`);
 
     } catch (error) {
-      // Handle errors
+      toast({
+        variant: "destructive",
+        title: "Error Creating Assignment",
+        description: "There was an error creating the assignemnt. Make sure you fill in all areas.",
+      });
       console.error('There was an issue submitting the form:', error);
     }
   };
