@@ -8,8 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
 
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 
 const CreateClass = () => {
@@ -63,30 +71,45 @@ const CreateClass = () => {
       <Button className="mb-4" onClick={handleGoback}>Go to Classrooms</Button>
 
       <div className="flex justify-center items-center pt-10 pb-10">
-        <form className="bg-white rounded-lg shadow-lg p-8 mt-6 mb-6 w-full max-w-lg" onSubmit={handleSubmit}>
-          <h2 className="text-2xl font-bold mb-6 text-center">Create a New Classroom</h2>
-          <div className="mb-4">
-            <Input
-              type="text"
-              placeholder="Title"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+
+
+      <Card className="max-w-lg mx-auto mt-6 mb-6">
+      <CardHeader>
+        <CardTitle>Create a New Classroom</CardTitle>
+        <CardDescription>Fill out the form to create a new classroom.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                placeholder="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="mb-6">
-            <Input
-              type="text"
-              placeholder="Description"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <Button className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors" type="submit">
-            Create Classroom
-          </Button>
         </form>
+      </CardContent>
+      <CardFooter className="flex justify-end">
+        <Button className="bg-blue-500 text-white p-3 rounded hover:bg-blue-600 transition-colors" type="submit" onClick={handleSubmit}>
+          Create Classroom
+        </Button>
+      </CardFooter>
+    </Card>
+
+
       </div>
 
       <Toaster />

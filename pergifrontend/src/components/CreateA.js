@@ -1,9 +1,24 @@
 // components/CreateA.js
 
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { useParams, useNavigate } from "react-router-dom";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea" // Assuming you have a Textarea component
+import Navbar from './Navbar';
 
 
 
@@ -31,7 +46,7 @@ const CreateA = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const body = { ...formData, classId:id };
+    const body = { ...formData, classId: id };
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/make`, {
@@ -60,37 +75,44 @@ const CreateA = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg min-w-full sm:min-w-0 sm:w-1/2">
-    <h2 className="text-2xl font-bold mb-6 text-gray-800">Create New Assignment</h2>
-    
-    <div className="mb-4">
-      <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Assignment Name:</label>
-      <textarea id="name" name="name" value={formData.name} onChange={handleChange} required
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+    <div>
+      <Navbar />
+
+      <div className="flex justify-center items-center min-h-screen">
+
+        <Card className="min-w-full sm:min-w-0 sm:w-1/2">
+          <CardHeader>
+            <CardTitle>Create New Assignment</CardTitle>
+            <CardDescription>Fill in the details for the new assignment.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col space-y-4">
+                <div>
+                  <Label htmlFor="name">Assignment Name:</Label>
+                  <Textarea id="name" name="name" value={formData.name} onChange={handleChange} required placeholder="Assignment Name" />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description:</Label>
+                  <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required placeholder="Brief Description" />
+                </div>
+
+                <div>
+                  <Label htmlFor="dueDate">Due Date:</Label>
+                  <Input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange} required />
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button type="submit" onClick={handleSubmit}>Create Assignment</Button>
+          </CardFooter>
+        </Card>
+      </div>
+
+
     </div>
-    
-    <div className="mb-4">
-      <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">Description:</label>
-      <textarea id="description" name="description" value={formData.description} onChange={handleChange} required
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-    </div>
-    
-    <div className="mb-4">
-      <label htmlFor="rubric" className="block text-gray-700 text-sm font-bold mb-2">Rubric:</label>
-      <textarea id="rubric" name="rubric" value={formData.rubric} onChange={handleChange}
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-    </div>
-    
-    <div className="mb-4">
-      <label htmlFor="dueDate" className="block text-gray-700 text-sm font-bold mb-2">Due Date:</label>
-      <input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange} required
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-    </div>
-    
-    <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-      Create Assignment
-    </button>
-  </form>
+
   );
 };
 

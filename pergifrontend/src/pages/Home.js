@@ -61,20 +61,27 @@ import {
 
 
 const joinFormSchema = z.object({
-  joinCode: z.string().min(1, {
-    message: "Please enter a join code: ",
-  }),
+  joinCode: z.string().min(1, "Please enter a join code"),
+});
+
+// Schema for create class
+const createClassSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
 });
 
 
 
 const Home = () => {
   const { toast } = useToast();
-
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(true);
-  const form = useForm({
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false); // For join class
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // For create class
+  const joinForm = useForm({
     resolver: zodResolver(joinFormSchema),
+  });
+  const createForm = useForm({
+    resolver: zodResolver(createClassSchema),
   });
 
   const onSubmit = async (data) => {
@@ -117,18 +124,6 @@ const Home = () => {
     navigate('/create');
   };
 
-  const handleNavigateToJoin = () => {
-
-    setIsModalOpen(true);
-  };
-  const handleJoinClassContinue = () => {
-    navigate('/join'); // Navigate after confirming
-  };
-
-  const handleJoinClassCancel = () => {
-    setIsModalOpen(false); // Close the modal
-  };
-
   useEffect(() => {
     const fetchClassrooms = async () => {
       console.log("fetching classrooms");
@@ -160,22 +155,22 @@ const Home = () => {
         credentials: 'include', // Make sure cookies are sent with the request if needed for authentication
         mode: 'cors', // Ensure CORS policy is handled correctly
       });
-  
+
       if (!response.ok) {
         // Handle non-OK responses here
         throw new Error('Failed to delete classroom');
       }
-  
+
       // Successfully deleted the classroom
       console.log('Classroom deleted successfully:', classroomId);
-      
+
       // Optionally, show a success message to the user
       toast({
         variant: "positive",
         title: "Classroom Deleted",
         description: "The classroom was successfully deleted.",
       });
-  
+
       // Refresh the classroom list or remove the deleted classroom from the state
       // to reflect the changes in the UI without reloading the page
       setCurrClassrooms(currClassrooms.filter(classroom => classroom._id !== classroomId));
@@ -189,7 +184,38 @@ const Home = () => {
       });
     }
   };
-  
+
+  const handleCreateSubmit = async (data) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom/createclass`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      toast({
+        title: "Class Created",
+        description: "The class is created",
+      });
+
+      window.location.reload(); // Reload to show the new class
+    } catch (error) {
+      console.error("There was a problem with the POST operation:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Creating Classroom",
+        description: "There was an error creating the classroom. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -197,7 +223,48 @@ const Home = () => {
       <div className="flex justify-between items-center m-8">
         <h1 className='text-3xl font-bold'>Here are your Classrooms!</h1>
         {user && user.authority === "teacher" && (
-          <Button className='text-md font-bold bg-slate-600' onClick={handleNavigateToCreate}>CREATE CLASS +</Button>
+          <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <AlertDialogTrigger asChild>
+              <Button className='text-md font-bold bg-slate-600'>CREATE CLASS +</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Create Class</AlertDialogTitle>
+              </AlertDialogHeader>
+              <Form {...createForm}>
+                <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8">
+                  <FormField
+                    control={createForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter class title" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter class description" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <Button type="submit">Create</Button>
+                  </AlertDialogFooter>
+                </form>
+              </Form>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
         {user && user.authority === "student" && (
           <AlertDialog>
@@ -208,10 +275,10 @@ const Home = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Join Class</AlertDialogTitle>
               </AlertDialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <Form {...joinForm}>
+                <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
                   <FormField
-                    control={form.control}
+                    control={joinForm.control}
                     name="joinCode"
                     render={({ field }) => (
                       <FormItem>
