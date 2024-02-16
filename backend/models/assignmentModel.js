@@ -56,10 +56,11 @@ const submissionSchema = new Schema({
 const assignmentSchema = new Schema({
   name: {
     type: String,  // name of the assignment
-    required: true,
+    required: true
   },
   description: {  // description of the assignment (what it is about)
     type: String,
+    required: true
   },
   classId: {
     type: String,  // use the class's object id NOT THE JOIN CODE
