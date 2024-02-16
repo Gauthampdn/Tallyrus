@@ -70,14 +70,14 @@ const Login = () => {
 
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div>
-          <h1 className="text-3xl font-bold  text-white">Tallyrus</h1>
+          <img src="/tallyrus2white.png" alt="" className="h-10" />
         </div>
         <div className="mb-10">
           <blockquote className="italic text-white">
             “I used to spend countless hours grading assignments before
             and now I'm able to give students their papers graded back within hours”
           </blockquote>
-          <p className="mt-4  text-white">- teacher</p>
+          <p className="mt-4  text-white">- a teacher</p>
         </div>
       </div>
 
