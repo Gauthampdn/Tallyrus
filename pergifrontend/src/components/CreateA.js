@@ -1,8 +1,8 @@
 // components/CreateA.js
 
 import React, { useState } from 'react';
-import { Toaster } from "@/components/ui/sonner"
-import { toast } from "sonner"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/components/ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 
 import {
@@ -23,6 +23,8 @@ import Navbar from './Navbar';
 
 
 const CreateA = () => {
+
+  const { toast } = useToast();
 
   const navigate = useNavigate();
   const { id } = useParams(); // This is how you access the classroom ID from the URL
@@ -114,6 +116,7 @@ const CreateA = () => {
         </Card>
       </div>
 
+      <Toaster />
 
     </div>
 
