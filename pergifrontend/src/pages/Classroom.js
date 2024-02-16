@@ -271,7 +271,7 @@ const Classroom = () => {
     console.log('backend', selectedAssignment, formData);
     if (selectedAssignment && formData) {
       try {
-        const response = await fetch(`http://localhost:4000/assignments/${selectedAssignment._id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${selectedAssignment._id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ const Classroom = () => {
   const handleGradeAll = async (assignmentId) => {
 
     try {
-      const response = await fetch(`http://localhost:4000/openai/gradeall/${assignmentId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradeall/${assignmentId}`, {
         method: 'GET',
         credentials: 'include',
         mode: 'cors',
@@ -424,7 +424,7 @@ const Classroom = () => {
 
     try {
         const text = await getTextFromPdf(file);
-        const response = await fetch(`http://localhost:4000/openai/gradesubmission/${assignmentId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -458,7 +458,7 @@ const Classroom = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`http://localhost:4000/files/upload/${assignmentId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -493,7 +493,7 @@ const Classroom = () => {
   const fetchAssignments = async () => {
 
     try {
-      const response = await fetch(`http://localhost:4000/assignments/${id}`,
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`,
         {
           credentials: 'include',
           mode: 'cors'
@@ -519,7 +519,7 @@ const Classroom = () => {
 
   const deleteAssignment = async (assignmentId) => {
     try {
-      const response = await fetch(`http://localhost:4000/assignments/${assignmentId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignmentId}`, {
         method: 'DELETE',
         credentials: 'include',
         mode: 'cors',

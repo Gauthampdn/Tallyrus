@@ -26,7 +26,7 @@ const app = express()
 app.use(express.json()) // to get req body
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://tallyrus.com'],
   credentials: true
 }));
 

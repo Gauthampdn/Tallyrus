@@ -23,7 +23,7 @@ export const AuthContextProvider = ({ children }) => {
 
     const fetchUser = async () => {
 
-      const response = await fetch("http://localhost:4000/auth/googleUser", {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/auth/googleUser`, {
         credentials: 'include',
         mode: 'cors'
       });

@@ -37,7 +37,7 @@ const Assignment = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/assignments/submissions/${id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/submissions/${id}`, {
         credentials: 'include',
         mode: 'cors'
       });
