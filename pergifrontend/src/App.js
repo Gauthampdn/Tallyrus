@@ -11,6 +11,7 @@ import Mail from "./pages/Mail";
 import Classroom from "pages/Classroom";
 import CreateA from "components/CreateA";
 import Assignemnt from "pages/Assignment";
+import AboutTallyrus from "pages/AboutTallyrus";
 
 function App() {
 
@@ -29,7 +30,7 @@ function App() {
             />
             <Route
               path="about"
-              element={<About />}
+              element={<AboutTallyrus/>}
             />
             <Route
               path="/login"
