@@ -208,3 +208,51 @@
   background-color: #f9f9f9; /* Light background for the feedback */
   border-radius: 5px;
 }
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border 0.3s ease-in-out;
+}
+
+.dropzone:hover {
+  border-color: #888;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+}
+
+.file-list li {
+  margin-bottom: 5px;
+}
+
+.delete-button {
+  background-color: white;
+  color: grey;
+  border: none;
+}
+
+.delete-button:hover {
+  color: red;
+  background-color: white;
+
+}
+
+.delete-btn {
+  margin-left: 1em;
+  background-color: white;
+  color: grey;
+  border: none;
+}
+
+.delete-btn:hover {
+  color: red;
+  background-color: white;
+
+}

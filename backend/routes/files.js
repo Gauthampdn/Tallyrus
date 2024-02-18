@@ -7,6 +7,7 @@ const {
     listFiles,
     downloadFile,
     deleteFile,
+    uploadTeacherFile,
     upload
 } = require('../controllers/filesController');
 
@@ -19,6 +20,7 @@ const {
 // Define routes
 // In your routes file
 router.post('/upload/:id', upload.single('file'), uploadFile);
+router.post('/upload-teacher/:id', upload.array('files'), uploadTeacherFile); // Add this line for the new route
 router.get('/list', listFiles);
 router.get('/download/:filename', downloadFile);
 router.delete('/delete/:filename', deleteFile);

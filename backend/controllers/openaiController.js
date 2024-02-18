@@ -101,7 +101,11 @@ const gradeall = async (req, res) => {
                 const extractedText = await getTextFromPDF(submission.pdfURL);
 
                 if (!extractedText) {
-                    return res.status(400).json({ error: "couldn't extract text" });
+                    console.log("POOP")
+                    submission.status = 'error';
+                    submission.feedback = 'Failed to extract text from PDF';
+                    await assignment.save();
+                    continue; // Skip this submission and continue with the next one
                 }
 
                 console.log(extractedText);

@@ -54,7 +54,7 @@ const upload = multer({
       const dateString = date.toISOString().replace(/:/g, '-'); // Replace colons to avoid file system issues
 
       // Concatenate date string with original file name
-      const uniqueFileName = `${dateString}-${file.originalname}`;
+      const uniqueFileName = `${file.originalname}-${dateString}`;
       console.log("Unique file name is: ", uniqueFileName);
 
       // Pass the new file name to the callback
@@ -153,7 +153,7 @@ const uploadFile = async (req, res, next) => {
         dateSubmitted: new Date(),
         status: 'submitted',
         pdfURL: req.file.location,
-        pdfKey: req.file.key
+        pdfKey: req.file.key 
       };
       assignment.submissions.push(submission);
     }
@@ -167,6 +167,64 @@ const uploadFile = async (req, res, next) => {
   }
 
 };
+
+const uploadTeacherFile = async (req, res, next) => {
+  console.log("here",req.files);
+  const assignmentId = req.params.id;
+  const user_id = req.user.id;
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'No files uploaded.' });
+  }
+
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can upload files" });
+  }
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(404).json({ error: "Invalid assignment ID" });
+    }
+
+    // Find the assignment
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    // Check if the user is a teacher of the classroom of the assignment
+    const classroom = await Classroom.findOne({ _id: assignment.classId, teachers: user_id });
+    if (!classroom) {
+      return res.status(403).json({ error: "Not authorized to upload files for this assignment" });
+    }
+    console.log("Starting push")
+    // Iterate through each file and upload it
+    for (const file of req.files) {
+      const fileData = {
+        studentName: file.key, // You might want to extract the student name and ID from the file key
+        studentId: file.key, // You might want to extract the student name and ID from the file key
+        pdfURL: file.location,
+        pdfKey: file.key,
+        dateSubmitted: new Date(),
+        status: 'submitted'
+      };
+
+      // Update the assignment with the uploaded file
+      console.log("PUSHING: ", fileData)
+      assignment.submissions.push(fileData);
+      await assignment.save();
+
+    }
+    console.log(assignment.submissions);
+    // Save the updated assignment to the database
+
+    res.status(201).json({ message: 'Files uploaded successfully', files: assignment.submissions });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 
 
 
@@ -201,6 +259,10 @@ const deleteFile = async (req, res) => {
   const filename = req.params.filename;
 
   try {
+    await Assignment.updateMany(
+      { 'submissions.pdfKey': filename },
+      { $pull: { submissions: { pdfKey: filename } } }
+    );
     await s3.deleteObject({ Bucket: BUCKET, Key: filename });
   }
   catch (error) {
@@ -218,5 +280,6 @@ module.exports = {
   listFiles,
   downloadFile,
   deleteFile,
-  upload // Export the multer configuration
+  upload, // Export the multer configuration
+  uploadTeacherFile
 };
