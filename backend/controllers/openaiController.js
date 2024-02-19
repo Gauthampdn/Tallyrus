@@ -71,6 +71,63 @@ function rubricToString(rubrics) {
 }
 
 
+function parseFeedback(gradingResponse) {
+    const feedback = gradingResponse;
+
+    const feedbackLines = feedback.split('\n');
+    const parsedFeedback = [];
+
+    let currentCriteria = null;
+    let currentComments = null;
+    let currentScore = null;
+    let currentTotal = null;
+
+    for (let line of feedbackLines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('**Criteria Name**:')) {
+            // Start of a new criteria
+            if (currentCriteria) {
+                // Save the previous criteria
+                parsedFeedback.push({
+                    name: currentCriteria,
+                    score: currentScore,
+                    total: currentTotal,
+                    comments: currentComments,
+                });
+            }
+            // Parse the new criteria
+            currentCriteria = trimmedLine.split('**Criteria Name**:')[1].trim();
+            currentComments = null;
+            currentScore = null;
+            currentTotal = null;
+        } else if (trimmedLine.startsWith('**Score**:')) {
+            // Parse the score
+            const scoreText = trimmedLine.split('**Score**:')[1].trim().replace(/\*/g, ''); // Remove asterisks
+            const scoreParts = scoreText.split('/');
+            console.log(scoreParts[0])
+            currentScore = parseInt(scoreParts[0], 10); // Parse the achieved score as an integer
+            currentTotal = parseInt(scoreParts[1], 10);
+
+        } else if (trimmedLine.startsWith('**Comments/suggestions**:')) {
+            // Parse the comments
+            currentComments = trimmedLine.split('**Comments/suggestions**:')[1].trim();
+        }
+    }
+
+    // Add the last criteria
+    if (currentCriteria) {
+        parsedFeedback.push({
+            name: currentCriteria,
+            score: currentScore,
+            total: currentTotal,
+            comments: currentComments
+        });
+    }
+    console.log("inside parsedFeedback", parsedFeedback);
+
+    return parsedFeedback;
+}
+
 
 
 const gradeall = async (req, res) => {
@@ -91,12 +148,13 @@ const gradeall = async (req, res) => {
         console.log('assignment found')
 
         // Iterate through each submission
-
+        console.log(assignment.submissions);
         for (let submission of assignment.submissions) {
             console.log('GRADING AN ASSIGNMENT NOW')
 
             // Check if the submission is not already graded
             if (submission.status !== 'graded') {
+                console.log("submission name", submission.pdfKey);
                 // Extract and grade the text from the submission's PDF
                 const extractedText = await getTextFromPDF(submission.pdfURL);
 
@@ -165,12 +223,14 @@ const gradeall = async (req, res) => {
                 if (!gradingResponse) {
                     return res.status(400).json({ error: "couldn't grade text" });
                 }
-
-                submission.feedback = gradingResponse.choices[0].message.content; // Assuming gradingResponse contains the feedback
+                const gradedfeedback = gradingResponse.choices[0].message.content;
+                submission.feedback = await parseFeedback(gradedfeedback); // Assuming gradingResponse contains the feedback
+                console.log("FEEDBACK", submission.feedback);
+                console.log(assignment.rubric);
+                console.log("submission name", submission.pdfKey);
                 submission.status = 'graded';
             }
             await assignment.save();
-
         }
         console.log('GRADING DONE')
 

@@ -51,6 +51,7 @@
     "katex": "^0.16.9",
     "ldrs": "^1.0.1",
     "lucide-react": "^0.303.0",
+    "marked": "^12.0.0",
     "next-themes": "^0.2.1",
     "openai": "^4.0.0",
     "pdf-dist": "^1.0.0",

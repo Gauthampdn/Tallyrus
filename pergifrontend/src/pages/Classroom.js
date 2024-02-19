@@ -827,7 +827,7 @@ const Classroom = () => {
   <React.Fragment key={submission._id}>
     <div className="mb-2">
       <div className="flex h-5 items-center space-x-8 text-sm">
-        <p>{submission.studentName.slice(0, 20)}{submission.studentName.length > 20 ? '...' : ''}</p>
+        <p>{submission.studentName.slice(0,15)}{submission.studentName.length > 15 ? '...' : ''}</p>
         <Separator orientation="vertical" />
 
         <p>{submission.status}</p>

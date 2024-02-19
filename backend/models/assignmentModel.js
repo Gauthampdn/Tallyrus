@@ -18,6 +18,22 @@ const rubricSchema = new Schema({
   values: [rubricValueSchema]
 });
 
+//feedback schema
+const feedbackCriteriaSchema = new Schema({
+  name: {
+    type: String,
+  },
+  score: {
+    type: Number,
+  },
+  total:{
+    type: Number,
+  },
+  comments: {
+    type: String,
+  },
+});
+
 
 const submissionSchema = new Schema({
   studentName: {
@@ -40,8 +56,8 @@ const submissionSchema = new Schema({
     default: 'open' // Optional: you can set a default status
   },
   feedback: {
-    type: String,
-    default: 'NOT GRADED YET' // Optional: you can set a default status
+    type: [feedbackCriteriaSchema],
+    default: [] // Optional: you can set a default status
   },
   pdfURL: {
     type: String,
