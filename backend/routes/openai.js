@@ -11,7 +11,9 @@ const {
 } = require("../controllers/openaiController")
 
 
-//login route
+const requireAuth = require("../middleware/requireAuth")
+
+router.use(requireAuth) // requires authentication and then calls next. if no authentication then it throws an error
 
 router.post("/completion", completion)
 

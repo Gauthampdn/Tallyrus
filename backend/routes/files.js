@@ -12,9 +12,9 @@ const {
 } = require('../controllers/filesController');
 
 
-// const requireAuth = require("../middleware/requireAuth")
+const requireAuth = require("../middleware/requireAuth")
 
-// router.use(requireAuth) // requires authentication and then calls next. if no authentication then it throws an error
+router.use(requireAuth) // requires authentication and then calls next. if no authentication then it throws an error
 
 
 // Define routes
