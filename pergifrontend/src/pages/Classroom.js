@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import CreateA from "components/CreateA";
-import { useAssignmentsContext } from "hooks/useAssignmentsContext";
 import { Toaster } from "@/components/ui/toaster"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -218,7 +217,6 @@ const Classroom = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { templates, dispatch } = useAssignmentsContext();
   const { user } = useAuthContext();
 
   const { id } = useParams(); // This is how you access the classroom ID from the URL
