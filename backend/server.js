@@ -6,7 +6,6 @@ require("dotenv").config()
 const express = require("express")
 const mongoose = require("mongoose")
 const MongoStore = require('connect-mongo');
-const templateRoutes = require("./routes/templates")
 const openaiRoutes = require("./routes/openai")
 const authRoutes = require("./routes/auth")
 const classroomRoutes = require("./routes/classroom")
@@ -52,7 +51,6 @@ app.use((req, res, next) => {
 
 //routes
 app.use("/auth", authRoutes)
-app.use("/api/templates", templateRoutes)
 app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)

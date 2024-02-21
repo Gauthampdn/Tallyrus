@@ -4,9 +4,6 @@ import { useAuthContext } from "./hooks/useAuthContext"
 // pages & components
 import Home from "./pages/Home"
 import Login from "./pages/Login";
-import Create from "./pages/Create";
-import Library from "./pages/Library";
-import About from "./pages/About";
 import Mail from "./pages/Mail";
 import Classroom from "pages/Classroom";
 import CreateA from "components/CreateA";
@@ -36,14 +33,7 @@ function App() {
               path="/login"
               element={!user ? <Login /> : <Navigate to="/" />}
             />
-            <Route
-              path="/create"
-              element={<Create />}
-            />
-            <Route
-              path="/library"
-              element={<Library />}
-            />
+
             <Route
               path="/mail"
               element={<Mail />}
