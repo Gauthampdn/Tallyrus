@@ -470,16 +470,18 @@ const Classroom = () => {
         mode: 'cors',
       });
 
+      toast({
+        title: "Grading Now!",
+        description: "Our systems are grading all assignments - check back in a bit!",
+      });
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
       console.log(data); // Logging the response
-      toast({
-        title: "Grading Now!",
-        description: "Our systems are grading all assignments - check back in a bit!",
-      });
+
 
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
