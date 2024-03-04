@@ -58,10 +58,10 @@ function rubricToString(rubrics) {
     let rubricString = '';
 
     rubrics.forEach(rubric => {
-        rubricString += `Rubric: ${rubric.name}\n`;
+        rubricString += `Topic and Total points: ${rubric.name}\n`;
 
         rubric.values.forEach(value => {
-            rubricString += `  - Point: ${value.point}, Description: ${value.description}\n`;
+            rubricString += `  - ${value.point} points = ${value.description}\n`;
         });
 
         rubricString += '\n'; // Adding a newline for separation between rubrics
@@ -171,9 +171,9 @@ const gradeall = async (req, res) => {
 
                 const newrubric = rubricToString(assignment.rubric);
 
-                console.log(newrubric);
+                console.log("This is the rubic: ", newrubric);
                 const gradingResponse = await openai.chat.completions.create({
-                    model: "gpt-3.5-turbo-0125",
+                    model: "gpt-4-0125-preview",
                     max_tokens: 1500,
                     messages: [{
                         "role": "user", "content": `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score. 
@@ -225,6 +225,7 @@ const gradeall = async (req, res) => {
                 }
                 const gradedfeedback = gradingResponse.choices[0].message.content;
                 submission.feedback = await parseFeedback(gradedfeedback); // Assuming gradingResponse contains the feedback
+                console.log(gradedfeedback)
                 console.log("FEEDBACK", submission.feedback);
                 console.log(assignment.rubric);
                 console.log("submission name", submission.pdfKey);
@@ -261,7 +262,7 @@ const gradeSubmission = async (req, res) => {
         const rubricString = rubricToString(assignment.rubric);
 
         const gradingResponse = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo-0125",
+            model: "gpt-4-0125-preview",
             max_tokens: 1500,
             messages: [
                 {
