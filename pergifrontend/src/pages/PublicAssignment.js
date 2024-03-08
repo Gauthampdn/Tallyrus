@@ -229,7 +229,7 @@ const PublicAssignment = () => {
   useEffect(() => {
     const fetchAssignment = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/assignments/single/${id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/single/${id}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
