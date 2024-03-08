@@ -46,22 +46,23 @@ const Assignment = () => {
     console.log(returnstatement);
     return returnstatement;
   };
+
   const formatFeedback = (submission) => {
-  const feedback = submission.feedback;
-  const formattedFeedback = feedback.map(criteria => (
-    `**${criteria.name}**: ${criteria.score}/${criteria.total} points\n\n${criteria.comments}\n\n`
-  )).join('');
+    const feedback = submission.feedback;
+    const formattedFeedback = feedback.map(criteria => (
+      `**${criteria.name}**: ${criteria.score}/${criteria.total} points\n\n${criteria.comments}\n\n`
+    )).join('');
 
-  // Calculate the overall total score
-  const overallTotal = feedback.reduce((sum, criteria) => sum + criteria.total, 0);
+    // Calculate the overall total score
+    const overallTotal = feedback.reduce((sum, criteria) => sum + criteria.total, 0);
 
-  // Append the overall total score to the formatted feedback
-  const feedbackWithOverallTotal = formattedFeedback + `**Overall Total**: ${calculateTotalScore(submission)}/${overallTotal} points\n\n`;
+    // Append the overall total score to the formatted feedback
+    const feedbackWithOverallTotal = formattedFeedback + `****Overall Total****: ${calculateTotalScore(submission)}/${overallTotal} points\n\n`;
 
-  return feedbackWithOverallTotal;
-};
-  
-  
+    return feedbackWithOverallTotal;
+  };
+
+
 
 
   const fetchAssignments = async () => {
@@ -95,7 +96,7 @@ const Assignment = () => {
       navigate('/'); // or any other fallback route you prefer
     }
   };
-  
+
 
 
   // Function to handle selection change
@@ -112,7 +113,8 @@ const Assignment = () => {
   const filteredSubmissions = assignment ? assignment.submissions.filter(submission =>
     getSubmissionLabel(submission).toLowerCase().includes(searchText.toLowerCase())
   ) : [];
-  const rawMarkup = selectedSubmission ? marked(formatFeedback(selectedSubmission)) : '';
+
+  const rawMarkup = selectedSubmission ? formatFeedback(selectedSubmission) : '';
 
   return (
     <div>
@@ -219,18 +221,17 @@ const Assignment = () => {
 
               {/* Student Details Column */}
               <div className="md:flex-1 p-4">
-      <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
-      <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
-      <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
-      <p className="pb-2"><strong>Status:</strong> {selectedSubmission.status}</p>
-      <hr />
-      <p className="pb-2"></p>
-      {/* Display the total score */}
-      <p><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)} points</p>
-      
-      <div className="markdownstyling" dangerouslySetInnerHTML={{ __html: rawMarkup }}></div>
+                <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
+                <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
+                <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
+                <p className="pb-2"><strong>Status:</strong> {selectedSubmission.status}</p>
+                <hr />
+                <p className="pb-2"></p>
+                {/* Display the total score */}
+                {/* <p><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)} points</p> */}
 
-    </div>
+                <ReactMarkdown >{rawMarkup}</ReactMarkdown>
+              </div>
             </div>
           )}
         </div>

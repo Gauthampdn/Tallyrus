@@ -38,6 +38,28 @@ const s3 = new S3({
 //-----------------------------------------------------------------------------------------------------------------------
 
 
+const getAssignment = async (req, res) => {
+
+  const assignmentId = req.params.id;
+
+
+  if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+    return res.status(404).json({ error: "No such Template and invalid ID" });
+  }
+
+  const assignment = await Assignment.findById(assignmentId);
+
+
+  if (!assignment) {
+    return res.status(404).json({ error: "Assignment not found" });
+  }
+
+  res.status(200).json(assignment);
+
+}
+
+
+
 
 
 const getAssignments = async (req, res) => {  // returns all the assignments in a class when you /assignments/CLASSID if you are in the class
@@ -271,6 +293,7 @@ const updateAssignmentRubric = async (req, res) => {
 
 
 module.exports = {
+  getAssignment,
   getAssignments,
   createAssignment,
   deleteAssignment,

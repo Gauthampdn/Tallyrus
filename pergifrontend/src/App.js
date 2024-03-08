@@ -9,6 +9,7 @@ import Classroom from "pages/Classroom";
 import CreateA from "components/CreateA";
 import Assignemnt from "pages/Assignment";
 import AboutTallyrus from "pages/AboutTallyrus";
+import PublicAssignment from "pages/PublicAssignment";
 
 function App() {
 
@@ -27,7 +28,7 @@ function App() {
             />
             <Route
               path="about"
-              element={<AboutTallyrus/>}
+              element={<AboutTallyrus />}
             />
             <Route
               path="/login"
@@ -54,7 +55,11 @@ function App() {
               path="/assignment/:id"
               element={<Assignemnt />}
             />
-            
+            <Route
+              path="/publicassignment/:id"
+              element={<PublicAssignment/>}
+            />
+
           </Routes>
         </div>
       </BrowserRouter>
