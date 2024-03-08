@@ -261,6 +261,8 @@ const gradeSubmission = async (req, res) => {
         // Assuming you have a function or method to convert the assignment rubric to a string format
         const rubricString = rubricToString(assignment.rubric);
 
+        console.log(rubricString)
+
         const gradingResponse = await openai.chat.completions.create({
             model: "gpt-4-0125-preview",
             max_tokens: 1500,

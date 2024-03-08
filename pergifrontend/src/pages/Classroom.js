@@ -235,12 +235,12 @@ const Classroom = () => {
       setTeacherFiles(acceptedFiles);
     },
   });
-  
+
   // Function to open the modal
   const handleOpenTeacherUploadModal = () => {
     setIsTeacherUploadModalOpen(true);
   };
-  
+
   // Function to close the modal
   const handleCloseTeacherUploadModal = () => {
     setIsTeacherUploadModalOpen(false);
@@ -255,23 +255,23 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       toast({
         title: "File Deleted",
         description: "The file has been successfully deleted.",
       });
-  
+
       // Refresh the submissions list to reflect the deletion
       fetchAssignments();
     } catch (error) {
       console.error("There was a problem with the file deletion:", error);
     }
   };
-  
+
 
 
 
@@ -307,24 +307,24 @@ const Classroom = () => {
       setTeacherFiles(prevFiles => [...prevFiles, ...selectedFiles]);
     }
   };
-  
+
   // Function to remove a file from the list
   const removeFile = (index) => {
     setTeacherFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
-  
+
 
   const handleTeacherFilesUpload = async (assignmentId) => {
     if (!teacherFiles || teacherFiles.length === 0) {
       console.log("No files selected");
       return;
     }
-  
+
     const formData = new FormData();
     Array.from(teacherFiles).forEach(file => {
       formData.append('files', file);
     });
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-teacher/${assignmentId}`, {
         method: 'POST',
@@ -332,11 +332,11 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
       console.log(data); // Logging the response
       toast({
@@ -348,7 +348,7 @@ const Classroom = () => {
       console.error("There was a problem with the file upload:", error);
     }
   };
-  
+
 
 
 
@@ -463,6 +463,11 @@ const Classroom = () => {
 
   const handleGradeAll = async (assignmentId) => {
 
+    toast({
+      title: "Grading Now!",
+      description: "Our systems are grading all assignments - check back in a bit!",
+    });
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradeall/${assignmentId}`, {
         method: 'GET',
@@ -470,13 +475,17 @@ const Classroom = () => {
         mode: 'cors',
       });
 
-      toast({
-        title: "Grading Now!",
-        description: "Our systems are grading all assignments - check back in a bit!",
-      });
 
       if (!response.ok) {
+
+        toast({
+          variant: "destructive",
+          title: "Error In Grading All",
+          description: "Try grading all later.",
+        });
+
         throw new Error('Network response was not ok');
+
       }
 
       const data = await response.json();
@@ -496,24 +505,24 @@ const Classroom = () => {
 
     const fileReader = new FileReader();
     return new Promise((resolve, reject) => {
-        fileReader.onload = async (event) => {
-            const typedArray = new Uint8Array(event.target.result);
-            try {
-                const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
-                let text = '';
-                for (let i = 1; i <= pdfDoc.numPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const textContent = await page.getTextContent();
-                    text += textContent.items.map(item => item.str).join(' ');
-                }
-                resolve(text);
-            } catch (error) {
-                reject(error);
-            }
-        };
-        fileReader.readAsArrayBuffer(file);
+      fileReader.onload = async (event) => {
+        const typedArray = new Uint8Array(event.target.result);
+        try {
+          const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+          let text = '';
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            text += textContent.items.map(item => item.str).join(' ');
+          }
+          resolve(text);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      fileReader.readAsArrayBuffer(file);
     });
-}
+  }
 
   const handleGrade = async (assignmentId) => {
     if (!file) {
@@ -522,28 +531,28 @@ const Classroom = () => {
     }
 
     try {
-        const text = await getTextFromPdf(file);
-        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Include any other headers your backend requires
-            },
-            body: JSON.stringify({ text }),
-            credentials: 'include',
-        });
+      const text = await getTextFromPdf(file);
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include any other headers your backend requires
+        },
+        body: JSON.stringify({ text }),
+        credentials: 'include',
+      });
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
 
-        const data = await response.json();
-        console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
-        setFeedback(data.feedback);
+      const data = await response.json();
+      console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
+      setFeedback(data.feedback);
     } catch (error) {
-        console.error("There was a problem with extracting or sending the text:", error);
+      console.error("There was a problem with extracting or sending the text:", error);
     }
-};
+  };
 
 
 
@@ -644,11 +653,28 @@ const Classroom = () => {
     }
   };
 
-  useEffect(() => {
-    fetchAssignments();
+  // Define the function outside of your return statement but inside your component
+const copyPublicLink = () => {
+  const url = `https://tallyrus.com/publicassignment/${selectedAssignment._id}`;
+  navigator.clipboard.writeText(url)
+    .then(() => {
+      console.log('Link copied to clipboard!');
+    })
+    .catch(err => {
+      console.error('Failed to copy the link: ', err);
+    });
+};
 
-  }, [user]); // This effect should run when the component mounts and whenever the ID changes.
 
+// In your JSX
+{user && user.authority === "teacher" && (
+  <Button 
+    className="p-2 bg-slate-700" 
+    onClick={copyPublicLink} // Use the function reference here
+  >
+    Public Link
+  </Button>
+)}
 
 
   return (
@@ -692,6 +718,12 @@ const Classroom = () => {
 
 
                 <div>
+                  {user && user.authority === "teacher" && (
+                    <Button onClick={() => copyPublicLink()} className="p-2 bg-slate-700">
+                          Public Link
+
+                    </Button>
+                  )}
                   {user && user.authority === "teacher" && (
                     <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
                       {rubricButtonText}
@@ -791,18 +823,18 @@ const Classroom = () => {
                           <br></br>
                           <br></br>
                           <Button
-        className="submit-button"
-        onClick={() => handleGrade(selectedAssignment._id)}
-        disabled={!file} // Disable the button if no file is selected
-    >
-        See Potential Grade
-    </Button>
-    <div className="feedback-container">
-    <h2>Feedback</h2>
-    <div className="feedback-box">
-        {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
-    </div>
-</div>
+                            className="submit-button"
+                            onClick={() => handleGrade(selectedAssignment._id)}
+                            disabled={!file} // Disable the button if no file is selected
+                          >
+                            See Potential Grade
+                          </Button>
+                          <div className="feedback-container">
+                            <h2>Feedback</h2>
+                            <div className="feedback-box">
+                              {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -824,41 +856,41 @@ const Classroom = () => {
                           </div>
                           <div className="p-4">
                             {selectedAssignment.submissions.map((submission, index) => (
-  <React.Fragment key={submission._id}>
-    <div className="mb-2">
-      <div className="flex h-5 items-center space-x-8 text-sm">
-        <p>{submission.studentName.slice(0,15)}{submission.studentName.length > 15 ? '...' : ''}</p>
-        <Separator orientation="vertical" />
+                              <React.Fragment key={submission._id}>
+                                <div className="mb-2">
+                                  <div className="flex h-5 items-center space-x-8 text-sm">
+                                    <p>{submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}</p>
+                                    <Separator orientation="vertical" />
 
-        <p>{submission.status}</p>
-        <Separator orientation="vertical" />
+                                    <p>{submission.status}</p>
+                                    <Separator orientation="vertical" />
 
-        <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Submission</a>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="delete-button ml-4">
-              <FontAwesomeIcon icon={faTrash} />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this submission?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleDeleteSubmission(submission.pdfKey)}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
-  </React.Fragment>
-))}
+                                    <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Submission</a>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" className="delete-button ml-4">
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Are you sure you want to delete this submission?
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteSubmission(submission.pdfKey)}>
+                                            Delete
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </div>
+                              </React.Fragment>
+                            ))}
 
                           </div>
                         </ScrollArea>
@@ -882,39 +914,39 @@ const Classroom = () => {
                           </AlertDialog>
                           <Button onClick={() => handleGradeAll(selectedAssignment._id)}>Grade all</Button>
                           {isTeacherUploadModalOpen && (
-                          <AlertDialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
-                            <AlertDialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Upload Files</AlertDialogTitle>
-                              </AlertDialogHeader>
-                              <AlertDialogDescription>
-                                <div {...getRootProps({ className: 'dropzone' })}>
-                                  <input {...getInputProps()} />
-                                  <p>Drag and drop some files here, or click to select files</p>
-                                </div>
-                                <ul className="file-list">
-                                  {teacherFiles && teacherFiles.map((file, index) => (
-                                    <li key={index}>
-                                      {file.name}
-                                      <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </AlertDialogDescription>
-                              <AlertDialogFooter>
-                                <Button onClick={handleCloseTeacherUploadModal}>Cancel</Button>
-                                <Button
-                                  onClick={() => {
-                                    handleTeacherFilesUpload(selectedAssignment._id);
-                                    handleCloseTeacherUploadModal();
-                                  }}
-                                  disabled={!teacherFiles || teacherFiles.length === 0}
-                                >
-                                  Submit Files
-                                </Button>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                            <AlertDialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
+                              <AlertDialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Upload Files</AlertDialogTitle>
+                                </AlertDialogHeader>
+                                <AlertDialogDescription>
+                                  <div {...getRootProps({ className: 'dropzone' })}>
+                                    <input {...getInputProps()} />
+                                    <p>Drag and drop some files here, or click to select files</p>
+                                  </div>
+                                  <ul className="file-list">
+                                    {teacherFiles && teacherFiles.map((file, index) => (
+                                      <li key={index}>
+                                        {file.name}
+                                        <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </AlertDialogDescription>
+                                <AlertDialogFooter>
+                                  <Button onClick={handleCloseTeacherUploadModal}>Cancel</Button>
+                                  <Button
+                                    onClick={() => {
+                                      handleTeacherFilesUpload(selectedAssignment._id);
+                                      handleCloseTeacherUploadModal();
+                                    }}
+                                    disabled={!teacherFiles || teacherFiles.length === 0}
+                                  >
+                                    Submit Files
+                                  </Button>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
                           <Button onClick={handleOpenTeacherUploadModal}>
                             Upload Files
