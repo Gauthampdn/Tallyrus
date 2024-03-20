@@ -45,7 +45,7 @@ const Hero = () => {
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
         <div className="md:w-1/2">
           <h1 className="text-5xl font-bold mb-6">Welcome to Tallyrus</h1>
-          <p className="text-lg mb-6">Stripe Apps lets you embed custom user experiences directly in the Stripe Dashboard and orchestrate the Stripe API. Create an app to streamline operations just for your team or for the more than one million businesses using Stripe.</p>
+          <p className="text-lg mb-6">Tallyrus is an innovative AI-powered grading app designed to revolutionize the educational process by automating essay grading, thereby saving teachers time and enhancing the accuracy of assessments. The app is currently being implemented in schools and aims to expand its reach to support educators and students in improving the efficiency and effectiveness of the grading process.</p>
           <div className="flex">
             <a href="https://docs.google.com/forms/d/1u6flS76PDzomzjtAG1S_AI5Mh8RDi5JoP4EnZFCelFI/edit" target="_blank" rel="noopener noreferrer">
               <Button className="text-white hover:underline mr-4">Join Our Team</Button>
