@@ -26,6 +26,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 
 import './Classroom.css';
+
 import {
   useReactTable,
   getCoreRowModel,

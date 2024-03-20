@@ -8,7 +8,7 @@ const gradientStyle = {
   left: 0,
   right: 0,
   height: '300px',
-  background: 'linear-gradient(to right, #f00, #ff0)',
+  background: 'linear-gradient(to right, #058C42, #16db65)',
   transform: 'skewY(-3deg)',
   transformOrigin: 'top left',
   bottom: '-280px',
@@ -23,7 +23,6 @@ const Header = () => {
           {/* Navigation could be uncommented and used here */}
         </nav>
         <div>
-          <Button className="text-white hover:underline">Contact sales</Button>
           <Button className="ml-4 text-white px-4 py-2 rounded-md hover:bg-white-700">Sign in</Button>
         </div>
       </div>
