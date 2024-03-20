@@ -38,8 +38,9 @@ const Hero = () => {
           <h1 className="text-5xl font-bold mb-6">Welcome to Tallyrus</h1>
           <p className="text-lg mb-6">Stripe Apps lets you embed custom user experiences directly in the Stripe Dashboard and orchestrate the Stripe API. Create an app to streamline operations just for your team or for the more than one million businesses using Stripe.</p>
           <div className="flex">
-            <Button className="text-white hover:underline mr-4">Read the docs</Button>
-            <Button className="text-white hover:underline">Browse apps</Button>
+            <a href="https://docs.google.com/forms/d/1u6flS76PDzomzjtAG1S_AI5Mh8RDi5JoP4EnZFCelFI/edit" target="_blank" rel="noopener noreferrer">
+              <Button className="text-white hover:underline mr-4">Join Our Team</Button>
+            </a>
           </div>
         </div>
         <div className="md:w-1/2">
