@@ -2,6 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useNavigate } from 'react-router-dom';
+
 
 const gradientStyle = {
   position: 'absolute',
@@ -15,6 +17,8 @@ const gradientStyle = {
 };
 
 const Header = () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
   return (
     <header className="bg-white py-4">
       <div className="container mx-auto flex items-center justify-between px-4">
@@ -23,7 +27,12 @@ const Header = () => {
           {/* Navigation could be uncommented and used here */}
         </nav>
         <div>
-          <Button className="ml-4 text-white px-4 py-2 rounded-md hover:bg-white-700">Sign in</Button>
+        <Button
+            className="ml-4 text-white px-4 py-2 rounded-md hover:bg-white-700"
+            onClick={() => navigate('/')} // Navigate to root path on click
+          >
+            Go To App
+          </Button>
         </div>
       </div>
     </header>
