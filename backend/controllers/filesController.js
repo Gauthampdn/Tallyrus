@@ -54,7 +54,7 @@ const upload = multer({
       const dateString = date.toISOString().replace(/:/g, '-'); // Replace colons to avoid file system issues
 
       // Concatenate date string with original file name
-      const uniqueFileName = `${file.originalname}-${dateString}`;
+      const uniqueFileName = `${dateString}-${file.originalname}`;
       console.log("Unique file name is: ", uniqueFileName);
 
       // Pass the new file name to the callback

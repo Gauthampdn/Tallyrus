@@ -664,6 +664,12 @@ const copyPublicLink = () => {
     .catch(err => {
       console.error('Failed to copy the link: ', err);
     });
+    
+    toast({
+      title: "Copied Link",
+      description: "We copied the Public Link to this assignment to your clipboard, so you can share it!",
+    });
+  
 };
 
 
@@ -856,7 +862,7 @@ const copyPublicLink = () => {
                             </div>
                           </div>
                           <div className="p-4">
-                            {selectedAssignment.submissions.map((submission, index) => (
+                            {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
                               <React.Fragment key={submission._id}>
                                 <div className="mb-2">
                                   <div className="flex h-5 items-center space-x-8 text-sm">

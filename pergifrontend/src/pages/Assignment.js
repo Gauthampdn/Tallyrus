@@ -9,8 +9,13 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './assignments.css';
 import { marked } from 'marked';
 
-
-
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 import {
   Command,
@@ -78,6 +83,11 @@ const Assignment = () => {
 
       const data = await response.json();
       setAssignment(data);
+
+      if (data.submissions && data.submissions.length > 0) {
+        setSelectedSubmission(data.submissions[0]);
+      }
+
       console.log(data);
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
@@ -107,7 +117,7 @@ const Assignment = () => {
   };
 
   const getSubmissionLabel = (submission) => {
-    return `${submission.studentName} - ${new Date(submission.dateSubmitted).toLocaleDateString()} - ${submission.studentEmail}`;
+    return `${submission.studentName} - ${submission.studentEmail}`;
   };
 
   const filteredSubmissions = assignment ? assignment.submissions.filter(submission =>
@@ -115,6 +125,23 @@ const Assignment = () => {
   ) : [];
 
   const rawMarkup = selectedSubmission ? formatFeedback(selectedSubmission) : '';
+
+  const navigateToPreviousSubmission = () => {
+    const currentIndex = assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id);
+    if (currentIndex > 0) { // Check if not the first submission
+      const previousIndex = currentIndex - 1;
+      setSelectedSubmission(assignment.submissions[previousIndex]);
+    }
+  };
+
+  const navigateToNextSubmission = () => {
+    const currentIndex = assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id);
+    if (currentIndex < assignment.submissions.length - 1) { // Check if not the last submission
+      const nextIndex = currentIndex + 1;
+      setSelectedSubmission(assignment.submissions[nextIndex]);
+    }
+  };
+
 
   return (
     <div>
@@ -128,6 +155,28 @@ const Assignment = () => {
       {assignment ? (
         <div style={{ width: '97%' }} className="mx-auto">
           {/* Dropdown Select for Submissions */}
+
+          {/* Left (Previous) Button */}
+          <Button
+            onClick={navigateToPreviousSubmission}
+            disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === 0}
+            className="p-4 mr-2"
+            aria-label="Previous Submission"
+          >
+            &#8592;
+          </Button>
+
+          {/* Right (Next) Button */}
+          <Button
+            onClick={navigateToNextSubmission}
+            disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === assignment.submissions.length - 1}
+            className="p-4 mr-2"
+            aria-label="Next Submission"
+          >
+            &#8594;
+          </Button>
+
+
           <Popover open={open} onOpenChange={setOpen}  >
             <PopoverTrigger asChild>
               <Button
@@ -200,6 +249,7 @@ const Assignment = () => {
               </Command>
             </PopoverContent>
           </Popover>
+
 
           {/* Display selected submission details */}
 

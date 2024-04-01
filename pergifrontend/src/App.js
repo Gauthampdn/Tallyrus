@@ -10,6 +10,7 @@ import CreateA from "components/CreateA";
 import Assignemnt from "pages/Assignment";
 import AboutTallyrus from "pages/AboutTallyrus";
 import PublicAssignment from "pages/PublicAssignment";
+import Rubric from "pages/Rubric";
 
 function App() {
 
@@ -59,7 +60,10 @@ function App() {
               path="/publicassignment/:id"
               element={<PublicAssignment/>}
             />
-
+            <Route
+              path="/rubric"
+              element={<Rubric/>}
+            />
           </Routes>
         </div>
       </BrowserRouter>
