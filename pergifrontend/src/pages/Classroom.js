@@ -76,87 +76,6 @@ import {
 
 
 
-const rubricValueSchema = z.object({
-  point: z.number(),
-  description: z.string(),
-});
-
-const rubricSchema = z.object({
-  rubrics: z.array(z.object({
-    name: z.string(),
-    values: z.array(rubricValueSchema)
-  }))
-});
-
-
-const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric }) => {
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: `rubrics.${rubricIndex}.values`,
-  });
-  const adjustTextareaHeight = (element) => {
-    if (element) {
-      element.style.height = "auto"; // Reset height to ensure accurate scrollHeight measurement
-      element.style.height = `${element.scrollHeight}px`; // Adjust height based on content
-    }
-  };
-
-  // Adjust all textareas on initial render and when fields change
-  useEffect(() => {
-    fields.forEach((field, index) => {
-      // Adjust both point and description textareas
-      adjustTextareaHeight(document.getElementById(`point-${rubricIndex}-${index}`));
-      adjustTextareaHeight(document.getElementById(`description-${rubricIndex}-${index}`));
-    });
-  }, [fields]);
-
-
-
-  return (
-    <div key={rubricField.id} className="rubric-card">
-      <div className="rubric-header flex items-center">
-        <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
-          <FontAwesomeIcon icon={faPlusCircle} />
-        </Button>
-        {/* Replace textarea with input for topic */}
-        <input
-          {...register(`rubrics.${rubricIndex}.name`)}
-          placeholder="Topic"
-          className="topic-input"
-        />
-        <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
-          <FontAwesomeIcon icon={faMinusCircle} />
-        </Button>
-      </div>
-
-      {fields.map((field, index) => (
-        <div key={field.id} className="flex items-center justify-between my-field rubric-item">
-          <Button type="button" onClick={() => remove(index)} className="my-minus-button rubric-button">
-            <FontAwesomeIcon icon={faMinusCircle} />
-          </Button>
-          <div className="input-wrapper">
-            <input
-              {...register(`rubrics.${rubricIndex}.values.${index}.point`)}
-              type="number"
-              placeholder="0"
-              className="point-input rubric-input flex-grow"
-            />
-          </div>
-          <textarea
-            {...register(`rubrics.${rubricIndex}.values.${index}.description`)}
-            placeholder="Description"
-            className="description-input rubric-input flex-grow"
-            style={{ resize: 'none', height: 'auto' }}
-          // Remove the style for resizing and height adjustment
-          />
-        </div>
-      ))}
-    </div>
-  );
-
-
-};
 
 
 const RubricTable = ({ rubric }) => {
@@ -225,7 +144,6 @@ const Classroom = () => {
   const [allAssignments, setAllAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [file, setFile] = useState(null); // State to hold the selected file
-  const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
   const [feedback, setFeedback] = useState('');
   const [teacherFiles, setTeacherFiles] = useState(null); // State to hold the selected files for the teacher
   const [isTeacherUploadModalOpen, setIsTeacherUploadModalOpen] = useState(false);
@@ -274,46 +192,10 @@ const Classroom = () => {
   };
 
 
-
-
-  const { control, register, getValues, reset } = useForm({
-    resolver: zodResolver(rubricSchema),
-    defaultValues: {
-      rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
-    }
-  });
-
-
-  const { fields: rubricFields, append: appendRubric, remove: removeRubric } = useFieldArray({
-    control,
-    name: "rubrics",
-  });
-
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [submittedData, setSubmittedData] = useState(null); // State to store submitted data
-
-  const handleRubricSubmission = () => {
-    const formData = getValues(); // This will get all form values
-    setSubmittedData(formData);
-    console.log(formData);
-    console.log(submittedData);
-    setIsModalOpen(false); // Close the modal
-    // Call the function to update the rubric in the backend
-    handleRubricFormSubmit(formData);
-  };
-
-  const handleTeacherFilesChange = (event) => {
-    const selectedFiles = event.target.files;
-    if (selectedFiles && selectedFiles.length > 0) {
-      setTeacherFiles(prevFiles => [...prevFiles, ...selectedFiles]);
-    }
-  };
-
   // Function to remove a file from the list
   const removeFile = (index) => {
     setTeacherFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
-
 
   const handleTeacherFilesUpload = async (assignmentId) => {
     if (!teacherFiles || teacherFiles.length === 0) {
@@ -353,86 +235,15 @@ const Classroom = () => {
 
 
 
-
-  // Function to open the modal
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // Function to close the modal
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-
-  const handleRubricFormSubmit = async (formData) => {
-    console.log('backend', selectedAssignment, formData);
-    if (selectedAssignment && formData) {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${selectedAssignment._id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ rubric: formData.rubrics }),
-          credentials: 'include',
-          mode: 'cors',
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const updatedAssignment = await response.json();
-        console.log(updatedAssignment); // Logging the updated assignment
-        setSelectedAssignment({ ...selectedAssignment, rubric: formData.rubrics }); // Update the state with the new rubric
-        toast({
-          title: "Rubric Updated",
-          description: "The rubric has been successfully updated.",
-        });
-      } catch (error) {
-        console.error("There was a problem with the update:", error);
-      }
-    }
-    else {
-      console.log('invalid');
-    }
-  };
-
-  const onSubmit = data => {
-    const formData = getValues(); // This assumes you have a function to get form data
-    setSubmittedData(formData);
-    console.log(formData);
-    setIsModalOpen(false); // Close the modal
-  };
-
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
-    if (assignment && assignment.rubric) {
-      setRubricButtonText("Edit Rubric");
-      reset({ rubrics: assignment.rubric }); // Load existing rubric data into the form
-    } else {
-      setRubricButtonText("Add Rubric");
-      reset({ rubrics: [{ name: '', values: [{ point: 0, description: '' }] }] });
-    }
   };
 
   useEffect(() => {
     fetchAssignments();
   }, [user]); // Only re-run when the user changes
 
-  useEffect(() => {
-    // If there's a selected assignment, check for rubric
-    if (selectedAssignment) {
-      if (selectedAssignment.rubric) {
-        setRubricButtonText("Edit Rubric");
-        reset({ rubrics: selectedAssignment.rubric });
-      } else {
-        setRubricButtonText("Add Rubric");
-        reset({ rubrics: [{ name: '', values: [{ point: 0, description: '' }] }] });
-      }
-    }
-  }, [selectedAssignment, reset]);
+
 
 
   const handleCreateA = () => {
@@ -598,6 +409,9 @@ const Classroom = () => {
     navigate(`/assignment/${selectedAssignment._id}`);
   };
 
+  const handleNavtoRubric = () => {
+    navigate(`/rubric/${selectedAssignment._id}`);
+  };
 
   const fetchAssignments = async () => {
 
@@ -608,7 +422,6 @@ const Classroom = () => {
           mode: 'cors'
         }
       );
-
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -732,11 +545,11 @@ const copyPublicLink = () => {
                     </Button>
                   )}
                   {user && user.authority === "teacher" && (
-                    <Button onClick={() => setIsModalOpen(true)} className="my-plus-button-big">
-                      {rubricButtonText}
+                    <Button onClick={() => handleNavtoRubric()} className="my-plus-button-big">
+                      Edit Rubric
                     </Button>
                   )}
-                  <Button onClick={handleNavtoSubs} className="p-2 bg-slate-700">All Submissions</Button>
+                  <Button onClick={() => handleNavtoSubs()} className="p-2 bg-slate-700">All Submissions</Button>
                 </div>
 
               </div>
@@ -755,39 +568,7 @@ const copyPublicLink = () => {
                   </div>
 
                   {/* Modal for the form */}
-                  {isModalOpen && (
-                    <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                      <AlertDialogContent className="max-h-[80vh] max-w-[60vw] overflow-hidden overflow-hidden bg-white p-4 rounded-lg shadow-lg">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Enter Rubric:</AlertDialogTitle>
-                          <ScrollArea className="max-h-[60vh] overflow-auto my-4">
-                            <form className="space-y-8 max-w-[56vw]">
-                              {rubricFields.map((rubricField, rubricIndex) => (
-                                <RubricField
-                                  key={rubricField.id}
-                                  control={control}
-                                  register={register}
-                                  rubricIndex={rubricIndex}
-                                  rubricField={rubricField}
-                                  removeRubric={removeRubric}
-                                />
-                              ))}
-                              <div className="flex justify-end items-center space-x-4">
-                                <Button type="button" onClick={() => appendRubric({ name: '', values: [{ point: 0, description: '' }] })} className="my-plus-button-big">
-                                  Add New Topic
-                                </Button>
-                                <Button type="button" onClick={handleRubricSubmission} className="my-save-button-big">
-                                  Save Rubric
-                                </Button>
-                                <Button onClick={handleCloseModal} style={{ margin: "2em" }} variant="destructive">Cancel</Button>
 
-                              </div>
-                            </form>
-                          </ScrollArea>
-                        </AlertDialogHeader>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
 
                   {/* Display the submitted data on the main page */}
                   {selectedAssignment && selectedAssignment.rubric && (

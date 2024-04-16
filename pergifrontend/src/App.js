@@ -61,7 +61,7 @@ function App() {
               element={<PublicAssignment/>}
             />
             <Route
-              path="/rubric"
+              path="/rubric/:id"
               element={<Rubric/>}
             />
           </Routes>

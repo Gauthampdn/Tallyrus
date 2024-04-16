@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button'; // Ensure this path is correct
 import Navbar from 'components/Navbar'; // Adjust the import path as necessary
+
+import { Textarea } from "@/components/ui/textarea"
+
+import PremadeRubrics from 'components/PremadeRubrics';
 
 import {
   Table,
@@ -31,60 +35,96 @@ const rubricSchema = z.object({
   values: z.array(valuesSchema),
 });
 
-const premadeRubrics = [
-  {
-    Template: 'Template 1',
-    values: [
-      {
-        name: "Analysis",
-        Criteria: [
-          { point: 5, description: 'Criterion 1 for Template 1' },
-          { point: 10, description: 'Criterion 2 for Template 1' },
-        ],
-      },
-      {
-        name: "Grammar",
-        Criteria: [
-          { point: 5, description: 'Criterion 1 for Template 1' },
-          { point: 10, description: 'Criterion 2 for Template 1' },
-        ],
-      },
-    ],
-  },
-  // Additional templates can be added here
-];
+const premadeRubrics = PremadeRubrics;
 
 
 const Rubric = () => {
-  const { assignmentId } = useParams();
+  const { id } = useParams(); // This is how you access the PublicAssignment ID from the URL
+  const [rubric, setRubric] = useState([]);
+
   const navigate = useNavigate();
 
   const { control, register, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm({
     resolver: zodResolver(rubricSchema),
-    defaultValues: { Template: '', values: [] },
+    defaultValues: {
+      Template: '',
+      values: [] // This will be populated with fetched data
+    },
   });
 
-  // Correctly setup useFieldArray for managing 'values'
-  const { fields, append, remove, update } = useFieldArray({
+  // Setup useFieldArray for dynamic form fields
+  const { fields, append, prepend, remove, update } = useFieldArray({
     control,
-    name: 'values', // Name should match the key in your form's defaultValues
+    name: 'values', // Matches the key in defaultValues
   });
+
 
   useEffect(() => {
-    if (assignmentId) {
-      // Fetch rubric data based on the assignmentId and then:
-      // reset(fetchedData);
-    } else {
-      // For demonstration, load a template as default values dynamically
-      // Choose one of the premadeRubrics to set as default for demonstration
-      reset(premadeRubrics[0]); // This would dynamically load one of your premade rubrics as an example
-    }
-  }, [assignmentId, reset]);
+    const fetchAssignment = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/single/${id}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
 
-  const onSubmit = data => {
-    console.log(data);
-    navigate('/classroom');
+        // Convert fetched rubric to form defaultValues format
+        const formValues = data.rubric.map(category => ({
+          name: category.name,
+          Criteria: category.values.map(value => ({
+            point: value.point,
+            description: value.description
+          }))
+        }));
+
+        // Use reset to initialize form with fetched data
+        reset({ values: formValues });
+      } catch (error) {
+        console.error("Failed to fetch assignment:", error);
+      }
+    };
+
+    fetchAssignment();
+  }, [id, reset]);
+
+
+
+
+  const onSubmit = async (data) => {
+    const formData = getValues();  // Get form values using getValues
+    const rubrics = formData.values.map(category => ({
+      name: category.name,
+      values: category.Criteria.map(criterion => ({
+        point: criterion.point,
+        description: criterion.description
+      }))
+    }));
+
+    console.log("Transformed data for backend:", rubrics);
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rubric: rubrics }),
+        credentials: 'include',
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Handle successful PATCH request
+      // For example, you might want to navigate the user to another page or show a success message
+      console.log("Rubric updated successfully!");
+    } catch (error) {
+      console.error("Failed to save rubric:", error);
+    }
   };
+
 
   const loadTemplate = template => {
     reset(template);
@@ -114,71 +154,86 @@ const Rubric = () => {
     update(sectionIndex, { ...fields[sectionIndex], Criteria: currentCriteria });
   };
 
+  const adjustTextareaHeight = (element) => {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  }
   return (
     <div className="flex flex-col h-screen bg-gray-300">
       <Navbar />
-      <div className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow">
-        <div className="flex-1 p-4 overflow-auto ">
-          <Button type="button" onClick={() => handleAddCriteria()}>+</Button>
-          <Button type="submit">Save Rubric</Button>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Table>
-              <TableHead className="bg-slate-200">
-                <TableRow>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Point</TableCell>
-                  <TableCell>Description</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {fields.map((item, sectionIndex) => (
-                  <React.Fragment key={item.id}>
-                    <TableRow className="bg-slate-100">
-                      <TableCell colSpan={3}>{item.name}</TableCell>
-                      <TableCell>
-                        <Button type="button" onClick={() => addCriteriaToSection(sectionIndex)}>++</Button>
-                      </TableCell>
-                    </TableRow>
-                    {item.Criteria.map((criteria, criteriaIndex) => (
-                      <React.Fragment key={criteriaIndex}>
-                        <TableRow className="bg-gray-100">
-                          <TableCell></TableCell>
-                          <TableCell>
-                            <input
-                              {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].point`)}
-                              type="number"
-                              className="border p-1"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <input
-                              {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].description`)}
-                              className="border p-1"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>Delete</Button>
-                          </TableCell>
-                        </TableRow>
-                      </React.Fragment>
-                    ))}
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow">
 
+        <div className="flex-[1] p-4 ">
+          <div className='rounded-3xl bg-green-700 text-white p-4'>
+            <h1 className="p-2 text-2xl font-extrabold underline" >Select a Template</h1>
+            {premadeRubrics.map((template, index) => (
+              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200" onClick={() => loadTemplate(template)}>
+                <strong>{template.Template}</strong>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        <div className="flex-[3] p-4 overflow-auto ">
+
+          <div>
+            <Button className="m-2" onClick={() => handleAddCriteria()}>+</Button>
+            <Button className="m-2" onClick={() => onSubmit()}>Save Rubric</Button>
+            <Table>
+              <TableBody >
+                {fields.map((category, sectionIndex) => (
+                  <React.Fragment key={category.id}>
+                    <TableRow>
+                      <TableCell className="font-bold">
+                        <input
+                          {...register(`values[${sectionIndex}].name`)}
+                          className="border p-1"
+                          defaultValue={category.name}
+                        />
+                        <Button type="button" onClick={() => addCriteriaToSection(sectionIndex)}>+</Button>
+
+                      </TableCell>
+
+                    </TableRow>
+
+                    {category.Criteria.map((criteria, criteriaIndex) => (
+                      <TableRow key={criteria.id} >
+                        <TableCell className="w-1/12">
+                          <Textarea
+                            placeholder="Number of points"
+
+                            {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].point`)}
+                            className="border p-1 resize-none"
+                            defaultValue={criteria.point}
+                          />
+                        </TableCell>
+                        <TableCell className="w-11/12">
+                          <Textarea
+                            placeholder="Type your rubric description here"
+
+                            {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].description`)}
+                            className="border p-1 w-full resize-none overflow-hidden"
+                            defaultValue={criteria.description}
+                            onChange={(e) => {
+                              adjustTextareaHeight(e.target); // Add this line
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}><span className="material-symbols-outlined">delete</span>
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </React.Fragment>
                 ))}
               </TableBody>
-            </Table>
 
-          </form>
+            </Table>
+          </div>
         </div>
-        <div className="flex-1 p-4">
-          <h2>Select a Template</h2>
-          {premadeRubrics.map((template, index) => (
-            <div key={index} className="cursor-pointer p-2 hover:bg-gray-200" onClick={() => loadTemplate(template)}>
-              <strong>{template.Template}</strong>
-            </div>
-          ))}
-        </div>
-      </div>
+      </form>
     </div>
   );
 
