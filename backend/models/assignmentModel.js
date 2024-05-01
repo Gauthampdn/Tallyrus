@@ -91,7 +91,7 @@ const assignmentSchema = new Schema({
   submissions: {
     type: [submissionSchema], // multiple submissions in an assignment
   }
-});
+}, { timestamps: true });
 
 
 // Create the model based on the schema

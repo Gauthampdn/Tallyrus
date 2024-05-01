@@ -93,7 +93,7 @@ const getAssignments = async (req, res) => {  // returns all the assignments in 
 
     // Find all assignments for the classroom
 
-    const assignments = await Assignment.find({ classId: classId });
+    const assignments = await Assignment.find({ classId: classId }).sort({ updatedAt: -1 });
 
     if (req.user.authority === 'student') {
       const modifiedAssignments = assignments.map(assignment => {
