@@ -40,7 +40,7 @@ const premadeRubrics = PremadeRubrics;
 
 const Rubric = () => {
   const { id } = useParams(); // This is how you access the PublicAssignment ID from the URL
-  const [rubric, setRubric] = useState([]);
+  const [classId, setclassId] = useState();
 
   const navigate = useNavigate();
 
@@ -67,6 +67,8 @@ const Rubric = () => {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
+
+        setclassId(data.classId)
 
         // Convert fetched rubric to form defaultValues format
         const formValues = data.rubric.map(category => ({
@@ -116,6 +118,7 @@ const Rubric = () => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
+      navigate(`/classroom/${classId}`);
 
       // Handle successful PATCH request
       // For example, you might want to navigate the user to another page or show a success message
@@ -178,8 +181,9 @@ const Rubric = () => {
         <div className="flex-[3] p-4 overflow-auto ">
 
           <div>
-            <Button className="m-2" onClick={() => handleAddCriteria()}>+</Button>
             <Button className="m-2" onClick={() => onSubmit()}>Save Rubric</Button>
+
+            <Button className="m-2" onClick={() => handleAddCriteria()}>+</Button>
             <Table>
               <TableBody >
                 {fields.map((category, sectionIndex) => (
@@ -191,9 +195,10 @@ const Rubric = () => {
                           className="border p-1"
                           defaultValue={category.name}
                         />
-                        <Button type="button" onClick={() => addCriteriaToSection(sectionIndex)}>+</Button>
 
                       </TableCell>
+                      <Button type="button" onClick={() => addCriteriaToSection(sectionIndex)}>+</Button>
+
 
                     </TableRow>
 
