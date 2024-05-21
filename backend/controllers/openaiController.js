@@ -22,9 +22,6 @@ const gradingInstructions =
         **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
         """
                             
-        Also, give the total scores at the end in this format:
-                            
-        ***TOTALSCORE***: ***(score)/total***
                             
         Do not grade too harshly. Try to make scores fall between 100 to 80, closer to 100. Also, you can give scores between 2 levels of achievement, for instance, if only 4 points and 3 points are specified, you should give partial points between this range if deserved.
                             
@@ -41,8 +38,6 @@ const gradingInstructions =
         **Score**: **24/25**
 
         **Comments/suggestions**: Your analysis in the essay is thorough, insightful, and well-supported by evidence from the text. You delve deep into Rodriguez's portrayal of the police force as oppressors, examining specific examples from the book to illustrate the systemic issues of racism and brutality within law enforcement. Furthermore, your analysis of the psychological factors driving gang involvement, the impact of mentorship, and the contrasting approaches to power and strength presented by Rodriguez and Chente Ramírez is well-developed and thought-provoking. Your essay effectively connects these analyses to the broader societal structures and challenges the reader to rethink their perceptions.
-
-        ***TOTALSCORE***: ***47/50***
 
         You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions.
         `;
@@ -99,16 +94,11 @@ const openai = new OpenAI({
 });
 
 
-/*
-do it like this:
-parse thru each  submission on the front end and then  
-
-*/
 function rubricToString(rubrics) {
     let rubricString = '';
 
     rubrics.forEach(rubric => {
-        rubricString += `Topic and Total points: ${rubric.name}\n`;
+        rubricString += `Criteria Name : ${rubric.name}\n`;
 
         rubric.values.forEach(value => {
             rubricString += `  - ${value.point} points = ${value.description}\n`;
