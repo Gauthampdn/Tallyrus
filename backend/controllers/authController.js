@@ -66,7 +66,7 @@ const getAuth = passport.authenticate("google", { scope: ["email", "profile"] })
 
 const redirectGoogle = passport.authenticate("google", {
   successRedirect: "https://tallyrus.com",
-  failureRedirect: "/failedAuth",
+  failureRedirect: "https://tallyrus.com/login",
 });
 
 const logout = (req, res) => {
