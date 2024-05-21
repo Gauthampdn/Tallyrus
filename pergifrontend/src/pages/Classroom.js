@@ -149,11 +149,14 @@ const Classroom = () => {
   const [isTeacherUploadModalOpen, setIsTeacherUploadModalOpen] = useState(false);
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: '.pdf',
+    accept: {
+      'application/pdf': []
+    },
     onDrop: (acceptedFiles) => {
       setTeacherFiles(acceptedFiles);
     },
   });
+  
 
   // Function to open the modal
   const handleOpenTeacherUploadModal = () => {
@@ -257,21 +260,31 @@ const Classroom = () => {
     });
 
   }
+
+  
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
-      // Check if the selected file is a PDF
-      if (selectedFile.type === "application/pdf") {
+      // Check if the selected file is a PDF or DOCX
+      const allowedTypes = [
+        "application/pdf",
+      ];
+      if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile); // Update the state with the selected file
       } else {
         // Show toast notification
-        doToast();
+        toast({
+          variant: "destructive",
+          title: "Invalid file type",
+          description: "Please select a PDF or DOCX file.",
+        });
         // Clear the input field
         event.target.value = null;
       }
     }
   };
-
+  
+  
 
   const handleGradeAll = async (assignmentId) => {
 
@@ -705,12 +718,12 @@ const copyPublicLink = () => {
                             <AlertDialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
                               <AlertDialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Upload Files</AlertDialogTitle>
+                                  <AlertDialogTitle>Upload PDFs</AlertDialogTitle>
                                 </AlertDialogHeader>
                                 <AlertDialogDescription>
                                   <div {...getRootProps({ className: 'dropzone' })}>
                                     <input {...getInputProps()} />
-                                    <p>Drag and drop some files here, or click to select files</p>
+                                    <p>Click here upload your students' essay PDFs</p>
                                   </div>
                                   <ul className="file-list">
                                     {teacherFiles && teacherFiles.map((file, index) => (

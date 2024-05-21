@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
+const mammoth = require("mammoth");
 
 
 require("dotenv").config();
@@ -28,20 +29,31 @@ async function getTextFromPDF(pdfPath) {
     return extractedText;
 }
 
-// const trialtextex = async (req, res) => {
-// // Check if req.files is undefined or req.files.file is not present
+async function getTextFromDOCX(url) {
+    try {
+        console.log("file is " , url)
+        // Fetch the .docx file from the URL
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-//     const options = {
-//         normalizeWhitespace: true,
-//         disableCombineTextItems: true
-//     };
+        // // Convert the response to an array buffer
+        // const arrayBuffer = await response.arrayBuffer();
 
-//     pdfParse("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T02-13-20.145Z-CHI%2010%20rough%20draft%20%283%29.pdf", options).then(result => {
-//         res.send(result.text);
-//     });
-// };
+        // // Use Mammoth.js to convert the array buffer to HTML
+        // const mammoth = require("mammoth");
+        // const { value: html, messages } = await mammoth.convertToHtml({ arrayBuffer });
 
+        // // Output the HTML and any messages
+        // console.log("HTML:", html);
+        // messages.forEach(message => console.log("Message:", message));
 
+        // return html;
+    } catch (error) {
+        console.error("Error fetching or converting document:", error);
+    }
+}
 
 
 const openai = new OpenAI({
@@ -154,14 +166,22 @@ const gradeall = async (req, res) => {
 
             // Check if the submission is not already graded
             if (submission.status !== 'graded') {
-                console.log("submission name", submission.pdfKey);
-                // Extract and grade the text from the submission's PDF
-                const extractedText = await getTextFromPDF(submission.pdfURL);
+                let extractedText = ' ';
+                if (submission.pdfURL.endsWith('.pdf')) {
+                    extractedText = await getTextFromPDF(submission.pdfURL);
+                } else if (submission.pdfURL.endsWith('.docx')) {
+                    extractedText = await getTextFromDOCX(submission.pdfURL);
+                    console.log("extractedText is: ", extractedText)
+                } else {
+                    submission.status = 'error';
+                    submission.feedback = 'Unsupported file format';
+                    await assignment.save();
+                    continue; // Skip this submission and continue with the next one
+                }
 
                 if (!extractedText) {
-                    console.log("POOP")
                     submission.status = 'error';
-                    submission.feedback = 'Failed to extract text from PDF';
+                    submission.feedback = 'Failed to extract text from file';
                     await assignment.save();
                     continue; // Skip this submission and continue with the next one
                 }

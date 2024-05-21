@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button'; // Ensure this path is correct
 import Navbar from 'components/Navbar'; // Adjust the import path as necessary
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster"
 
 import { Textarea } from "@/components/ui/textarea"
 
@@ -39,6 +41,8 @@ const premadeRubrics = PremadeRubrics;
 
 
 const Rubric = () => {
+  const { toast } = useToast();
+
   const { id } = useParams(); // This is how you access the PublicAssignment ID from the URL
   const [classId, setclassId] = useState();
 
@@ -92,7 +96,8 @@ const Rubric = () => {
 
 
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (event) => {
+    event.preventDefault(); // Prevent default form submission behavior
     const formData = getValues();  // Get form values using getValues
     const rubrics = formData.values.map(category => ({
       name: category.name,
@@ -116,26 +121,36 @@ const Rubric = () => {
       });
 
       if (!response.ok) {
+        toast({
+          variant: "destructive",
+          title: "Error Editting Rubric",
+          description: "There was an error editting the rubric, remember no letters in the point values",
+        });
         throw new Error('Network response was not ok');
       }
-      navigate(`/classroom/${classId}`);
 
-      // Handle successful PATCH request
-      // For example, you might want to navigate the user to another page or show a success message
       console.log("Rubric updated successfully!");
+      navigate(`/classroom/${classId}`); // Navigate after successful update
     } catch (error) {
       console.error("Failed to save rubric:", error);
     }
   };
 
 
+
   const loadTemplate = template => {
     reset(template);
   };
 
-  const handleAddCriteria = () => {
-    append({ name: '', Criteria: [{ point: 0, description: '' }] })
+const handleAddCriteria = () => {
+  append({ name: '', Criteria: [{ point: 0, description: '' }] });
+};
+
+
+  const handleRemoveCriteriaSection = (sectionIndex) => {
+    remove(sectionIndex);
   };
+
 
   const addCriteriaToSection = (sectionIndex) => {
     const criteriaName = `values[${sectionIndex}].Criteria`;
@@ -143,7 +158,6 @@ const Rubric = () => {
     console.log(criteriaName)
     const updatedCriteria = [...currentValues, { point: 0, description: '' }];
     console.log(updatedCriteria)
-    setValue(criteriaName, updatedCriteria);
     // Ensure re-render
     update(sectionIndex, { ...fields[sectionIndex], Criteria: updatedCriteria });
   };
@@ -164,7 +178,7 @@ const Rubric = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-300">
       <Navbar />
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow">
+      <form className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow" onSubmit={onSubmit}>
 
         <div className="flex-[1] p-4 ">
           <div className='rounded-3xl bg-green-700 text-white p-4'>
@@ -179,35 +193,39 @@ const Rubric = () => {
         </div>
 
         <div className="flex-[3] p-4 overflow-auto ">
-
           <div>
-            <Button className="m-2" onClick={() => onSubmit()}>Save Rubric</Button>
-
-            <Button className="m-2" onClick={() => handleAddCriteria()}>+</Button>
+            <Button type="submit" className="m-2">Save Rubric</Button>
+            <Button type="button" className="m-2" onClick={() => handleAddCriteria()}>+</Button>
             <Table>
-              <TableBody >
+              <TableBody>
                 {fields.map((category, sectionIndex) => (
                   <React.Fragment key={category.id}>
-                    <TableRow>
+                    <TableRow >
                       <TableCell className="font-bold">
                         <input
                           {...register(`values[${sectionIndex}].name`)}
                           className="border p-1"
                           defaultValue={category.name}
                         />
-
                       </TableCell>
-                      <Button type="button" onClick={() => addCriteriaToSection(sectionIndex)}>+</Button>
+                      <div>
+                        <span className="cursor-pointer hover:text-green-500 material-symbols-outlined" onClick={() => addCriteriaToSection(sectionIndex)}>
+                          add
+                        </span>
+                        <span className="cursor-pointer hover:text-red-500 material-symbols-outlined" onClick={() => handleRemoveCriteriaSection(sectionIndex)}>
+                          delete
+                        </span>
+                      </div>
+
 
 
                     </TableRow>
 
                     {category.Criteria.map((criteria, criteriaIndex) => (
-                      <TableRow key={criteria.id} >
+                      <TableRow key={criteria.id}>
                         <TableCell className="w-1/12">
                           <Textarea
                             placeholder="Number of points"
-
                             {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].point`)}
                             className="border p-1 resize-none"
                             defaultValue={criteria.point}
@@ -216,29 +234,27 @@ const Rubric = () => {
                         <TableCell className="w-11/12">
                           <Textarea
                             placeholder="Type your rubric description here"
-
                             {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].description`)}
                             className="border p-1 w-full resize-none overflow-hidden"
                             defaultValue={criteria.description}
-                            onChange={(e) => {
-                              adjustTextareaHeight(e.target); // Add this line
-                            }}
+                            onChange={(e) => adjustTextareaHeight(e.target)}
                           />
                         </TableCell>
                         <TableCell>
-                          <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}><span className="material-symbols-outlined">delete</span>
-                          </span>
+                          <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}><span className="material-symbols-outlined">delete</span></span>
                         </TableCell>
                       </TableRow>
                     ))}
                   </React.Fragment>
                 ))}
               </TableBody>
-
             </Table>
           </div>
         </div>
+
       </form>
+      <Toaster />
+
     </div>
   );
 
