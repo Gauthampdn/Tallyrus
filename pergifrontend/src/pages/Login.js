@@ -3,6 +3,8 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { Link } from "react-router-dom"
 import { RocketIcon } from "@radix-ui/react-icons"
 import { helix } from 'ldrs'
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -30,9 +32,13 @@ import { Button } from "@/components/ui/button"
 const Login = () => {
   const { user, dispatch } = useAuthContext();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   helix.register()
 
-
+  const navigateAbout = () => {
+      navigate(`/about`);
+  };
 
   const handleButtonClick = () => {
     window.location.href = `${process.env.REACT_APP_API_BACKEND}/auth`;
@@ -69,8 +75,9 @@ const Login = () => {
     <div className="flex flex-row min-h-screen bg-slate-600  ">
 
       <div className="basis-1/2 flex flex-col justify-between p-10">
-        <div>
+        <div className="flex justify-between items-center">
           <img src="/tallyrus2white.png" alt="" className="h-10" />
+          <Button onClick={navigateAbout}>About Tallyrus!</Button>
         </div>
         <div className="mb-10">
           <blockquote className="italic text-white">
