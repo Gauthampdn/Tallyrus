@@ -11,8 +11,9 @@ require("dotenv").config();
 const gradingInstructions =
     `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
         Give extremely in-depth paragraphs of feedback, comments, and suggestions on each criteria on what was done well, what could be improved, and suggestions and tips on how to improve. Use examples on how it can be better and/or how it can be rewritten/rephrased.
+        Do not grade too harshly, as you should grade for a middle school writing level. Also, you can give scores between 2 levels of achievement, for instance, if only 4 points and 3 points are specified, you should give partial points between this range if deserved.
 
-        Now this is how each grading rubric should be formatted:
+        Now this is strictly how each criteria should be formatted:
                             
         """
         **Criteria Name**: **Name of the Criteria**
@@ -21,11 +22,8 @@ const gradingInstructions =
 
         **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
         """
-                            
-                            
-        Do not grade too harshly. Try to make scores fall between 100 to 80, closer to 100. Also, you can give scores between 2 levels of achievement, for instance, if only 4 points and 3 points are specified, you should give partial points between this range if deserved.
-                            
-        Here is an example:
+        
+        Here is an example of how the output should be formated:
 
         """
         **Criteria Name**: **Clarity of Thesis**
@@ -41,7 +39,7 @@ const gradingInstructions =
         **Comments/suggestions**: Your analysis in the essay is thorough, insightful, and well-supported by evidence from the text. You delve deep into Rodriguez's portrayal of the police force as oppressors, examining specific examples from the book to illustrate the systemic issues of racism and brutality within law enforcement. Furthermore, your analysis of the psychological factors driving gang involvement, the impact of mentorship, and the contrasting approaches to power and strength presented by Rodriguez and Chente Ramírez is well-developed and thought-provoking. Your essay effectively connects these analyses to the broader societal structures and challenges the reader to rethink their perceptions.
         """
         
-        You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions.
+        You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
         `;
 
 async function loadPdfJsLib() {

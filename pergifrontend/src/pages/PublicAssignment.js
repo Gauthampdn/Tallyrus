@@ -418,7 +418,7 @@ const PublicAssignment = () => {
                   See Potential Grade
                 </Button>
                 <div className="feedback-container mt-4">
-                  <h2>Feedback</h2>
+                  <h2 className="text-lg font-bold mb-4" >Feedback</h2>
                   <div className="feedback-box">
                     {feedback ? (
                       <ReactMarkdown>{feedback}</ReactMarkdown>

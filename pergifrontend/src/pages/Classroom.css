@@ -203,7 +203,6 @@
   border: 1px solid #ddd;
   padding: 10px;
   width: 100%;
-  max-height: 200px; /* Adjust based on your preference */
   overflow-y: auto; /* Makes the box scrollable */
   background-color: #f9f9f9; /* Light background for the feedback */
   border-radius: 5px;
