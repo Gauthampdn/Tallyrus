@@ -3,8 +3,22 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
+/* 
+:root {
+  --primary: #058c42;
+  --white: #eee9e5;
+}
 
+::-webkit-scrollbar {
+  width: 12px; 
+}
 
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary); 
+  border-radius: 6px; 
+  border: 3.75px solid white;
+}
+ */
 
 @layer base {
   :root {

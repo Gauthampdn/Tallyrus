@@ -249,7 +249,7 @@ const gradeall = async (req, res) => {
         res.json({ message: "All submissions graded successfully" });
     } catch (error) {
         console.error("Error grading assignments:", error);
-        res.status(500).send('Error grading assignments');
+        res.status(500).send('Error grading assignments:', error);
     }
 };
 
@@ -295,8 +295,8 @@ const gradeSubmission = async (req, res) => {
 
         res.json({ feedback });
     } catch (error) {
-        console.error("Error grading submission:", error);
-        res.status(500).send('Error grading submission');
+        console.error("Error grading submission: ", error);
+        res.status(500).send('Error grading submission:', error);
     }
 };
 
