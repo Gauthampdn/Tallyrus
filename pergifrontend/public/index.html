@@ -1,20 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const root = document.documentElement;
-
-    const colors = [
-      getComputedStyle(root).getPropertyValue('--color1').trim(),
-      getComputedStyle(root).getPropertyValue('--color2').trim(),
-      getComputedStyle(root).getPropertyValue('--color3').trim(),
-      getComputedStyle(root).getPropertyValue('--color4').trim()
-    ];
-
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    root.style.setProperty('--primary', randomColor);
-  });
-</script>
 
 <head>
   <meta charset="utf-8" />

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createRef } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import ReactMarkdown from 'react-markdown';
 import Navbar from "components/Navbar";
@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './assignments.css';
 import { marked } from 'marked';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import {
   Carousel,
@@ -33,6 +35,8 @@ import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
 const Assignment = () => {
+  const contentRef = createRef();
+
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthContext();
@@ -67,6 +71,86 @@ const Assignment = () => {
     return feedbackWithOverallTotal;
   };
 
+
+  const handlePrint = async () => {
+    const content = contentRef.current.innerHTML;
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+  
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${selectedSubmission.studentName} - Tallyrus Report</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              position: relative;
+            }
+            .header {
+              background-color: #058c42; /* Green */
+              color: white;
+              text-align: center;
+              padding: 10px 0;
+              margin-bottom: 20px;
+            }
+            .watermark {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 80%;
+              height: 80%;
+              background-image: url('/tallyrus2green.png'); /* Replace with your image path */
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
+              opacity: 0.1;
+              z-index: -1;
+              pointer-events: none;
+            }
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .header {
+                background-color: #058c42 !important; /* Green */
+                color: white !important;
+              }
+              .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 80%;
+                height: 80%;
+                background-image: url('/tallyrus2green.png'); /* Replace with your image path */
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                opacity: 0.1;
+                z-index: -1;
+                pointer-events: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Tallyrus Report</h1>
+          </div>
+          <div class="watermark"></div>
+          <div>${content}</div>
+        </body>
+      </html>
+    `);
+  
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+  
 
 
 
@@ -154,7 +238,6 @@ const Assignment = () => {
 
       {assignment ? (
         <div style={{ width: '97%' }} className="mx-auto">
-          {/* Dropdown Select for Submissions */}
 
           {/* Left (Previous) Button */}
           <Button
@@ -175,7 +258,9 @@ const Assignment = () => {
           >
             &#8594;
           </Button>
-
+          <Button onClick={handlePrint} className="p-4 m-2" >
+            🖨️ Print
+          </Button>
 
           <Popover open={open} onOpenChange={setOpen}  >
             <PopoverTrigger asChild>
@@ -270,16 +355,13 @@ const Assignment = () => {
               </div>
 
               {/* Student Details Column */}
-              <div className="md:flex-1 p-4">
+              <div ref={contentRef}  className="md:flex-1 p-4">
                 <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
                 <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
                 <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
                 <p className="pb-2"><strong>Status:</strong> {selectedSubmission.status}</p>
                 <hr />
                 <p className="pb-2"></p>
-                {/* Display the total score */}
-                {/* <p><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)} points</p> */}
-
                 <ReactMarkdown >{rawMarkup}</ReactMarkdown>
               </div>
             </div>
