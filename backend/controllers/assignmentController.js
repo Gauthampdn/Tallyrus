@@ -290,7 +290,52 @@ const updateAssignmentRubric = async (req, res) => {
 };
 
 
+const updateSubmission = async (req, res) => {
+  const { assignmentId, submissionId } = req.params;
+  const { studentName, status, feedback } = req.body;
+  const user_id = req.user.id;
 
+
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can update assignments rubrics" });
+  }
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(assignmentId) || !mongoose.Types.ObjectId.isValid(submissionId)) {
+    return res.status(400).json({ error: "Invalid assignment or submission ID" });
+  }
+
+
+  const assignment = await Assignment.findById(assignmentId);
+  if (!assignment) {
+    return res.status(403).json({ error: "Assignment not found" });
+  }
+
+  // Check if the user is a teacher in the classroom of the assignment
+  const classroom = await Classroom.findOne({ _id: assignment.classId, teachers: user_id });
+  if (!classroom) {
+    return res.status(403).json({ error: "Not authorized to access this assignment" });
+  }
+
+
+  try {
+
+    const submission = assignment.submissions.id(submissionId);
+    console.log(submission)
+    if (!submission) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+      if (studentName) submission.studentName = studentName;
+      if (status) submission.status = status;
+      if (feedback) submission.feedback = feedback;
+
+    await assignment.save();
+    res.status(200).json(assignment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getAssignment,
@@ -298,5 +343,6 @@ module.exports = {
   createAssignment,
   deleteAssignment,
   getSubmissions,
-  updateAssignmentRubric
+  updateAssignmentRubric,
+  updateSubmission
 };

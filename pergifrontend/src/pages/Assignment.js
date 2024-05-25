@@ -11,13 +11,9 @@ import { marked } from 'marked';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Input } from "@/components/ui/input"
+
+
 
 import {
   Command,
@@ -26,11 +22,41 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command"
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
+
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +70,10 @@ const Assignment = () => {
   const [assignment, setAssignment] = useState(null);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [open, setOpen] = useState(false);
+  const [editName, setEditName] = useState(false);
+  const [name, setName] = useState('');
+
+
   const [searchText, setSearchText] = useState("");
 
   const calculateTotalScore = (submission) => {
@@ -71,11 +101,62 @@ const Assignment = () => {
     return feedbackWithOverallTotal;
   };
 
+  const handleEditName = async (submissionId, name) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include authentication headers if needed
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify({ studentName: name })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update submission name');
+      }
+
+      const updatedAssignment = await response.json();
+      setAssignment(updatedAssignment);
+      setSelectedSubmission(updatedAssignment.submissions.find(sub => sub._id === submissionId));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleMarkForRegrade = async (submissionId) => {
+    console.log(submissionId)
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify({ status: 'regrade' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to mark submission for regrade');
+      }
+
+      const updatedAssignment = await response.json();
+      setAssignment(updatedAssignment);
+      setSelectedSubmission(updatedAssignment.submissions.find(sub => sub._id === submissionId));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+
 
   const handlePrint = async () => {
     const content = contentRef.current.innerHTML;
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-  
+
     printWindow.document.write(`
       <html>
         <head>
@@ -144,13 +225,13 @@ const Assignment = () => {
         </body>
       </html>
     `);
-  
+
     printWindow.document.close();
     printWindow.onload = () => {
       printWindow.print();
     };
   };
-  
+
 
 
 
@@ -258,17 +339,14 @@ const Assignment = () => {
           >
             &#8594;
           </Button>
-          <Button onClick={handlePrint} className="p-4 m-2" >
-            🖨️ Print
-          </Button>
 
-          <Popover open={open} onOpenChange={setOpen}  >
+          <Popover open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
-                className="command-item-text mb-4"
+                className="command-item-text p-4 mb-4"
 
               >
                 {selectedSubmission
@@ -277,6 +355,7 @@ const Assignment = () => {
                 <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
+
             <PopoverContent className="w-[200px] p-0">
               <Command>
                 <div style={{ position: 'relative', width: '100%' }}>
@@ -335,6 +414,28 @@ const Assignment = () => {
             </PopoverContent>
           </Popover>
 
+          <DropdownMenu >
+            <DropdownMenuTrigger asChild >
+              <Button variant="" className="material-symbols-outlined ml-2">apps</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onSelect={handlePrint}>
+                  🖨️ Print
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onSelect={() => setEditName(true)}>
+                  Edit File Name
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onSelect={() => handleMarkForRegrade(selectedSubmission._id)}>
+                  Mark for Regrade
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Display selected submission details */}
 
@@ -355,7 +456,7 @@ const Assignment = () => {
               </div>
 
               {/* Student Details Column */}
-              <div ref={contentRef}  className="md:flex-1 p-4">
+              <div ref={contentRef} className="md:flex-1 p-4">
                 <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
                 <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
                 <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
@@ -364,6 +465,29 @@ const Assignment = () => {
                 <p className="pb-2"></p>
                 <ReactMarkdown >{rawMarkup}</ReactMarkdown>
               </div>
+
+              <AlertDialog open={editName}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Change File name</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Update the file name to better organize and reflect your records.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div>
+                    <Input
+                      type="text"
+                      placeholder="Enter new name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setEditName(false)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => { handleEditName(selectedSubmission._id, name); setEditName(false); }}>Change</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
         </div>

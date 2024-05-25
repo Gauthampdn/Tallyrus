@@ -7,7 +7,8 @@ const {
   createAssignment,
   deleteAssignment,
   getSubmissions,
-  updateAssignmentRubric
+  updateAssignmentRubric,
+  updateSubmission
    // import the createSubmission function
 } = require("../controllers/assignmentController")
 
@@ -27,16 +28,14 @@ router.post("/make", createAssignment)
 // Delete an assignment
 router.delete("/:id", deleteAssignment)
 
-
 router.get("/submissions/:id", getSubmissions) // new route for submitting assignments
 
+router.patch('/:assignmentId/submissions/:submissionId', updateSubmission);
 
 router.patch("/:id", updateAssignmentRubric)
 
 
 // In assignment router:
-
-
 
 
 
