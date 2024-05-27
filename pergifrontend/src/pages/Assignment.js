@@ -181,9 +181,6 @@ const Assignment = () => {
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>All Submissions - Writing Feedback</h1>
-          </div>
           <div id="content"></div>
         </body>
       </html>
