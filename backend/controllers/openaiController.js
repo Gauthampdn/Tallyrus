@@ -22,7 +22,26 @@ const gradingInstructions =
 
         **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
         """
-                
+
+        Here is an examples:
+
+        """
+
+        **Criteria Name**: **Evaluating Sources and Using Evidence:**
+
+        **Score**: **4.5/5**
+
+        **Comments/suggestions**: The essay effectively develops both claims and counterclaims, presenting the argument that farming is more important than trading while acknowledging the benefits of trading. The strengths and limitations of both are well articulated. For example, the essay points out that farming boosts the economy and provides a steady food supply but also recognizes that climate change can affect crops.
+
+        **Criteria Name**: **Language**
+
+        **Score**: **5/5**
+
+        **Comments/suggestions**: The essay demonstrates a strong command of standard English capitalization, punctuation, and spelling, contributing to clear and formal writing. There are minimal errors, which do not distract from the overall readability of the essay.
+
+        """
+        
+
         You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
         `;
 
