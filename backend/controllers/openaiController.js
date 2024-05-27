@@ -177,7 +177,7 @@ const gradeall = async (req, res) => {
             console.log('GRADING AN ASSIGNMENT NOW')
 
             // Check if the submission is not already graded
-            if (submission.status !== 'wgraded') {
+            if (submission.status !== 'graded') {
                 let extractedText = ' ';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
