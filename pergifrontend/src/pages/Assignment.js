@@ -151,6 +151,67 @@ const Assignment = () => {
     }
   };
 
+  const printAll = async () => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>All Submissions - Writing Feedback</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              position: relative;
+            }
+            .header {
+              text-align: center;
+              padding: 10px 0;
+              margin-bottom: 20px;
+            }
+            .submission {
+              margin-bottom: 40px;
+              page-break-after: always;
+            }
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>All Submissions - Writing Feedback</h1>
+          </div>
+          <div id="content"></div>
+        </body>
+      </html>
+    `);
+  
+    const contentElement = printWindow.document.getElementById('content');
+  
+    assignment.submissions.forEach(submission => {
+      const formattedFeedback = formatFeedback(submission);
+      const submissionContent = `
+        <div class="submission">
+          <p><strong>Name:</strong> ${submission.studentName}</p>
+          <p><strong>Email:</strong> ${submission.studentEmail}</p>
+          <p><strong>Date Submitted:</strong> ${new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+          <p><strong>Status:</strong> ${submission.status}</p>
+          <hr />
+          <div>${marked(formattedFeedback)}</div>
+        </div>
+      `;
+      contentElement.innerHTML += submissionContent;
+    });
+  
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+  
 
 
   const handlePrint = async () => {
@@ -160,7 +221,7 @@ const Assignment = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>${selectedSubmission.studentName} - Tallyrus Report</title>
+          <title>${selectedSubmission.studentName} - Writing Feedback</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -168,59 +229,22 @@ const Assignment = () => {
               position: relative;
             }
             .header {
-              background-color: #058c42; /* Green */
-              color: white;
               text-align: center;
               padding: 10px 0;
               margin-bottom: 20px;
-            }
-            .watermark {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: 80%;
-              height: 80%;
-              background-image: url('/tallyrus2green.png'); /* Replace with your image path */
-              background-size: contain;
-              background-repeat: no-repeat;
-              background-position: center;
-              opacity: 0.1;
-              z-index: -1;
-              pointer-events: none;
             }
             @media print {
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
-              .header {
-                background-color: #058c42 !important; /* Green */
-                color: white !important;
-              }
-              .watermark {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 80%;
-                height: 80%;
-                background-image: url('/tallyrus2green.png'); /* Replace with your image path */
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                opacity: 0.1;
-                z-index: -1;
-                pointer-events: none;
-              }
             }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>Tallyrus Report</h1>
+            <h1>Writing Feedback</h1>
           </div>
-          <div class="watermark"></div>
           <div>${content}</div>
         </body>
       </html>
@@ -424,6 +448,9 @@ const Assignment = () => {
               <DropdownMenuGroup>
                 <DropdownMenuItem onSelect={handlePrint}>
                   🖨️ Print
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={printAll}>
+                  🖨️ Print All
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onSelect={() => setEditName(true)}>
