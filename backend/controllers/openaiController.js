@@ -129,7 +129,7 @@ function parseFeedback(gradingResponse) {
             const scoreText = trimmedLine.split('**Score**:')[1].trim().replace(/\*/g, ''); // Remove asterisks
             const scoreParts = scoreText.split('/');
             console.log(scoreParts[0])
-            currentScore = parseInt(scoreParts[0], 10); // Parse the achieved score as an integer
+            currentScore = parseFloat(scoreParts[0], 10); // Parse the achieved score as an integer
             currentTotal = parseInt(scoreParts[1], 10);
 
         } else if (trimmedLine.startsWith('**Comments/suggestions**:')) {
