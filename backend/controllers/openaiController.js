@@ -11,7 +11,7 @@ require("dotenv").config();
 const gradingInstructions =
     `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
         Give extremely in-depth paragraphs of feedback, comments, and suggestions on each criteria on what was done well, what could be improved, and suggestions. Use examples on how it can be better and/or how it can be rewritten/rephrased.
-        Grade leniently at an elementary school writing level, aiming to give scores mostly in the top two ranges (e.g., 4/5 or 5/5). You can give partial scores (e.g., 4.5) if deserved.
+        Grade leniently at an elementary school writing level, aiming to give scores mostly in the top two ranges (e.g., 4/5 or 5/5, maybe 3/5 sometimes). You can give partial scores (e.g., 4.5) if deserved.
 
         Now this is strictly how each criteria should be formatted:
                             
