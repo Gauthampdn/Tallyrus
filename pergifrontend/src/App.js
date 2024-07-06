@@ -25,17 +25,16 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={user ? <Home /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="about"
               element={<AboutTallyrus />}
             />
             <Route
-              path="/login"
-              element={!user ? <Login /> : <Navigate to="/" />}
+              path="/app"
+              element={user ? <Home /> : <Navigate to="/login" />}
             />
-
+            <Route
+              path="/login"
+              element={!user ? <Login /> : <Navigate to="/app" />}
+            />
             <Route
               path="/mail"
               element={<Mail />}
@@ -58,11 +57,11 @@ function App() {
             />
             <Route
               path="/publicassignment/:id"
-              element={<PublicAssignment/>}
+              element={<PublicAssignment />}
             />
             <Route
               path="/rubric/:id"
-              element={<Rubric/>}
+              element={<Rubric />}
             />
           </Routes>
         </div>
