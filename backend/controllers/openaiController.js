@@ -67,29 +67,22 @@ async function getTextFromPDF(pdfPath) {
 
 async function getTextFromDOCX(url) {
     try {
-        console.log("file is ", url)
-        // Fetch the .docx file from the URL
+        console.log("file is ", url);
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        // // Convert the response to an array buffer
-        // const arrayBuffer = await response.arrayBuffer();
-
-        // // Use Mammoth.js to convert the array buffer to HTML
-        // const mammoth = require("mammoth");
-        // const { value: html, messages } = await mammoth.convertToHtml({ arrayBuffer });
-
-        // // Output the HTML and any messages
-        // console.log("HTML:", html);
-        // messages.forEach(message => console.log("Message:", message));
-
-        // return html;
+        const arrayBuffer = await response.arrayBuffer();
+        const { value: extractedText, messages } = await mammoth.extractRawText({ arrayBuffer });
+        console.log("Extracted Text:", extractedText);
+        messages.forEach(message => console.log("Message:", message));
+        return extractedText;
     } catch (error) {
         console.error("Error fetching or converting document:", error);
+        return null;
     }
 }
+
 
 
 const openai = new OpenAI({
@@ -169,6 +162,49 @@ function parseFeedback(gradingResponse) {
     console.log("inside parsedFeedback", parsedFeedback);
 
     return parsedFeedback;
+}
+
+const parseRubricWithGPT4 = async (rubricURL) => {
+    try {
+        const extractedText = await getTextFromPDF(rubricURL);
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are a helpful assistant that can parse rubrics from text and convert them into a structured format." },
+                { role: "user", content: `Parse the following rubric text into a structured format: ${extractedText}` }
+            ],
+            max_tokens: 1000
+        });
+
+        if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
+            return convertToRubricSchema(gradingResponse.choices[0].message.content);
+        } else {
+            throw new Error("Failed to get a valid response from GPT-4");
+        }
+    } catch (error) {
+        console.error("Error parsing rubric:", error);
+        throw new Error("Failed to parse rubric");
+    }
+};
+
+function convertToRubricSchema(gptOutput) {
+    if (!gptOutput) return [];
+
+    const rubrics = gptOutput.split('\n\n').map(rubricText => {
+        const [name, ...values] = rubricText.split('\n');
+        return {
+            name: name.trim(),
+            values: values.filter(value => value.trim()).map(value => {
+                const [point, description] = value.split(':');
+                return {
+                    point: parseInt(point.trim(), 10),
+                    description: description.trim()
+                };
+            })
+        };
+    });
+
+    return rubrics;
 }
 
 
@@ -395,5 +431,6 @@ module.exports = {
     test,
     extractText,
     gradeall,
-    gradeSubmission
+    gradeSubmission,
+    parseRubricWithGPT4
 }

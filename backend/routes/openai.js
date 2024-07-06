@@ -7,7 +7,8 @@ const {
   test,
   extractText,
   gradeall,
-  gradeSubmission
+  gradeSubmission, 
+  parseRubricWithGPT4,
 } = require("../controllers/openaiController")
 
 
@@ -25,6 +26,8 @@ router.get("/test", test)
 router.post("/extext", extractText)
 
 router.get("/gradeall/:id", gradeall)
+
+router.post("/parse-rubric/:assignmentId", parseRubricWithGPT4);
 
 // Add this new route in openai.js
 

@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
+const { parseRubricWithGPT4 } = require('./openaiController');
 
 const {
   S3
@@ -272,6 +273,50 @@ const deleteFile = async (req, res) => {
   res.send('File Deleted Successfully');
 };
 
+const uploadRubric = async (req, res) => {
+  const assignmentId = req.params.id;
+  const user_id = req.user.id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded.' });
+  }
+
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can upload rubrics" });
+  }
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(404).json({ error: "Invalid assignment ID" });
+    }
+
+    // Find the assignment
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    // Check if the user is a teacher of the classroom of the assignment
+    const classroom = await Classroom.findOne({ _id: assignment.classId, teachers: user_id });
+    if (!classroom) {
+      return res.status(403).json({ error: "Not authorized to upload rubric for this assignment" });
+    }
+
+    // Get the file URL
+    const rubricURL = req.file.location;
+
+    // Call the OpenAI API to parse the rubric
+    const parsedRubric = await parseRubricWithGPT4(rubricURL);
+
+    // Update the assignment with the new rubric
+    assignment.rubric = parsedRubric;
+    await assignment.save();
+
+    res.status(201).json({ message: 'Rubric uploaded and parsed successfully', rubric: parsedRubric });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 
@@ -281,5 +326,6 @@ module.exports = {
   downloadFile,
   deleteFile,
   upload, // Export the multer configuration
-  uploadTeacherFile
+  uploadTeacherFile,
+  uploadRubric
 };

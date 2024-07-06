@@ -19,7 +19,6 @@ import {
 
 import { Input } from "@/components/ui/input"
 
-//import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -59,7 +58,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-
 const joinFormSchema = z.object({
   joinCode: z.string().min(1, "Please enter a join code"),
 });
@@ -69,8 +67,6 @@ const createClassSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
 });
-
-
 
 const Home = () => {
   const { toast } = useToast();
@@ -144,7 +140,7 @@ const Home = () => {
   }, [user]);
 
   const handleEditClassroom = async () => {
-
+    // Handle edit classroom functionality here
   }
 
   const handleDeleteClassroom = async (classroomId) => {
@@ -217,55 +213,62 @@ const Home = () => {
     }
   };
 
+  const handleStripeCheckout = () => {
+    window.location.href = "https://buy.stripe.com/fZe6sagnL3dw10IbII";
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="flex justify-between items-center m-8">
         <h1 className='text-3xl font-bold'>Here are your Classrooms!</h1>
-        {user && user.authority === "teacher" && (
-          <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <AlertDialogTrigger asChild>
-              <Button className='text-md font-bold bg-slate-600'>CREATE CLASS +</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Create Class</AlertDialogTitle>
-              </AlertDialogHeader>
-              <Form {...createForm}>
-                <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8">
-                  <FormField
-                    control={createForm.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter class title" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter class description" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button type="submit">Create</Button>
-                  </AlertDialogFooter>
-                </form>
-              </Form>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <div className="flex space-x-4">
+          {user && user.authority === "teacher" && (
+            <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+              <AlertDialogTrigger asChild>
+                <Button className='text-md font-bold bg-slate-600'>CREATE CLASS +</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Create Class</AlertDialogTitle>
+                </AlertDialogHeader>
+                <Form {...createForm}>
+                  <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8">
+                    <FormField
+                      control={createForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter class title" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter class description" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <Button type="submit">Create</Button>
+                    </AlertDialogFooter>
+                  </form>
+                </Form>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Button className='text-md font-bold bg-blue-600' onClick={handleStripeCheckout}>Buy More Credits</Button>
+        </div>
         {user && user.authority === "student" && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -299,10 +302,7 @@ const Home = () => {
             </AlertDialogContent>
           </AlertDialog>
         )}
-
-
       </div>
-
 
       <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
@@ -328,7 +328,6 @@ const Home = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-
             </CardHeader>
             <CardContent>
               <CardDescription>{classroom.description}</CardDescription>

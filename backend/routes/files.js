@@ -8,7 +8,8 @@ const {
     downloadFile,
     deleteFile,
     uploadTeacherFile,
-    upload
+    upload,
+    uploadRubric
 } = require('../controllers/filesController');
 
 
@@ -24,5 +25,7 @@ router.post('/upload-teacher/:id', upload.array('files'), uploadTeacherFile); //
 router.get('/list', listFiles);
 router.get('/download/:filename', downloadFile);
 router.delete('/delete/:filename', deleteFile);
+router.post('/upload-rubric/:id', upload.single('file'), uploadRubric);
+
 
 module.exports = router;
