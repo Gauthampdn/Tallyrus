@@ -18,7 +18,7 @@ const AboutTallyrus = () => {
           <div>
             <Button
               className="ml-4 text-white px-4 py-2 rounded-md hover:bg-green-400"
-              onClick={() => navigate('/')} // Navigate to root path on click
+              onClick={() => navigate('/app')} // Navigate to root path on click
             >
               Go To App
             </Button>

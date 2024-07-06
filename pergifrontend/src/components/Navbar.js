@@ -16,7 +16,7 @@ const Navbar = ({ resetTemplate }) => {
   return (
     <header className="m-3 mb-0 rounded-3xl p-4 flex justify-between items-center bg-slate-700 text-white">
       
-      {user && (<div onClick={() => navigate('/')}>
+      {user && (<div>
         <span className="block font-bold">
           Account Type:
         </span>

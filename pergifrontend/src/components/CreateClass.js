@@ -48,7 +48,7 @@ const CreateClass = () => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      navigate('/');
+      navigate('/app');
       toast({
         title: "Class Created",
         description: "The class is created",

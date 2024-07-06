@@ -289,7 +289,7 @@ const Assignment = () => {
       navigate(`/classroom/${assignment.classId}`);
     } else {
       // Handle the case where assignment or classId is not available
-      navigate('/'); // or any other fallback route you prefer
+      navigate('/app'); // or any other fallback route you prefer
     }
   };
 
