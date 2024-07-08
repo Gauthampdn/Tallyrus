@@ -43,7 +43,7 @@ const AboutTallyrus = () => {
         line.className = 'line';
         const angle = Math.random() * 360;
         const width = getRandom(20, 35);
-        const height = getRandom(1.5, 3);
+        const height = getRandom(1, 2.5);
         const color = colors[Math.floor(Math.random() * colors.length)];
         const duration = getRandom(20, 30);
         line.style.width = `${width}px`;
@@ -59,6 +59,9 @@ const AboutTallyrus = () => {
         }, duration * 1000); // Remove the line after its animation duration
       };
 
+      for (let i = 0; i < 30; i++) {
+        createLine();
+      }
       // Create new lines at regular intervals
       const intervalId = setInterval(() => {
         createLine();
@@ -79,19 +82,20 @@ const AboutTallyrus = () => {
             <img src="/tallyrus2green.png" className="w-[80px]" />
           </div>
           <div className="w-full ">
-            <h1 className="text-6xl font-extrabold mb-6">The AI-Powered <br /> Essay Grader</h1>
+            <h1 className="text-6xl font-extrabold mb-6">The AI-Powered <br /> Essay Grader.</h1>
             <h1 className="text-xl font-semibold mb-6 text-gray-500">
               Tallyrus 2.0 -  saving teachers time and providing more in-depth feedback
             </h1>
-            <p className="text-sm text-gray-500 m-4">We welcome you to join our team!</p>
-
-            <div className="flex justify-center">
-              <Button
-                className="ml-4 text-white px-4 py-2 rounded-md hover:bg-green-400"
+            <div className="flex justify-center gap-4">
+              {/* <Button
+                className="ml-4 text-white px-4 py-2 rounded-md bg-green-600 hover:bg-green-800"
                 onClick={() => navigate('/')} // Navigate to root path on click
               >
-                Go To App
-              </Button>
+                Go To App →
+              </Button>  */}
+              <a href="https://docs.google.com/forms/d/1u6flS76PDzomzjtAG1S_AI5Mh8RDi5JoP4EnZFCelFI/edit" target="_blank" rel="noopener noreferrer">
+                <Button className="text-white bg-blue-600 hover:bg-blue-800 mr-4">Join Our Team!</Button>
+              </a>
             </div>
           </div>
           <div className='p-10'>
@@ -143,7 +147,7 @@ const AboutTallyrus = () => {
           <h1 className="text-xl font-semibold text-center mb-20 text-gray-500"> Here's how Tallyrus works to save both <br /> teachers and students' time</h1>
           <div className="grid grid-cols-4 gap-4">
             {features.map((feature, index) => (
-              <div key={index} className="w-full cursor-pointer transition-transform duration-200 ease-in-out overflow-hidden rounded-xl hover:scale-105 fade-in" style={{ animationDelay: `${0.8 + index * 0.2}s` }}>
+              <div key={index} className="w-full cursor-pointer transition-transform duration-200 ease-in-out overflow-hidden rounded-xl hover:scale-105" style={{ animationDelay: `${0.8 + index * 0.2}s` }}>
                 <div className={`w-full h-full p-2 transition-transform duration-200 ease-in-out ${feature.hoverColor} text-white`}>
                   <div className="p-4">
                     <h2 className="text-xl font-bold">{feature.title}</h2>
