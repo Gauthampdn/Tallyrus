@@ -171,7 +171,25 @@ const parseRubricWithGPT4 = async (rubricURL) => {
             model: "gpt-4",
             messages: [
                 { role: "system", content: "You are a helpful assistant that can parse rubrics from text and convert them into a structured format." },
-                { role: "user", content: `Parse the following rubric text into a structured format: ${extractedText}` }
+                { role: "user", content: `Parse the following rubric text into a structured format:
+                
+const rubricValueSchema = new Schema({
+  point: {
+    type: Number,
+  },
+  description: {
+    type: String,
+  }
+});
+
+const rubricSchema = new Schema({
+  name: {
+    type: String,
+  },
+  values: [rubricValueSchema]
+});
+
+${extractedText}` }
             ],
             max_tokens: 1000
         });

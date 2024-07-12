@@ -214,7 +214,7 @@ const Home = () => {
   };
 
   const handleStripeCheckout = () => {
-    window.location.href = "https://buy.stripe.com/fZe6sagnL3dw10IbII";
+    window.location.href = "https://buy.stripe.com/dR617Q1sRbK2fVC7st";
   }
 
   return (
