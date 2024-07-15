@@ -4,46 +4,13 @@ const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 const mammoth = require("mammoth");
-
-
 require("dotenv").config();
 
-const gradingInstructions =
-    `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
-        Give extremely in-depth paragraphs of feedback, comments, and suggestions on each criteria on what was done well, what could be improved, and suggestions. Use examples on how it can be better and/or how it can be rewritten/rephrased.
-        Grade leniently at an elementary school writing level, aiming to give scores mostly in the top two ranges (e.g., 4/5 or 5/5). You can also give partial scores (e.g., 4.5) if you feel the writing quality is between 2 levels of achievement.
+const gradingInstructions = `Your grading instructions here`;
 
-        Now this is strictly how each criteria should be formatted:
-                            
-        """
-        **Criteria Name**: **Name of the Criteria**
-
-        **Score**: **(score)/subtotal**
-
-        **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
-        """
-
-        Here is an examples:
-
-        """
-
-        **Criteria Name**: **Evaluating Sources and Using Evidence:**
-
-        **Score**: **4.5/5**
-
-        **Comments/suggestions**: The essay effectively develops both claims and counterclaims, presenting the argument that farming is more important than trading while acknowledging the benefits of trading. The strengths and limitations of both are well articulated. For example, the essay points out that farming boosts the economy and provides a steady food supply but also recognizes that climate change can affect crops.
-
-        **Criteria Name**: **Language**
-
-        **Score**: **5/5**
-
-        **Comments/suggestions**: The essay demonstrates a strong command of standard English capitalization, punctuation, and spelling, contributing to clear and formal writing. There are minimal errors, which do not distract from the overall readability of the essay.
-
-        """
-        
-
-        You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
-        `;
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 async function loadPdfJsLib() {
     const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
@@ -67,14 +34,12 @@ async function getTextFromPDF(pdfPath) {
 
 async function getTextFromDOCX(url) {
     try {
-        console.log("file is ", url);
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const arrayBuffer = await response.arrayBuffer();
         const { value: extractedText, messages } = await mammoth.extractRawText({ arrayBuffer });
-        console.log("Extracted Text:", extractedText);
         messages.forEach(message => console.log("Message:", message));
         return extractedText;
     } catch (error) {
@@ -83,12 +48,19 @@ async function getTextFromDOCX(url) {
     }
 }
 
-
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
+async function getTextFromImage(imagePath) {
+    try {
+        const response = await openai.images.generate({
+            image: imagePath,
+            request_text: true,
+            prompt: 'Extract the text from this image',
+        });
+        return response.data.text;
+    } catch (error) {
+        console.error("Error extracting text from image:", error);
+        return null;
+    }
+}
 
 function rubricToString(rubrics) {
     let rubricString = '';
@@ -100,16 +72,14 @@ function rubricToString(rubrics) {
             rubricString += `  - ${value.point} points = ${value.description}\n`;
         });
 
-        rubricString += '\n'; // Adding a newline for separation between rubrics
+        rubricString += '\n';
     });
 
     return rubricString;
 }
 
-
 function parseFeedback(gradingResponse) {
     const feedback = gradingResponse;
-
     const feedbackLines = feedback.split('\n');
     const parsedFeedback = [];
 
@@ -121,9 +91,7 @@ function parseFeedback(gradingResponse) {
     for (let line of feedbackLines) {
         const trimmedLine = line.trim();
         if (trimmedLine.startsWith('**Criteria Name**:')) {
-            // Start of a new criteria
             if (currentCriteria) {
-                // Save the previous criteria
                 parsedFeedback.push({
                     name: currentCriteria,
                     score: currentScore,
@@ -131,26 +99,20 @@ function parseFeedback(gradingResponse) {
                     comments: currentComments,
                 });
             }
-            // Parse the new criteria
             currentCriteria = trimmedLine.split('**Criteria Name**:')[1].trim();
             currentComments = null;
             currentScore = null;
             currentTotal = null;
         } else if (trimmedLine.startsWith('**Score**:')) {
-            // Parse the score
-            const scoreText = trimmedLine.split('**Score**:')[1].trim().replace(/\*/g, ''); // Remove asterisks
+            const scoreText = trimmedLine.split('**Score**:')[1].trim().replace(/\*/g, '');
             const scoreParts = scoreText.split('/');
-            console.log(scoreParts[0])
-            currentScore = parseFloat(scoreParts[0]); // Parse the achieved score as an integer
+            currentScore = parseFloat(scoreParts[0]);
             currentTotal = parseInt(scoreParts[1], 10);
-
         } else if (trimmedLine.startsWith('**Comments/suggestions**:')) {
-            // Parse the comments
             currentComments = trimmedLine.split('**Comments/suggestions**:')[1].trim();
         }
     }
 
-    // Add the last criteria
     if (currentCriteria) {
         parsedFeedback.push({
             name: currentCriteria,
@@ -159,73 +121,9 @@ function parseFeedback(gradingResponse) {
             comments: currentComments
         });
     }
-    console.log("inside parsedFeedback", parsedFeedback);
 
     return parsedFeedback;
 }
-
-const parseRubricWithGPT4 = async (rubricURL) => {
-    try {
-        const extractedText = await getTextFromPDF(rubricURL);
-        const gradingResponse = await openai.chat.completions.create({
-            model: "gpt-4",
-            messages: [
-                { role: "system", content: "You are a helpful assistant that can parse rubrics from text and convert them into a structured format." },
-                { role: "user", content: `Parse the following rubric text into a structured format:
-                
-const rubricValueSchema = new Schema({
-  point: {
-    type: Number,
-  },
-  description: {
-    type: String,
-  }
-});
-
-const rubricSchema = new Schema({
-  name: {
-    type: String,
-  },
-  values: [rubricValueSchema]
-});
-
-${extractedText}` }
-            ],
-            max_tokens: 1000
-        });
-
-        if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
-            return convertToRubricSchema(gradingResponse.choices[0].message.content);
-        } else {
-            throw new Error("Failed to get a valid response from GPT-4");
-        }
-    } catch (error) {
-        console.error("Error parsing rubric:", error);
-        throw new Error("Failed to parse rubric");
-    }
-};
-
-function convertToRubricSchema(gptOutput) {
-    if (!gptOutput) return [];
-
-    const rubrics = gptOutput.split('\n\n').map(rubricText => {
-        const [name, ...values] = rubricText.split('\n');
-        return {
-            name: name.trim(),
-            values: values.filter(value => value.trim()).map(value => {
-                const [point, description] = value.split(':');
-                return {
-                    point: parseInt(point.trim(), 10),
-                    description: description.trim()
-                };
-            })
-        };
-    });
-
-    return rubrics;
-}
-
-
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
@@ -235,55 +133,43 @@ const gradeall = async (req, res) => {
     }
 
     try {
-        // Fetch the assignment by ID
         const assignment = await Assignment.findById(assignmentId);
 
         if (!assignment) {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        console.log('assignment found')
-
-        // Iterate through each submission
-        console.log(assignment.submissions);
         for (let submission of assignment.submissions) {
-            console.log('GRADING AN ASSIGNMENT NOW')
-
-            // Check if the submission is not already graded
             if (submission.status !== 'graded') {
                 let extractedText = ' ';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
                 } else if (submission.pdfURL.endsWith('.docx')) {
                     extractedText = await getTextFromDOCX(submission.pdfURL);
-                    console.log("extractedText is: ", extractedText)
+                } else if (['.png', '.jpg', '.jpeg'].some(ext => submission.pdfURL.endsWith(ext))) {
+                    extractedText = await getTextFromImage(submission.pdfURL);
                 } else {
                     submission.status = 'error';
                     submission.feedback = 'Unsupported file format';
                     await assignment.save();
-                    continue; // Skip this submission and continue with the next one
+                    continue;
                 }
 
                 if (!extractedText) {
                     submission.status = 'error';
                     submission.feedback = 'Failed to extract text from file';
                     await assignment.save();
-                    continue; // Skip this submission and continue with the next one
+                    continue;
                 }
 
-                console.log(extractedText);
-                console.log(assignment.rubric);
-
                 const newrubric = rubricToString(assignment.rubric);
-
-                console.log("This is the rubic: ", newrubric);
                 const gradingResponse = await openai.chat.completions.create({
                     model: "gpt-4o",
                     max_tokens: 3000,
                     messages: [
-                        { "role": "user", "content": gradingInstructions },
-                        { "role": "user", "content": newrubric },
-                        { "role": "user", "content": extractedText }
+                        { role: "user", content: gradingInstructions },
+                        { role: "user", content: newrubric },
+                        { role: "user", content: extractedText }
                     ]
                 });
 
@@ -291,17 +177,11 @@ const gradeall = async (req, res) => {
                     return res.status(400).json({ error: "couldn't grade text" });
                 }
                 const gradedfeedback = gradingResponse.choices[0].message.content;
-                submission.feedback = await parseFeedback(gradedfeedback); // Assuming gradingResponse contains the feedback
-                console.log(gradedfeedback)
-                console.log("FEEDBACK", submission.feedback);
-                console.log(assignment.rubric);
-                console.log("submission name", submission.pdfKey);
+                submission.feedback = parseFeedback(gradedfeedback);
                 submission.status = 'graded';
             }
             await assignment.save();
         }
-        console.log('GRADING DONE')
-
 
         res.json({ message: "All submissions graded successfully" });
     } catch (error) {
@@ -312,7 +192,7 @@ const gradeall = async (req, res) => {
 
 const gradeSubmission = async (req, res) => {
     const { assignmentId } = req.params;
-    const { text } = req.body; // Extracted text from the PDF sent from the frontend
+    const { text } = req.body;
 
     if (!text) {
         return res.status(400).json({ error: "No text provided" });
@@ -325,26 +205,15 @@ const gradeSubmission = async (req, res) => {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        // Assuming you have a function or method to convert the assignment rubric to a string format
         const rubricString = rubricToString(assignment.rubric);
-
-        console.log(rubricString)
 
         const gradingResponse = await openai.chat.completions.create({
             model: "gpt-4o",
             max_tokens: 3000,
             messages: [
-                {
-                    "role": "user", "content": gradingInstructions
-                },
-                {
-                    "role": "user",
-                    "content": rubricString
-                },
-                {
-                    "role": "user",
-                    "content": text // The actual text extracted from the PDF
-                }
+                { role: "user", content: gradingInstructions },
+                { role: "user", content: rubricString },
+                { role: "user", content: text }
             ]
         });
 
@@ -357,79 +226,51 @@ const gradeSubmission = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
 const extractText = async (req, res) => {
     try {
-        // Check if req.files is undefined or req.files.file is not present
-        // Proceed with file processing
-
-        const result = await getTextFromPDF("https://aigradertestbucket.s3.us-west-1.amazonaws.com/2024-01-05T07-31-34.283Z-CHI+10+rough+draft+(3).pdf");
-        console.log(result)
+        const result = await getTextFromPDF("https://example.com/sample.pdf");
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             max_tokens: 1000,
             messages: [
                 {
-                    "role": "assistant", "content": `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score. 
+                    role: "assistant", content: `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score.
 
                     This is how each grading rubric should be formatted:
-                    
+
                     """
                     **Criteria Name**:
                     **Comments/suggestions**:
                     **Score**: **(score)/subtotal**
                     """
-                    
+
                     Also give the total scores at the end in this format:
-                    
+
                     ***TOTALSCORE***:
-                    
+
                     Grade for a middle school level, and do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100.
-
                     `
-
                 },
-                {
-                    "role": "assistant", "content": `
-                Rubric:\n
-                Content and Depth of Analysis (25 points),\n
-                Structure and Organization (25 points),\n
-                Argument Strength and Persuasiveness (25 points),\n
-                Clarity and Language Use (15 points),\n
-                Originality and Insight (10 points)\n` },
-                { "role": "user", "content": result }
+                { role: "assistant", content: `Rubric:\nContent and Depth of Analysis (25 points),\nStructure and Organization (25 points),\nArgument Strength and Persuasiveness (25 points),\nClarity and Language Use (15 points),\nOriginality and Insight (10 points)\n` },
+                { role: "user", content: result }
             ]
         });
-
-
 
         res.json(response);
     } catch (error) {
         console.error("Error with OpenAI request:", error);
         res.status(500).send('Error with OpenAI request');
     }
-
 };
-
-
-
 
 const completion = async (req, res) => {
     try {
         const prompt = req.body.prompt;
 
-        console.log("prompt is " + prompt)
-
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: prompt
         });
-
 
         res.json(response);
     } catch (error) {
@@ -437,12 +278,7 @@ const completion = async (req, res) => {
     }
 };
 
-
-
-const test = async (req, res) => {
-
-};
-
+const test = async (req, res) => {};
 
 module.exports = {
     completion,
@@ -450,5 +286,4 @@ module.exports = {
     extractText,
     gradeall,
     gradeSubmission,
-    parseRubricWithGPT4
-}
+};
