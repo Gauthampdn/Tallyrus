@@ -177,6 +177,7 @@ const parseRubricWithGPT4 = async (rubricURL) => {
         });
 
         if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
+            console.log(gradingResponse.choices[0].message.content)
             return convertToRubricSchema(gradingResponse.choices[0].message.content);
         } else {
             throw new Error("Failed to get a valid response from GPT-4");

@@ -180,11 +180,11 @@ const handleAddCriteria = () => {
       <Navbar />
       <form className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow" onSubmit={onSubmit}>
 
-        <div className="flex-[1] p-4 ">
+        <div className="flex-[1] p-4">
           <div className='rounded-3xl bg-green-700 text-white p-4'>
             <h1 className="p-2 text-2xl font-extrabold underline" >Select a Template</h1>
             {premadeRubrics.map((template, index) => (
-              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200" onClick={() => loadTemplate(template)}>
+              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200 hover:text-green-700 rounded-xl" onClick={() => loadTemplate(template)}>
                 <strong>{template.Template}</strong>
               </div>
             ))}
@@ -201,14 +201,14 @@ const handleAddCriteria = () => {
                 {fields.map((category, sectionIndex) => (
                   <React.Fragment key={category.id}>
                     <TableRow >
-                      <TableCell className="font-bold">
+                      <TableCell className="font-bold ">
                         <input
                           {...register(`values[${sectionIndex}].name`)}
                           className="border p-1"
                           defaultValue={category.name}
                         />
                       </TableCell>
-                      <div>
+                      <div className='mt-3'>
                         <span className="cursor-pointer hover:text-green-500 material-symbols-outlined" onClick={() => addCriteriaToSection(sectionIndex)}>
                           add
                         </span>
