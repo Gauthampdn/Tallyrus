@@ -540,7 +540,7 @@ const Classroom = () => {
       <Navbar />
 
       <div className="flex flex-grow overflow-hidden">
-        <aside className=" rounded-3xl m-3 mr-0 w-1/5 bg-green-700 p-4 overflow-auto text-white">
+        <aside className=" rounded-3xl m-3 mr-0 w-1/5 bg-indigo-700 p-4 overflow-auto text-white">
           <Button className="mb-4" onClick={handleGoback}>back</Button>
           <h2 className="font-extrabold text-xl mb-4 underline">All Assignments</h2>
 
@@ -548,7 +548,7 @@ const Classroom = () => {
             {allAssignments.map((eachassignment) => (
               <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                 <button
-                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-green-600' : ''}`}
+                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-indigo-600' : ''}`}
                   onClick={() => handleSelectAssignment(eachassignment)}
                 >
                   {eachassignment.name}
@@ -557,7 +557,7 @@ const Classroom = () => {
             ))}
           </ul>
           {user && user.authority === "teacher" && (
-            <Button className="p-2 bg-slate-600" onClick={handleCreateA}>
+            <Button className="p-2 bg-stone-600" onClick={handleCreateA}>
               + New
             </Button>
           )}
@@ -571,7 +571,7 @@ const Classroom = () => {
 
                 <div>
                   {user && user.authority === "teacher" && (
-                    <Button onClick={() => copyPublicLink()} className="p-2 bg-slate-700">
+                    <Button onClick={() => copyPublicLink()} className="p-2 bg-stone-700">
                       Public Link
                     </Button>
                   )}
@@ -580,7 +580,7 @@ const Classroom = () => {
                       Edit Rubric
                     </Button>
                   )}
-                  <Button onClick={() => handleNavtoSubs()} className="p-2 bg-slate-700">All Submissions</Button>
+                  <Button onClick={() => handleNavtoSubs()} className="p-2 bg-stone-700">All Submissions</Button>
                 </div>
               </div>
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>

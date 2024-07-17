@@ -19,7 +19,7 @@ function App() {
 
 
   return (
-    <div class="">
+    <div className="bg-white">
 
       <BrowserRouter>
         <div className="pages">

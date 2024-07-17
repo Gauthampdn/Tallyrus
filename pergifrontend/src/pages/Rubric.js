@@ -158,6 +158,7 @@ const handleAddCriteria = () => {
     console.log(criteriaName)
     const updatedCriteria = [...currentValues, { point: 0, description: '' }];
     console.log(updatedCriteria)
+    setValue(criteriaName, updatedCriteria);
     // Ensure re-render
     update(sectionIndex, { ...fields[sectionIndex], Criteria: updatedCriteria });
   };
@@ -181,10 +182,10 @@ const handleAddCriteria = () => {
       <form className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow" onSubmit={onSubmit}>
 
         <div className="flex-[1] p-4">
-          <div className='rounded-3xl bg-green-700 text-white p-4'>
+          <div className='rounded-3xl bg-indigo-700 text-white p-4'>
             <h1 className="p-2 text-2xl font-extrabold underline" >Select a Template</h1>
             {premadeRubrics.map((template, index) => (
-              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200 hover:text-green-700 rounded-xl" onClick={() => loadTemplate(template)}>
+              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200 hover:text-indigo-700 rounded-xl" onClick={() => loadTemplate(template)}>
                 <strong>{template.Template}</strong>
               </div>
             ))}
@@ -202,14 +203,14 @@ const handleAddCriteria = () => {
                   <React.Fragment key={category.id}>
                     <TableRow >
                       <TableCell className="font-bold ">
-                        <input
+                        <Textarea
                           {...register(`values[${sectionIndex}].name`)}
                           className="border p-1"
                           defaultValue={category.name}
                         />
                       </TableCell>
                       <div className='mt-3'>
-                        <span className="cursor-pointer hover:text-green-500 material-symbols-outlined" onClick={() => addCriteriaToSection(sectionIndex)}>
+                        <span className="cursor-pointer hover:text-indigo-500 material-symbols-outlined" onClick={() => addCriteriaToSection(sectionIndex)}>
                           add
                         </span>
                         <span className="cursor-pointer hover:text-red-500 material-symbols-outlined" onClick={() => handleRemoveCriteriaSection(sectionIndex)}>
@@ -223,7 +224,7 @@ const handleAddCriteria = () => {
 
                     {category.Criteria.map((criteria, criteriaIndex) => (
                       <TableRow key={criteria.id}>
-                        <TableCell className="w-1/12">
+                        <TableCell className="w-2/12">
                           <Textarea
                             placeholder="Number of points"
                             {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].point`)}
@@ -231,14 +232,16 @@ const handleAddCriteria = () => {
                             defaultValue={criteria.point}
                           />
                         </TableCell>
-                        <TableCell className="w-11/12">
+                        <TableCell className="w-10/12">
                           <Textarea
                             placeholder="Type your rubric description here"
                             {...register(`values[${sectionIndex}].Criteria[${criteriaIndex}].description`)}
-                            className="border p-1 w-full resize-none overflow-hidden"
+                            className="border p-1 w-full resize-none overflow-hidden min-h-[2em]"
                             defaultValue={criteria.description}
                             onChange={(e) => adjustTextareaHeight(e.target)}
-                          />
+                            ref={(el) => {
+                              if (el) adjustTextareaHeight(el);
+                            }}                          />
                         </TableCell>
                         <TableCell>
                           <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}><span className="material-symbols-outlined">delete</span></span>

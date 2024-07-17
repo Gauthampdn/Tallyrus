@@ -14,7 +14,7 @@ const Navbar = ({ resetTemplate }) => {
   }
 
   return (
-    <header className="m-3 mb-0 rounded-3xl p-4 flex justify-between items-center bg-slate-700 text-white">
+    <header className="m-3 mb-0 rounded-3xl p-4 flex justify-between items-center bg-zinc-700 text-white">
       
       {user && (<div>
         <span className="block font-bold">
@@ -40,7 +40,7 @@ const Navbar = ({ resetTemplate }) => {
 
           <button
             onClick={handleClick}
-            className="bg-white hover:bg-slate-100 text-black font-bold py-2 px-4 rounded"
+            className="bg-white hover:bg-stone-100 text-black font-bold py-2 px-4 rounded"
           >
             Logout
           </button>
