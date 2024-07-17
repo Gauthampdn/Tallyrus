@@ -125,6 +125,131 @@ function parseFeedback(gradingResponse) {
     return parsedFeedback;
 }
 
+const parseRubricWithGPT4 = async (rubricURL) => {
+    try {
+        const extractedText = await getTextFromPDF(rubricURL);
+        console.log(extractedText);
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            max_tokens: 3000,
+            messages: [
+                {
+                    role: "system", content: `
+
+                    You are a JSON rubric formatting expert. I need you to convert any rubric provided to you into a specific JSON array format
+                    
+                    The rubric will have categories, each with different levels of achievement and corresponding descriptions. Here's the required JSON structure:
+                    [
+                        {
+                            "name": "Category Name",
+                            "values": [
+                                {
+                                    "point": Achievement Level,
+                                    "description": "Description of the achievement level."
+                                },
+                                {
+                                    "point": Achievement Level,
+                                    "description": "Description of the achievement level."
+                                },
+                                ...
+                            ]
+                        },
+                        ...
+                    ]
+
+
+                    Steps to follow:
+                    Identify the categories: Each category in the rubric should be represented as a separate object in the JSON array.
+                    Extract achievement levels: For each category, list all the achievement levels and their descriptions.
+                    Format the JSON: Ensure the JSON is correctly formatted with the following keys:
+                    "name": The name of the category.
+                    "values": An array of objects, each representing an achievement level with:
+                    "point": The point or level of achievement (as in integer) give in decreasing order
+                    "description": A description of what that level entails.
+
+                    Below is an example output:
+
+                    [
+                        {
+                            "name": "Title",
+                            "values": [
+                                {
+                                    "point": 2,
+                                    "description": "Has a clear title. Title is engaging and relevant to the essay."
+                                },
+                                {
+                                    "point": 1,
+                                    "description": "Has a title, but it is irrelevant to the essay or lacks creativity."
+                                },
+                                {
+                                    "point": 0,
+                                    "description": "Title is missing."
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Format",
+                            "values": [
+                                {
+                                    "point": 4,
+                                    "description": "Complete name, teacher's name, subject/period, and date is listed in the top left corner like MLA format. The student's last name and page number is in the top right corner of each page."
+                                },
+                                {
+                                    "point": 3,
+                                    "description": "Matches MLA format for a score of 4 for the most part, but may be missing one detail."
+                                },
+                                {
+                                    "point": 2,
+                                    "description": "Missing a majority of the details from score 4, but has a couple."
+                                },
+                                {
+                                    "point": 1,
+                                    "description": "MLA format for score 4 is missing or lacking the proper format for the most part."
+                                }
+                            ]
+                        }
+                    ]
+
+                ` },
+                {
+                    role: "user", content: `Parse the following rubric text into a structured format.
+
+                    rubric:
+                        ${extractedText}`
+                }
+            ]
+        });
+
+        if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
+            console.log(gradingResponse.choices[0].message.content)
+            return convertToRubricSchema(gradingResponse.choices[0].message.content);
+        } else {
+            throw new Error("Failed to get a valid response from GPT-4");
+        }
+    } catch (error) {
+        console.error("Error parsing rubric:", error);
+        throw new Error("Failed to parse rubric");
+    }
+};
+
+function convertToRubricSchema(gptOutput) {
+    if (!gptOutput) return [];
+
+    // Extract the JSON part from the output using regex
+    const jsonMatch = gptOutput.match(/```(?:json)?([\s\S]*?)```/);
+    if (!jsonMatch || jsonMatch.length < 2) return [];
+
+    const jsonContent = jsonMatch[1].trim();
+
+    // Parse the JSON content
+    const rubrics = JSON.parse(jsonContent);
+
+    return rubrics;
+}
+
+
+
+
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
 
@@ -234,25 +359,34 @@ const extractText = async (req, res) => {
             max_tokens: 1000,
             messages: [
                 {
-                    role: "assistant", content: `You are a Grader for essays. You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria. You will then give the total score.
+                    "role": "assistant", "content": `You are a Grader for essays.You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria.You will then give the total score. 
 
                     This is how each grading rubric should be formatted:
 
-                    """
-                    **Criteria Name**:
-                    **Comments/suggestions**:
-                    **Score**: **(score)/subtotal**
-                    """
-
+                """
+            ** Criteria Name **:
+                    ** Comments / suggestions **:
+                    ** Score **: ** (score) / subtotal **
+        """
+                    
                     Also give the total scores at the end in this format:
+                    
+                    *** TOTALSCORE ***:
 
-                    ***TOTALSCORE***:
+            Grade for a middle school level, and do not grade too harshly.Try to make scores fall between 100 to 70, closer to 100.
 
-                    Grade for a middle school level, and do not grade too harshly. Try to make scores fall between 100 to 70, closer to 100.
-                    `
+                `
+
                 },
-                { role: "assistant", content: `Rubric:\nContent and Depth of Analysis (25 points),\nStructure and Organization (25 points),\nArgument Strength and Persuasiveness (25 points),\nClarity and Language Use (15 points),\nOriginality and Insight (10 points)\n` },
-                { role: "user", content: result }
+                {
+                    "role": "assistant", "content": `
+        Rubric: \n
+                Content and Depth of Analysis(25 points), \n
+                Structure and Organization(25 points), \n
+                Argument Strength and Persuasiveness(25 points), \n
+                Clarity and Language Use(15 points), \n
+                Originality and Insight(10 points) \n` },
+                { "role": "user", "content": result }
             ]
         });
 
@@ -278,7 +412,7 @@ const completion = async (req, res) => {
     }
 };
 
-const test = async (req, res) => {};
+const test = async (req, res) => { };
 
 module.exports = {
     completion,

@@ -11,6 +11,7 @@ import Assignemnt from "pages/Assignment";
 import AboutTallyrus from "pages/AboutTallyrus";
 import PublicAssignment from "pages/PublicAssignment";
 import Rubric from "pages/Rubric";
+import Profile from "pages/Profile";
 
 function App() {
 
@@ -18,7 +19,7 @@ function App() {
 
 
   return (
-    <div class="">
+    <div className="bg-white">
 
       <BrowserRouter>
         <div className="pages">
@@ -38,6 +39,10 @@ function App() {
             <Route
               path="/mail"
               element={<Mail />}
+            />
+            <Route
+              path="/profile"
+              element={<Profile/>}
             />
             <Route
               path="/classroom/:id"

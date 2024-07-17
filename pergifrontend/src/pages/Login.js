@@ -72,7 +72,7 @@ const Login = () => {
 
 
   return (
-    <div className="flex flex-row min-h-screen bg-slate-600  ">
+    <div className="flex flex-row min-h-screen bg-stone-600  ">
 
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div className="flex justify-between items-center">

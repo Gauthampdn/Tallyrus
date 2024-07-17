@@ -65,8 +65,8 @@ passport.deserializeUser(async function (id, done) {
 const getAuth = passport.authenticate("google", { scope: ["email", "profile"] });
 
 const redirectGoogle = passport.authenticate("google", {
-  successRedirect: "http://localhost:3000",
-  failureRedirect: "/failedAuth",
+  successRedirect: "http://localhost:3000/app",
+  failureRedirect: "http://localhost:3000/login",
 });
 
 const logout = (req, res) => {
