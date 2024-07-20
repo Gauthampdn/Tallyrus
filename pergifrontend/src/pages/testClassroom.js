@@ -1,5 +1,3 @@
-// pages/Classroom.js
-
 import Navbar from "components/Navbar";
 import { useAuthContext } from "../hooks/useAuthContext";
 import React, { useState, useEffect } from "react";
@@ -18,10 +16,9 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import { faPlusCircle, faMinusCircle, faSave, faTrash } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import './Classroom.css';
 
@@ -68,7 +65,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 const RubricTable = ({ rubric }) => {
   const columns = React.useMemo(
@@ -128,7 +125,6 @@ const Classroom = () => {
   const { toast } = useToast();
 
   const { user } = useAuthContext();
-
   const { id } = useParams(); // This is how you access the classroom ID from the URL
 
   const [allAssignments, setAllAssignments] = useState([]);
@@ -143,7 +139,11 @@ const Classroom = () => {
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
-      'application/pdf': []
+      'application/pdf': [],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
+      'image/jpeg': [],
+      'image/png': [],
+      'image/jpg': []
     },
     onDrop: (acceptedFiles) => {
       if (isRubricModalOpen && acceptedFiles.length > 0) {
@@ -151,24 +151,24 @@ const Classroom = () => {
         setFileName(acceptedFiles[0].name);
       } else if (isTeacherUploadModalOpen && acceptedFiles.length > 0) {
         setTeacherFiles(acceptedFiles);
+      } else if (acceptedFiles.length > 0) {
+        setFile(acceptedFiles[0]);
+        setFileName(acceptedFiles[0].name);
       }
     },
   });
-  
-  
+
   const handleOpenRubricModal = () => {
     setIsRubricModalOpen(true);
     setRubricFile(null);
     setFileName('');
   };
-  
 
   const handleCloseRubricModal = () => {
     setIsRubricModalOpen(false);
     setRubricFile(null);
     setFileName('');
   };
-  
 
   const handleRubricUpload = async () => {
     if (!rubricFile) {
@@ -209,14 +209,12 @@ const Classroom = () => {
     setIsTeacherUploadModalOpen(true);
     setTeacherFiles(null);
   };
-  
-  
+
   // Function to close the modal
   const handleCloseTeacherUploadModal = () => {
     setIsTeacherUploadModalOpen(false);
     setTeacherFiles(null);
   };
-  
 
   const handleDeleteSubmission = async (filename) => {
     try {
@@ -297,36 +295,28 @@ const Classroom = () => {
     toast({
       variant: "destructive",
       title: "Invalid file type",
-      description: "Please select a PDF file.",
+      description: "Please select a valid file type (PDF, DOCX, JPEG, PNG).",
     });
-  }
+  };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    console.log("File selection event triggered"); // Add this line
     if (selectedFile) {
-      console.log("File selected:", selectedFile.name, "Type:", selectedFile.type);
-      const allowedTypes = ["application/pdf"];
+      const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg", "image/png"];
       if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
-        console.log("File state updated:", selectedFile.name);
-        // Add a state to display the file name
         setFileName(selectedFile.name);
       } else {
-        console.log("Invalid file type:", selectedFile.type);
         toast({
           variant: "destructive",
           title: "Invalid file type",
-          description: "Please select a PDF file.",
+          description: "Please select a valid file type (PDF, DOCX, JPEG, PNG).",
         });
         event.target.value = null;
       }
-    } else {
-      console.log("No file selected");
     }
   };
-  
-  
+
   const handleGradeAll = async (assignmentId) => {
     toast({
       title: "Grading Now!",
@@ -355,33 +345,49 @@ const Classroom = () => {
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
-  }
+  };
 
-  async function getTextFromPdf(file) {
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
-    const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.entry.js');
+  async function getTextFromFile(file) {
+    if (file.type === 'application/pdf') {
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+      const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.entry.js');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
-    const fileReader = new FileReader();
-    return new Promise((resolve, reject) => {
-      fileReader.onload = async (event) => {
-        const typedArray = new Uint8Array(event.target.result);
-        try {
-          const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
-          let text = '';
-          for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i);
-            const textContent = await page.getTextContent();
-            text += textContent.items.map(item => item.str).join(' ');
+      const fileReader = new FileReader();
+      return new Promise((resolve, reject) => {
+        fileReader.onload = async (event) => {
+          const typedArray = new Uint8Array(event.target.result);
+          try {
+            const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
+            let text = '';
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+              const page = await pdfDoc.getPage(i);
+              const textContent = await page.getTextContent();
+              text += textContent.items.map(item => item.str).join(' ');
+            }
+            resolve(text);
+          } catch (error) {
+            reject(error);
           }
-          resolve(text);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      fileReader.readAsArrayBuffer(file);
-    });
+        };
+        fileReader.readAsArrayBuffer(file);
+      });
+    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const arrayBuffer = await file.arrayBuffer();
+      const { value: extractedText } = await mammoth.extractRawText({ arrayBuffer });
+      return extractedText;
+    } else if (['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/extract-text-from-image`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      return data.text;
+    } else {
+      throw new Error('Unsupported file type');
+    }
   }
 
   const handleGrade = async (assignmentId) => {
@@ -391,7 +397,7 @@ const Classroom = () => {
     }
 
     try {
-      const text = await getTextFromPdf(file);
+      const text = await getTextFromFile(file);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
         method: 'POST',
         headers: {
@@ -406,7 +412,6 @@ const Classroom = () => {
       }
 
       const data = await response.json();
-      console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
       setFeedback(data.feedback);
     } catch (error) {
       console.error("There was a problem with extracting or sending the text:", error);
@@ -414,42 +419,34 @@ const Classroom = () => {
   };
 
   const handleSubmit = async (assignmentId) => {
-    console.log("Submit button clicked");
     if (!file) {
       console.log("No file selected for upload");
       return;
     }
-  
-    console.log("Preparing to upload file:", file.name);
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
-      console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
         mode: 'cors',
       });
-  
-      console.log("Response received:", response.status, response.statusText);
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
-      console.log("Upload successful, response data:", data);
       toast({
         title: "Congratulations!",
-        description: "You submitted your PDF successfully.",
+        description: "You submitted your file successfully.",
       });
       // Clear the file input after successful upload
       setFile(null);
       setFileName('');
-  
     } catch (error) {
       console.error("Error during file upload:", error);
     }
@@ -469,12 +466,10 @@ const Classroom = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`,
-        {
-          credentials: 'include',
-          mode: 'cors'
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`, {
+        credentials: 'include',
+        mode: 'cors'
+      });
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -482,7 +477,6 @@ const Classroom = () => {
 
       const data = await response.json();
       setAllAssignments(data);
-      console.log(data)
       if (data.length > 0) {
         setSelectedAssignment(data[0]); // Select the first assignment by default
       }
@@ -528,7 +522,7 @@ const Classroom = () => {
       .catch(err => {
         console.error('Failed to copy the link: ', err);
       });
-      
+
     toast({
       title: "Copied Link",
       description: "We copied the Public Link to this assignment to your clipboard, so you can share it!",
@@ -592,7 +586,6 @@ const Classroom = () => {
                     <br></br>
                   </div>
 
-                  {/* Display the submitted data on the main page */}
                   {selectedAssignment && selectedAssignment.rubric && (
                     <div className="rubric-view-section">
                       <ScrollArea className="scrollable-rubric-view" style={{ maxHeight: '500px', overflowY: 'auto' }}>
@@ -624,9 +617,9 @@ const Classroom = () => {
                           </Card>
                         ))}
                         <div className="max-w-sm">
-                          <Label htmlFor="pdf">Upload your PDF</Label>
-                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
-                          <Button className="mt-8 " onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                          <Label htmlFor="file">Upload your file</Label>
+                          <Input id="file" type="file" accept=".pdf, .docx, .jpg, .jpeg, .png" onChange={handleFileChange} />
+                          <Button className="mt-8" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
                           <br></br>
                           <br></br>
                           <Button
@@ -652,11 +645,9 @@ const Classroom = () => {
                             <div className="flex h-5 items-center space-x-8 text-sm">
                               <p className="text-lg font-bold">Name</p>
                               <Separator orientation="vertical" />
-
                               <p className="text-lg font-bold">Status</p>
                               <Separator orientation="vertical" />
-
-                              <p className="text-lg font-bold"> Link</p>
+                              <p className="text-lg font-bold">Link</p>
                             </div>
                           </div>
                           <div className="p-4">
@@ -666,10 +657,8 @@ const Classroom = () => {
                                   <div className="flex h-5 items-center space-x-8 text-sm">
                                     <p>{submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}</p>
                                     <Separator orientation="vertical" />
-
                                     <p>{submission.status}</p>
                                     <Separator orientation="vertical" />
-
                                     <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">Submission</a>
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
@@ -745,40 +734,40 @@ const Classroom = () => {
                             </AlertDialog>
                           )}
                           {isTeacherUploadModalOpen && (
-                          <AlertDialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
-                            <AlertDialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Upload PDFs</AlertDialogTitle>
-                              </AlertDialogHeader>
-                              <AlertDialogDescription>
-                                <div {...getRootProps({ className: 'dropzone' })}>
-                                  <input {...getInputProps()} />
-                                  <p>Click here to upload your students' essay PDFs</p>
-                                </div>
-                                <ul className="file-list">
-                                  {teacherFiles && teacherFiles.map((file, index) => (
-                                    <li key={index}>
-                                      {file.name}
-                                      <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </AlertDialogDescription>
-                              <AlertDialogFooter>
-                                <Button onClick={handleCloseTeacherUploadModal}>Cancel</Button>
-                                <Button
-                                  onClick={() => {
-                                    handleTeacherFilesUpload(selectedAssignment._id);
-                                    handleCloseTeacherUploadModal();
-                                  }}
-                                  disabled={!teacherFiles || teacherFiles.length === 0}
-                                >
-                                  Submit Files
-                                </Button>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                            <AlertDialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
+                              <AlertDialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Upload PDFs</AlertDialogTitle>
+                                </AlertDialogHeader>
+                                <AlertDialogDescription>
+                                  <div {...getRootProps({ className: 'dropzone' })}>
+                                    <input {...getInputProps()} />
+                                    <p>Click here to upload your students' essay PDFs</p>
+                                  </div>
+                                  <ul className="file-list">
+                                    {teacherFiles && teacherFiles.map((file, index) => (
+                                      <li key={index}>
+                                        {file.name}
+                                        <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </AlertDialogDescription>
+                                <AlertDialogFooter>
+                                  <Button onClick={handleCloseTeacherUploadModal}>Cancel</Button>
+                                  <Button
+                                    onClick={() => {
+                                      handleTeacherFilesUpload(selectedAssignment._id);
+                                      handleCloseTeacherUploadModal();
+                                    }}
+                                    disabled={!teacherFiles || teacherFiles.length === 0}
+                                  >
+                                    Submit Files
+                                  </Button>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                           <Button onClick={handleOpenTeacherUploadModal}>
                             Upload Files
                           </Button>
@@ -802,6 +791,6 @@ const Classroom = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Classroom;
