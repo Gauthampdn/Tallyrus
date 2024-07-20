@@ -89,9 +89,26 @@ const getGoogleUser = async (req, res) => {
   }
 }
 
+const switchAuthority = async (req, res) => {
+  if (req.isAuthenticated()) {
+    try {
+      const user = await User.findById(req.user._id);
+      user.authority = user.authority === "teacher" ? "student" : "teacher";
+      await user.save();
+      res.json( user );
+    } catch (err) {
+      res.status(500).json({ error: "An error occurred while switching authority" });
+    }
+  } else {
+    res.status(401).json({ error: "Unauthorized access" });
+  }
+};
+
+
 module.exports = {
   getAuth,
   redirectGoogle,
   logout,
-  getGoogleUser
+  getGoogleUser,
+  switchAuthority
 }

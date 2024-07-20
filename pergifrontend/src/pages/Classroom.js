@@ -456,7 +456,7 @@ const Classroom = () => {
   };
 
   const handleGoback = () => {
-    navigate("/");
+    navigate("/app");
   };
 
   const handleNavtoSubs = () => {

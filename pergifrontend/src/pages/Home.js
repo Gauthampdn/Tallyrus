@@ -226,7 +226,7 @@ const Home = () => {
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
-                <Button className='text-md font-bold bg-stone-600'>CREATE CLASS +</Button>
+                <Button className='text-md font-bold bg-indigo-600'>CREATE CLASS +</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -267,12 +267,12 @@ const Home = () => {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button className='text-md font-bold bg-blue-600' onClick={handleStripeCheckout}>Buy More Credits</Button>
+          {/* <Button className='text-md font-bold bg-blue-600' onClick={handleStripeCheckout}>Buy More Credits</Button> */}
         </div>
         {user && user.authority === "student" && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button className='text-md font-bold bg-stone-600'>JOIN CLASS +</Button>
+              <Button className='text-md font-bold bg-indigo-600'>JOIN CLASS +</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -306,7 +306,7 @@ const Home = () => {
 
       <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
-          <Card key={classroom._id} className="min-w-1/4 w-1/4 h-[300px] bg-stone-100 m-4 text-slate-700">
+          <Card key={classroom._id} className="min-w-1/4 w-1/4 h-[300px] bg-indigo-50 m-4 text-slate-700">
             <CardHeader>
               <div className='flex justify-between'>
                 <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
