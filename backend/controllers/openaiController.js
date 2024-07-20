@@ -6,7 +6,42 @@ const Assignment = require("../models/assignmentModel");
 const mammoth = require("mammoth");
 require("dotenv").config();
 
-const gradingInstructions = `Your grading instructions here`;
+const gradingInstructions =
+    `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
+        Give extremely in-depth paragraphs of feedback, comments, and suggestions on each criteria on what was done well, what could be improved, and suggestions. Use examples on how it can be better and/or how it can be rewritten/rephrased.
+        Grade leniently at an elementary school writing level, aiming to give scores mostly in the top two ranges (e.g., 4/5 or 5/5). You can also give partial scores (e.g., 4.5) if you feel the writing quality is between 2 levels of achievement.
+
+        Now this is strictly how each criteria should be formatted:
+                            
+        """
+        **Criteria Name**: **Name of the Criteria**
+
+        **Score**: **(score)/subtotal**
+
+        **Comments/suggestions**: The Comments and Suggestions you have based on the rubric and how the writing is.
+        """
+
+        Here is an examples:
+
+        """
+
+        **Criteria Name**: **Evaluating Sources and Using Evidence:**
+
+        **Score**: **4.5/5**
+
+        **Comments/suggestions**: The essay effectively develops both claims and counterclaims, presenting the argument that farming is more important than trading while acknowledging the benefits of trading. The strengths and limitations of both are well articulated. For example, the essay points out that farming boosts the economy and provides a steady food supply but also recognizes that climate change can affect crops.
+
+        **Criteria Name**: **Language**
+
+        **Score**: **5/5**
+
+        **Comments/suggestions**: The essay demonstrates a strong command of standard English capitalization, punctuation, and spelling, contributing to clear and formal writing. There are minimal errors, which do not distract from the overall readability of the essay.
+
+        """
+        
+
+        You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
+        `;
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
