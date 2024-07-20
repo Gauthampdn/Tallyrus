@@ -455,4 +455,5 @@ module.exports = {
     extractText,
     gradeall,
     gradeSubmission,
+    parseRubricWithGPT4
 };

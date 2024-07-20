@@ -27,8 +27,6 @@ router.post("/extext", extractText)
 
 router.get("/gradeall/:id", gradeall)
 
-router.post("/parse-rubric/:assignmentId", parseRubricWithGPT4);
-
 // Add this new route in openai.js
 
 
