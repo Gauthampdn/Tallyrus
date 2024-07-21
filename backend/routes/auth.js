@@ -21,7 +21,8 @@ router.get("/logout", logout)  // logs out user by clearing cookies and then red
 
 router.get("/googleUser", getGoogleUser)  // returns the user object to save it in frontend
 
-router.patch("/switchAuthority", switchAuthority)  // returns the user object to save it in frontend
+router.patch("/switchAuthority", switchAuthority) 
+
 
 
 module.exports = router

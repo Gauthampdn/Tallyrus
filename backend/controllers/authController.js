@@ -32,7 +32,8 @@ passport.use(new GoogleStrategy({
           id: profile.id,
           picture: profile.picture,
           name: profile.given_name,
-          authority: "student"
+          authority: "student",
+          numGraded: 0
         });
         await user.save();
         console.log("made new user")

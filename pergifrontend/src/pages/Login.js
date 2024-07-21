@@ -81,10 +81,11 @@ const Login = () => {
         </div>
         <div className="mb-10">
           <blockquote className="italic text-white">
-            “I used to spend countless hours grading assignments before
+            “I feel as though Tallyrus was made just for me as I 
+            used to spend countless hours grading assignments before
             and now I'm able to give students their papers graded back within hours”
           </blockquote>
-          <p className="mt-4  text-white">- a teacher</p>
+          <p className="mt-4  text-white">- Mrs.M - Grade 6 English Teacher</p>
         </div>
       </div>
 

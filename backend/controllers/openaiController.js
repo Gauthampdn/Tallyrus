@@ -3,8 +3,11 @@ const mongoose = require("mongoose");
 const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
-const mammoth = require("mammoth");
+// const mammoth = require("mammoth");
 require("dotenv").config();
+
+const { incrementGraded } = require('./authController');
+
 
 const gradingInstructions =
     `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
@@ -67,35 +70,35 @@ async function getTextFromPDF(pdfPath) {
     return extractedText;
 }
 
-async function getTextFromDOCX(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        const { value: extractedText, messages } = await mammoth.extractRawText({ arrayBuffer });
-        messages.forEach(message => console.log("Message:", message));
-        return extractedText;
-    } catch (error) {
-        console.error("Error fetching or converting document:", error);
-        return null;
-    }
-}
+// async function getTextFromDOCX(url) {
+//     try {
+//         const response = await fetch(url);
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+//         const arrayBuffer = await response.arrayBuffer();
+//         const { value: extractedText, messages } = await mammoth.extractRawText({ arrayBuffer });
+//         messages.forEach(message => console.log("Message:", message));
+//         return extractedText;
+//     } catch (error) {
+//         console.error("Error fetching or converting document:", error);
+//         return null;
+//     }
+// }
 
-async function getTextFromImage(imagePath) {
-    try {
-        const response = await openai.images.generate({
-            image: imagePath,
-            request_text: true,
-            prompt: 'Extract the text from this image',
-        });
-        return response.data.text;
-    } catch (error) {
-        console.error("Error extracting text from image:", error);
-        return null;
-    }
-}
+// async function getTextFromImage(imagePath) {
+//     try {
+//         const response = await openai.images.generate({
+//             image: imagePath,
+//             request_text: true,
+//             prompt: 'Extract the text from this image',
+//         });
+//         return response.data.text;
+//     } catch (error) {
+//         console.error("Error extracting text from image:", error);
+//         return null;
+//     }
+// }
 
 function rubricToString(rubrics) {
     let rubricString = '';
@@ -288,6 +291,8 @@ function convertToRubricSchema(gptOutput) {
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
 
+    console.log("starting to grade")
+
     if (req.user.authority !== "teacher") {
         return res.status(403).json({ error: "Only teachers can grade assignments" });
     }
@@ -300,15 +305,20 @@ const gradeall = async (req, res) => {
         }
 
         for (let submission of assignment.submissions) {
+
+            console.log(submission.pdfURL);
             if (submission.status !== 'graded') {
                 let extractedText = ' ';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
-                } else if (submission.pdfURL.endsWith('.docx')) {
-                    extractedText = await getTextFromDOCX(submission.pdfURL);
-                } else if (['.png', '.jpg', '.jpeg'].some(ext => submission.pdfURL.endsWith(ext))) {
-                    extractedText = await getTextFromImage(submission.pdfURL);
-                } else {
+                }
+                // else if (submission.pdfURL.endsWith('.docx')) {
+                //     extractedText = await getTextFromDOCX(submission.pdfURL);
+                // }
+                // else if (['.png', '.jpg', '.jpeg'].some(ext => submission.pdfURL.endsWith(ext))) {
+                //     extractedText = await getTextFromImage(submission.pdfURL);
+                // }
+                else {
                     submission.status = 'error';
                     submission.feedback = 'Unsupported file format';
                     await assignment.save();
@@ -333,12 +343,23 @@ const gradeall = async (req, res) => {
                     ]
                 });
 
-                if (!gradingResponse) {
+                if (!gradingResponse) { // maybe change this to continue to the next file (skipping so it doenst get stuck on a file every time)
                     return res.status(400).json({ error: "couldn't grade text" });
                 }
+
                 const gradedfeedback = gradingResponse.choices[0].message.content;
                 submission.feedback = parseFeedback(gradedfeedback);
                 submission.status = 'graded';
+
+                const user = await User.findById(req.user._id);
+                console.log("gonna add orange")
+
+                if (user.numGraded === undefined) {
+                    user.numGraded = 0;
+                }
+                user.numGraded++;
+                await user.save();
+
             }
             await assignment.save();
         }

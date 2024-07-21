@@ -23,6 +23,10 @@ const Navbar = ({ resetTemplate }) => {
     logout();
   }
 
+  const goToProfile = () => {
+    navigate("/profile");
+  }
+
   const switchAuthority = async () => {
     const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/auth/switchAuthority`, {
       method: 'PATCH',
@@ -69,7 +73,7 @@ const Navbar = ({ resetTemplate }) => {
       {user && (
         <div className="user-info flex gap-2 items-center">
           <img src={user.picture} alt={user.name} className="user-image rounded-full h-10 w-10 object-cover mr-3" />
-          <div className="mr-4">
+          <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
             <span className="block text-sm">Welcome,</span>
             <span className="block font-bold">
               {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}

@@ -25,6 +25,10 @@ const userSchema = new Schema({
     type: String,
     enum: ['teacher', 'student']
   },
+  numGraded: {
+    type: Number,
+    default: 0
+  }
 })
 
 module.exports = mongoose.model("User", userSchema)

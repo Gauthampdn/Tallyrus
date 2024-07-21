@@ -38,122 +38,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-//import { Form } from '@/components/ui';
-
-
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
-
-
-const rubricValueSchema = z.object({
-  point: z.number(),
-  description: z.string(),
-});
-
-const rubricSchema = z.object({
-  rubrics: z.array(z.object({
-    name: z.string(),
-    values: z.array(rubricValueSchema)
-  }))
-});
-
-
-const RubricField = ({ control, register, rubricIndex, rubricField, removeRubric }) => {
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: `rubrics.${rubricIndex}.values`,
-  });
-  const adjustTextareaHeight = (element) => {
-    if (element) {
-      element.style.height = "auto"; // Reset height to ensure accurate scrollHeight measurement
-      element.style.height = `${element.scrollHeight}px`; // Adjust height based on content
-    }
-  };
-
-  // Adjust all textareas on initial render and when fields change
-  useEffect(() => {
-    fields.forEach((field, index) => {
-      // Adjust both point and description textareas
-      adjustTextareaHeight(document.getElementById(`point-${rubricIndex}-${index}`));
-      adjustTextareaHeight(document.getElementById(`description-${rubricIndex}-${index}`));
-    });
-  }, [fields]);
-
-
-
-  return (
-    <div key={rubricField.id} className="rubric-card">
-      <div className="rubric-header flex items-center">
-        <Button type="button" onClick={() => append({ point: 0, description: '' })} className="plus-button">
-          <FontAwesomeIcon icon={faPlusCircle} />
-        </Button>
-        {/* Replace textarea with input for topic */}
-        <input
-          {...register(`rubrics.${rubricIndex}.name`)}
-          placeholder="Topic"
-          className="topic-input"
-        />
-        <Button type="button" onClick={() => removeRubric(rubricIndex)} className="minus-button">
-          <FontAwesomeIcon icon={faMinusCircle} />
-        </Button>
-      </div>
-
-      {fields.map((field, index) => (
-        <div key={field.id} className="flex items-center justify-between my-field rubric-item">
-          <Button type="button" onClick={() => remove(index)} className="my-minus-button rubric-button">
-            <FontAwesomeIcon icon={faMinusCircle} />
-          </Button>
-          <div className="input-wrapper">
-            <input
-              {...register(`rubrics.${rubricIndex}.values.${index}.point`)}
-              type="number"
-              placeholder="0"
-              className="point-input rubric-input flex-grow"
-            />
-          </div>
-          <textarea
-            {...register(`rubrics.${rubricIndex}.values.${index}.description`)}
-            placeholder="Description"
-            className="description-input rubric-input flex-grow"
-            style={{ resize: 'none', height: 'auto' }}
-          // Remove the style for resizing and height adjustment
-          />
-        </div>
-      ))}
-    </div>
-  );
-
-
-};
-
 
 const RubricTable = ({ rubric }) => {
   // Removed TypeScript type annotation
@@ -214,17 +98,11 @@ const PublicAssignment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { user } = useAuthContext();
-
   const { id } = useParams(); // This is how you access the PublicAssignment ID from the URL
 
-  const [allAssignments, setAllAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [file, setFile] = useState(null); // State to hold the selected file
-  const [rubricButtonText, setRubricButtonText] = useState("Add Rubric");
   const [feedback, setFeedback] = useState('');
-  const [teacherFiles, setTeacherFiles] = useState(null); // State to hold the selected files for the teacher
-  const [isTeacherUploadModalOpen, setIsTeacherUploadModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -242,29 +120,6 @@ const PublicAssignment = () => {
 
     fetchAssignment();
   }, []); // This useEffect depends on `id`, it will rerun when `id` changes
-
-
-
-
-
-  const { control, register, getValues, reset } = useForm({
-    resolver: zodResolver(rubricSchema),
-    defaultValues: {
-      rubrics: [{ name: '', values: [{ point: 0, description: '' }] }]
-    }
-  });
-
-
-  const { fields: rubricFields, append: appendRubric, remove: removeRubric } = useFieldArray({
-    control,
-    name: "rubrics",
-  });
-
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [submittedData, setSubmittedData] = useState(null); // State to store submitted data
-
-
-
 
 
   const doToast = () => {
