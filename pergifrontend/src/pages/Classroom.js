@@ -571,7 +571,7 @@ const Classroom = () => {
           )}
         </aside>
 
-        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (
             <div>
               <div className="flex justify-between">
@@ -621,6 +621,7 @@ const Classroom = () => {
 
               </div>
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
+              <hr className="mb-4"/>
 
               <div className="flex flex-row w-full">
                 <div className="flex-1">
@@ -632,7 +633,7 @@ const Classroom = () => {
                   {/* Display the submitted data on the main page */}
                   {selectedAssignment && selectedAssignment.rubric && (
                     <div className="rubric-view-section">
-                      <ScrollArea className="scrollable-rubric-view" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                      <ScrollArea className="scrollable-rubric-view" style={{ }}>
                         {selectedAssignment.rubric.map((rubric, index) => (
                           <RubricTable key={index} rubric={rubric} />
                         ))}
