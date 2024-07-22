@@ -3,7 +3,7 @@ import React, { useState, useEffect, createRef } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import ReactMarkdown from 'react-markdown';
 import Navbar from "components/Navbar";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './assignments.css';
@@ -11,9 +11,7 @@ import { marked } from 'marked';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import { Input } from "@/components/ui/input"
-
-
+import { Input } from "@/components/ui/input";
 
 import {
   Command,
@@ -21,13 +19,13 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
 import {
   DropdownMenu,
@@ -42,7 +40,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 import {
   AlertDialog,
@@ -55,7 +53,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-
 
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
@@ -72,7 +69,6 @@ const Assignment = () => {
   const [open, setOpen] = useState(false);
   const [editName, setEditName] = useState(false);
   const [name, setName] = useState('');
-
 
   const [searchText, setSearchText] = useState("");
 
@@ -185,9 +181,9 @@ const Assignment = () => {
         </body>
       </html>
     `);
-  
+
     const contentElement = printWindow.document.getElementById('content');
-  
+
     assignment.submissions.forEach(submission => {
       const formattedFeedback = formatFeedback(submission);
       const submissionContent = `
@@ -202,13 +198,13 @@ const Assignment = () => {
       `;
       contentElement.innerHTML += submissionContent;
     });
-  
+
     printWindow.document.close();
     printWindow.onload = () => {
       printWindow.print();
     };
   };
-  
+
 
 
   const handlePrint = async () => {
@@ -339,129 +335,135 @@ const Assignment = () => {
       </div>
 
       {assignment ? (
-        <div style={{ width: '97%' }} className="mx-auto">
+        <div className="m-4" >
 
-          {/* Left (Previous) Button */}
-          <Button
-            onClick={navigateToPreviousSubmission}
-            disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === 0}
-            className="p-4 mr-2"
-            aria-label="Previous Submission"
-          >
-            &#8592;
-          </Button>
 
-          {/* Right (Next) Button */}
-          <Button
-            onClick={navigateToNextSubmission}
-            disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === assignment.submissions.length - 1}
-            className="p-4 mr-2"
-            aria-label="Next Submission"
-          >
-            &#8594;
-          </Button>
+          <div className="flex mb-2">
 
-          <Popover open={open} onOpenChange={setOpen} >
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="command-item-text p-4 mb-4"
+            {/* Left (Previous) Button */}
+            <Button
+              onClick={navigateToPreviousSubmission}
+              disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === 0}
+              className="p-4 mr-2"
+              aria-label="Previous Submission"
+            >
+              &#8592;
+            </Button>
 
-              >
-                {selectedSubmission
-                  ? getSubmissionLabel(selectedSubmission)
-                  : "Select Submission..."}
-                <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
+            {/* Right (Next) Button */}
+            <Button
+              onClick={navigateToNextSubmission}
+              disabled={selectedSubmission && assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id) === assignment.submissions.length - 1}
+              className="p-4 mr-2"
+              aria-label="Next Submission"
+            >
+              &#8594;
+            </Button>
 
-            <PopoverContent className="w-[200px] p-0">
-              <Command>
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    style={{
-                      position: 'absolute',
-                      left: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 10,
-                      pointerEvents: 'none',
-                      fontSize: '14px',
-                      color: '#aaa', // Lighter font color
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search submission..."
-                    className="h-9"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    style={{
-                      padding: '10px 20px',
-                      width: '100%',
-                      boxSizing: 'border-box',
-                      outline: 'none',
-                      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.075)',
-                      fontSize: '16px',
-                      paddingLeft: '40px', // Adjust to avoid overlapping with the icon
-                    }}
-                  />
-                </div>
-                {filteredSubmissions.length === 0 && <CommandEmpty>No submission found.</CommandEmpty>}
-                <CommandGroup>
-                  {filteredSubmissions.map((submission) => (
-                    <CommandItem
-                      key={submission._id}
-                      value={submission._id}
-                      onSelect={() => handleSelectSubmission(submission._id)}
-                      className="command-item" // This is for any styling specific to the entire item
-                    >
-                      <div className="command-item-text" title={getSubmissionLabel(submission)}>
-                        {getSubmissionLabel(submission)}
-                      </div>
-                      <CheckIcon
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          selectedSubmission && submission._id === selectedSubmission._id ? "opacity-100" : "opacity-``0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+            <Popover open={open} onOpenChange={setOpen} >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="command-item-text p-4 mb-4"
 
-          <DropdownMenu >
-            <DropdownMenuTrigger asChild >
-              <Button variant="" className="material-symbols-outlined ml-2">apps</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Options</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onSelect={handlePrint}>
-                  🖨️ Print
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={printAll}>
-                  🖨️ Print All
-                </DropdownMenuItem>
+                >
+                  {selectedSubmission
+                    ? getSubmissionLabel(selectedSubmission)
+                    : "Select Submission..."}
+                  <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
 
-                <DropdownMenuItem onSelect={() => setEditName(true)}>
-                  Edit File Name
-                </DropdownMenuItem>
+              <PopoverContent className="w-[200px] p-0">
+                <Command>
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <FontAwesomeIcon
+                      icon={faSearch}
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        pointerEvents: 'none',
+                        fontSize: '14px',
+                        color: '#aaa', // Lighter font color
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search submission..."
+                      className="h-9"
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      style={{
+                        padding: '10px 20px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.075)',
+                        fontSize: '16px',
+                        paddingLeft: '40px', // Adjust to avoid overlapping with the icon
+                      }}
+                    />
+                  </div>
+                  {filteredSubmissions.length === 0 && <CommandEmpty>No submission found.</CommandEmpty>}
+                  <CommandGroup>
+                    {filteredSubmissions.map((submission) => (
+                      <CommandItem
+                        key={submission._id}
+                        value={submission._id}
+                        onSelect={() => handleSelectSubmission(submission._id)}
+                        className="command-item" // This is for any styling specific to the entire item
+                      >
+                        <div className="command-item-text" title={getSubmissionLabel(submission)}>
+                          {getSubmissionLabel(submission)}
+                        </div>
+                        <CheckIcon
+                          className={cn(
+                            "ml-auto h-4 w-4",
+                            selectedSubmission && submission._id === selectedSubmission._id ? "opacity-100" : "opacity-``0"
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
-                <DropdownMenuItem onSelect={() => handleMarkForRegrade(selectedSubmission._id)}>
-                  Mark for Regrade
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu >
+              <DropdownMenuTrigger asChild >
+                <Button variant="" className="material-symbols-outlined ml-2">apps</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onSelect={handlePrint}>
+                    🖨️ Print
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={printAll}>
+                    🖨️ Print All
+                  </DropdownMenuItem>
 
-          {/* Display selected submission details */}
+                  <DropdownMenuItem onSelect={() => setEditName(true)}>
+                    Edit File Name
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button className="ml-2 bg-red-500"  onClick={() => handleMarkForRegrade(selectedSubmission._id)}>
+              Mark for Regrade
+            </Button>
+
+          </div>
+
+          <hr className="mb-5"/>
+
 
           {selectedSubmission && (
             <div className="flex flex-col md:flex-row">
