@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 
 import './Classroom.css';
 
@@ -594,11 +594,9 @@ const Classroom = () => {
                           <DropdownMenuItem onSelect={() => handleNavtoRubric()}>Edit Rubric</DropdownMenuItem>
                           <DropdownMenuItem onSelect={handleOpenRubricModal}>Upload Rubric</DropdownMenuItem>
                           <DropdownMenuItem onSelect={handleOpenTeacherUploadModal}>Upload Files</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleNavtoSubs()}>All Submissions</DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button className="bg-green-600" onClick={() => handleGradeAll(selectedAssignment._id)}>Grade Assignments</Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button className="material-symbols-outlined" variant="destructive">delete</Button>
@@ -680,8 +678,15 @@ const Classroom = () => {
                       </div>
                     )}
                     {user.authority === "teacher" && (
-                      <div className="ml-5">
-                        <div className="rounded-md border">
+                      <div className="ml-5 flex flex-col items-start">
+                        <div className="flex w-full gap-5">
+                          <Button className="bg-green-600 flex-auto" onClick={() => handleGradeAll(selectedAssignment._id)}>Grade Assignments</Button>
+
+                          <Button className=" mb-4 flex-auto items-center justify-between" style={{ backgroundColor: '#f3722c', color: 'white' }} onClick={() => handleNavtoSubs()}>
+                            All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                          </Button>
+                        </div>
+                        <div className="w-full rounded-md border">
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -693,7 +698,9 @@ const Classroom = () => {
                             <TableBody>
                               {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
                                 <TableRow key={submission._id}>
-                                  <TableCell className="font-bold">{submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}</TableCell>
+                                  <TableCell className="font-bold">
+                                    {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
+                                  </TableCell>
                                   <TableCell className="font-bold">{submission.status}</TableCell>
                                   <TableCell>
                                     <Dialog>
@@ -720,6 +727,7 @@ const Classroom = () => {
                             </TableBody>
                           </Table>
                         </div>
+
                         <div className="flex justify-end items-center space-x-4 mt-4">
                           {isRubricModalOpen && (
                             <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
