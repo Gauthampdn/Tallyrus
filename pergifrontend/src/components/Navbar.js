@@ -44,30 +44,38 @@ const Navbar = ({ resetTemplate }) => {
   return (
     <header className="m-3 mb-0 rounded-3xl p-4 flex justify-between items-center bg-zinc-700 text-white">
       {user && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <div className="cursor-pointer hover:underline">
-              <span className="block font-bold">
-                Account Type:
-              </span>
-              <span className="block font-medium">
-                {user.authority}
-              </span>
-            </div>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will change your account authority, you can change back whenever you want.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={switchAuthority}>Yes</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="p-1 rounded-xl flex items-center gap-4 cursor-pointer hover:text-blue-600 hover:bg-white">
+
+          <span class="text-5xl material-symbols-outlined ">
+            metabolism
+          </span>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <div className="hover:underline">
+                <span className="block font-bold">
+                  Account Type:
+                </span>
+                <span className="block font-medium">
+                  {user.authority}
+                </span>
+              </div>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will change your account authority, you can change back whenever you want.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={switchAuthority}>Yes</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+        </div>
+
       )}
 
       {user && (
