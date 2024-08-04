@@ -254,7 +254,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {"<Button className='text-md font-bold bg-blue-600' onClick={startTour}>?</Button>"}
+          {/*<Button className='text-md font-bold bg-blue-600' onClick={startTour}>?</Button>*/}
         </div>
         {user && user.authority === "student" && (
           <AlertDialog>
