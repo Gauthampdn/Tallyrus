@@ -74,7 +74,7 @@ const logout = (req, res) => {
   req.logout(() => {
     req.session.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('https://tallyrus.com/login');
+      res.redirect('https://tallyrus.com');
     });
   });
 }
