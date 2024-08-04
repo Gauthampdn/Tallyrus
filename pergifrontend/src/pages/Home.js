@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 
 import {
   Card,
@@ -26,7 +26,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 import {
   AlertDialog,
@@ -56,23 +56,21 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 const joinFormSchema = z.object({
   joinCode: z.string().min(1, "Please enter a join code"),
 });
 
-// Schema for create class
 const createClassSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
 });
 
-const Home = () => {
+const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCreateModalOpen }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false); // For join class
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // For create class
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const joinForm = useForm({
     resolver: zodResolver(joinFormSchema),
   });
@@ -86,7 +84,6 @@ const Home = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          // Include authentication headers if needed
         },
         credentials: 'include',
         mode: 'cors',
@@ -109,8 +106,9 @@ const Home = () => {
       console.error('Error joining classroom:', error);
     }
   };
+
   const { user } = useAuthContext();
-  const [currClassrooms, setCurrClassrooms] = useState([]); // Renamed to plural
+  const [currClassrooms, setCurrClassrooms] = useState([]);
 
   const handleGoToClass = (classroomId) => {
     navigate(`/classroom/${classroomId}`);
@@ -122,7 +120,6 @@ const Home = () => {
 
   useEffect(() => {
     const fetchClassrooms = async () => {
-      console.log("fetching classrooms");
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom`, {
         credentials: 'include'
       });
@@ -145,34 +142,24 @@ const Home = () => {
 
   const handleDeleteClassroom = async (classroomId) => {
     try {
-      // Make a DELETE request to the backend API to delete the specified classroom
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom/${classroomId}`, {
         method: 'DELETE',
-        credentials: 'include', // Make sure cookies are sent with the request if needed for authentication
-        mode: 'cors', // Ensure CORS policy is handled correctly
+        credentials: 'include',
+        mode: 'cors',
       });
 
       if (!response.ok) {
-        // Handle non-OK responses here
         throw new Error('Failed to delete classroom');
       }
 
-      // Successfully deleted the classroom
-      console.log('Classroom deleted successfully:', classroomId);
-
-      // Optionally, show a success message to the user
+      setCurrClassrooms(currClassrooms.filter(classroom => classroom._id !== classroomId));
       toast({
         variant: "positive",
         title: "Classroom Deleted",
         description: "The classroom was successfully deleted.",
       });
-
-      // Refresh the classroom list or remove the deleted classroom from the state
-      // to reflect the changes in the UI without reloading the page
-      setCurrClassrooms(currClassrooms.filter(classroom => classroom._id !== classroomId));
     } catch (error) {
       console.error('Error deleting classroom:', error);
-      // Optionally, show an error message to the user
       toast({
         variant: "destructive",
         title: "Error Deleting Classroom",
@@ -202,7 +189,7 @@ const Home = () => {
         description: "The class is created",
       });
 
-      window.location.reload(); // Reload to show the new class
+      window.location.reload();
     } catch (error) {
       console.error("There was a problem with the POST operation:", error);
       toast({
@@ -226,14 +213,14 @@ const Home = () => {
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
-                <Button className='text-md font-bold bg-indigo-600'>CREATE CLASS +</Button>
+                <Button className='text-md font-bold bg-indigo-600 create-class-btn'>CREATE CLASS +</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Create Class</AlertDialogTitle>
                 </AlertDialogHeader>
                 <Form {...createForm}>
-                  <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8">
+                  <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8 fill-class-info">
                     <FormField
                       control={createForm.control}
                       name="title"
@@ -267,7 +254,7 @@ const Home = () => {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {/* <Button className='text-md font-bold bg-blue-600' onClick={handleStripeCheckout}>Buy More Credits</Button> */}
+          <Button className='text-md font-bold bg-blue-600' onClick={startTour}>?</Button>
         </div>
         {user && user.authority === "student" && (
           <AlertDialog>
@@ -306,7 +293,7 @@ const Home = () => {
 
       <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
-          <Card key={classroom._id} className="min-w-1/4 w-1/4 h-[300px] bg-indigo-50 m-4 text-slate-700">
+          <Card key={classroom._id} className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 ${classroom.color}`}>
             <CardHeader>
               <div className='flex justify-between'>
                 <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
@@ -334,7 +321,7 @@ const Home = () => {
             </CardContent>
             <CardFooter className="flex justify-between">
               <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
-              <Button onClick={() => handleGoToClass(classroom._id)}>Go to Class</Button>
+              <Button className="go-to-class-btn bg-teal-500" onClick={() => handleGoToClass(classroom._id)}>Go to Class</Button>
             </CardFooter>
           </Card>
         ))}

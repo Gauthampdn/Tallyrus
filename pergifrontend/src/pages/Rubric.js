@@ -182,7 +182,7 @@ const handleAddCriteria = () => {
       <form className="bg-white rounded-3xl m-3 flex overflow-auto flex-grow" onSubmit={onSubmit}>
 
         <div className="flex-[1] p-4">
-          <div className='rounded-3xl bg-indigo-700 text-white p-4'>
+          <div className='rounded-3xl bg-indigo-200 text-white p-4'>
             <h1 className="p-2 text-2xl font-extrabold underline" >Select a Template</h1>
             {premadeRubrics.map((template, index) => (
               <div key={index} className="cursor-pointer p-2 hover:bg-gray-200 hover:text-indigo-700 rounded-xl" onClick={() => loadTemplate(template)}>

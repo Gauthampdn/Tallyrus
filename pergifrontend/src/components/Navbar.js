@@ -42,23 +42,16 @@ const Navbar = ({ resetTemplate }) => {
   }
 
   return (
-    <header className="m-3 mb-0 rounded-3xl p-4 flex justify-between items-center bg-zinc-700 text-white">
+    <header className="m-1 mb-0 mt-1 rounded-xl p-4 flex justify-between items-center bg-zinc-700 text-white h-12">
       {user && (
-        <div className="p-1 rounded-xl flex items-center gap-4 cursor-pointer hover:text-blue-600 hover:bg-white">
+        <div className="p-1 rounded-xl flex items-center gap-4 cursor-pointer ">
 
-          <span class="text-5xl material-symbols-outlined ">
-            metabolism
-          </span>
+          
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <div className="hover:underline">
-                <span className="block font-bold">
-                  Account Type:
-                </span>
-                <span className="block font-medium">
-                  {user.authority}
-                </span>
-              </div>
+                <span class="text-2xl material-symbols-outlined hover:text-blue-500">
+                metabolism
+              </span>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -73,6 +66,11 @@ const Navbar = ({ resetTemplate }) => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          <div className="">
+                <span className="block font-medium">
+                  {user.authority}
+                </span>
+              </div>
 
         </div>
 
@@ -80,16 +78,15 @@ const Navbar = ({ resetTemplate }) => {
 
       {user && (
         <div className="user-info flex gap-2 items-center">
-          <img src={user.picture} alt={user.name} className="user-image rounded-full h-10 w-10 object-cover mr-3" />
+          <img src={user.picture} alt={user.name} className="user-image rounded-full h-4 w-4 object-cover mr-3" />
           <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
-            <span className="block text-sm">Welcome,</span>
             <span className="block font-bold">
               {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}
             </span>
           </div>
           <button
             onClick={handleClick}
-            className="bg-white hover:bg-stone-100 text-black font-bold py-2 px-4 rounded"
+            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-5 w-20 text-xs"
           >
             Logout
           </button>
