@@ -26,6 +26,10 @@ const classroomSchema = new Schema({
   },
   assignments:{
     type: [String], // all the assignments in the class (check the assignment schema)
+  },
+  color: {
+    type: String, // color for the class card background
+    default: 'bg-indigo-100'
   }
 }, { timestamps: true });
 

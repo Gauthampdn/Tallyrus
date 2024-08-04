@@ -8,7 +8,7 @@ require("dotenv").config();
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://bcknd.tallyrus.com/auth/redirect/google", // somehow this is appending /undefined after ENV so i hardcoded it
+  callbackURL: "http://localhost:4000/auth/redirect/google", // somehow this is appending /undefined after ENV so i hardcoded it
   passReqToCallback: true
 },
 
@@ -32,7 +32,7 @@ passport.use(new GoogleStrategy({
           id: profile.id,
           picture: profile.picture,
           name: profile.given_name,
-          authority: "teacher",
+          authority: "student",
           numGraded: 0
         });
         await user.save();
@@ -66,15 +66,15 @@ passport.deserializeUser(async function (id, done) {
 const getAuth = passport.authenticate("google", { scope: ["email", "profile"] });
 
 const redirectGoogle = passport.authenticate("google", {
-  successRedirect: "https://tallyrus.com/app",
-  failureRedirect: "https://tallyrus.com/login",
+  successRedirect: "http://localhost:3000/app",
+  failureRedirect: "http://localhost:3000/login",
 });
 
 const logout = (req, res) => {
   req.logout(() => {
     req.session.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('https://tallyrus.com/login');
+      res.redirect('http://localhost:3000/login');
     });
   });
 }

@@ -111,7 +111,7 @@ const CreateA = () => {
             </form>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button type="submit" onClick={handleSubmit}>Create Assignment</Button>
+          <Button type="submit" onClick={handleSubmit} className="create-assignment-btn">Create Assignment</Button>
           </CardFooter>
         </Card>
       </div>

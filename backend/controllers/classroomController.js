@@ -117,8 +117,15 @@ const createClassroom = async (req, res) => {
     return joincode;
   };
 
+  const colors = ["bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "bg-purple-100"];
+  const getRandomColor = () => {
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   try {
     const joincode = await getUniqueJoinCode();
+    const color = getRandomColor();
+
 
     const classroom = await Classroom.create({
       title,
@@ -126,7 +133,8 @@ const createClassroom = async (req, res) => {
       joincode,
       teachers: [user_id], // Add the creating teacher to the teachers array
       students: [], // Initialize with an empty students array
-      assignments: [] // Initialize with an empty assignments array
+      assignments: [], // Initialize with an empty assignments array
+      color
     });
 
     res.status(201).json(classroom);

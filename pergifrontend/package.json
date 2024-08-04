@@ -69,6 +69,7 @@
     "react-dropzone": "^14.2.3",
     "react-google-button": "^0.7.2",
     "react-hook-form": "^7.49.2",
+    "react-joyride": "^2.8.2",
     "react-katex": "^3.0.1",
     "react-markdown": "^9.0.0",
     "react-resizable-panels": "^1.0.5",
