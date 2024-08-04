@@ -299,7 +299,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                 <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="material-symbols-outlined">apps</Button>
+                    <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>Options</DropdownMenuLabel>
