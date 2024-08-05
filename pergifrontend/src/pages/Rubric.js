@@ -141,7 +141,7 @@ const Rubric = () => {
   };
 
   const handleAddCriteria = () => {
-    setRubric([...rubric, { name: '', Criteria: [{ point: 0, description: '' }] }]);
+    setRubric([{ name: '', Criteria: [{ point: 0, description: '' }] }, ...rubric]);
   };
 
   const handleRemoveCriteriaSection = (sectionIndex) => {
@@ -151,7 +151,7 @@ const Rubric = () => {
 
   const addCriteriaToSection = (sectionIndex) => {
     const updatedRubric = [...rubric];
-    updatedRubric[sectionIndex].Criteria.push({ point: 0, description: '' });
+    updatedRubric[sectionIndex].Criteria.unshift({ point: 0, description: '' });
     setRubric(updatedRubric);
   };
 
