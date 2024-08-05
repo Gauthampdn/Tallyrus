@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
-import { faTrash, faArrowRight, faFlag,faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle } from '@fortawesome/free-solid-svg-icons'; // Added icons
 
 import './Classroom.css';
 
@@ -75,7 +75,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
 
 const RubricTable = ({ rubric }) => {
   const columns = React.useMemo(
@@ -140,7 +139,7 @@ const Classroom = () => {
     const returnstatement = submission.feedback.reduce((total, criteria) => total + criteria.score, 0);
     console.log(returnstatement);
     return returnstatement;
-  }; 
+  };
 
   const formatFeedback = (submission) => {
     const feedback = submission.feedback;
@@ -570,265 +569,320 @@ const Classroom = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-300">
-  <Navbar />
-  <div className="flex flex-grow overflow-hidden justify-center">
-    <div className="flex flex-col w-1/5">
-      <aside className="rounded-3xl m-3 mr-0 bg-indigo-200 p-6 overflow-auto text-gray-700 border border-indigo-300 flex flex-col">
-      <div className="flex w-full justify-between mb-3 gap-2">
-      <Button className="w-1/4 bg-stone-600" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
-      {user && user.authority === "teacher" && (
-          <Button className="w-3/4 p-2 bg-lime-700" onClick={handleCreateA}>
-            + New
-          </Button>
-        )}
-        </div>
-        <h2 className="font-extrabold text-xl mb-4 underline">All Assignments</h2>
-        <ul>
-          {allAssignments.map((eachassignment) => (
-            <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
-              <button
-                className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-indigo-600' : ''}`}
-                onClick={() => handleSelectAssignment(eachassignment)}
-              >
-                {eachassignment.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-        
-      </aside>
-    </div>
-
-    <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl rounded-tr-md rounded-br-md m-3">
-      {selectedAssignment ? (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-extrabold underline">{selectedAssignment.name}</h1>
-            {user.authority === "teacher" && (
-              <div className="flex gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="" className="bg-indigo-600 material-symbols-outlined">apps</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    <DropdownMenuLabel>Options</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onSelect={() => copyPublicLink()}>Public Link</DropdownMenuItem>
-                      <DropdownMenuItem onSelect={handleOpenRubricModal}>Upload Rubric</DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleNavtoRubric()}>Edit Rubric</DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="material-symbols-outlined" variant="destructive">delete</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Are you absolutely sure?</DialogTitle>
-                      <DialogDescription>
-                        This action cannot be undone. This will permanently delete the assignment as well as all submissions.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button className="bg-red-500" onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
-          </div>
-          <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
-          <hr className="mb-4"/>
-
-          <div className="flex flex-row w-full">
-            <div className="flex-1">
-              <div className="flex w-full justify-start">
-            </div>
-
-
-              <div>
-                <h1 className="font-bold underline text-lg">Rubric:</h1>
-                <br />
-              </div>
-
-              {/* Display the submitted data on the main page */}
-              {selectedAssignment && selectedAssignment.rubric && (
-                <div className="rubric-view-section">
-                  <ScrollArea className="scrollable-rubric-view">
-                    {selectedAssignment.rubric.map((rubric, index) => (
-                      <RubricTable key={index} rubric={rubric} />
-                    ))}
-                  </ScrollArea>
-                </div>
+      <Navbar />
+      <div className="flex flex-grow overflow-hidden justify-center">
+        <div className="flex flex-col w-1/5">
+          <aside className="rounded-3xl m-3 mr-0 bg-indigo-200 p-6 overflow-auto text-gray-700 border border-indigo-300 flex flex-col">
+            <div className="flex w-full justify-between mb-3 gap-2">
+              <Button className="w-1/4 bg-stone-600" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
+              {user && user.authority === "teacher" && (
+                <Button className="w-3/4 p-2 bg-lime-700" onClick={handleCreateA}>
+                  + New
+                </Button>
               )}
             </div>
+            <h2 className="font-extrabold text-xl mb-4 underline">All Assignments</h2>
+            <ul>
+              {allAssignments.map((eachassignment) => (
+                <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
+                  <button
+                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-indigo-600' : ''}`}
+                    onClick={() => handleSelectAssignment(eachassignment)}
+                  >
+                    {eachassignment.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        </div>
 
-            {user && (user.authority === "student" || user.authority === "teacher") && (
-              <div className="flex-1">
-                {user.authority === "student" && (
-                  <div className="m-10 grid w-full items-center gap-1.5">
-                    {selectedAssignment.submissions.map((submission) => (
-                      <Card key={submission._id} className="max-w-sm mb-2">
-                        <CardHeader>
-                          <CardTitle><strong>Name:</strong> {submission.studentName}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p><strong>Email:</strong> {submission.studentEmail}</p>
-                          <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-                          <p><strong>Status:</strong> {submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
-                          <p><strong>Grade:</strong> {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</p>
-                        </CardContent>
-                        <CardFooter>
-                          <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                    <div className="max-w-sm">
-                      <Label htmlFor="pdf">Upload your PDF</Label>
-                      <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
-                      <Button className="mt-8" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
-                      <br />
-                      <br />
-                      <Button className="submit-button" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
-                        See Potential Grade
-                      </Button>
-                      <div className="feedback-container">
-                        <h2>Feedback</h2>
-                        <div className="feedback-box">
-                          {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl rounded-tr-md rounded-br-md m-3">
+          {selectedAssignment ? (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-extrabold underline">{selectedAssignment.name}</h1>
                 {user.authority === "teacher" && (
-                  <div className="ml-5 flex flex-col items-start">
-                    <div className="flex w-full gap-5">
-                      <Button className="bg-blue-500 flex-auto grade-all-btn"onClick={() => handleOpenTeacherUploadModal()}>Upload Assignments</Button>
-                      <Button className="bg-orange-500 flex-auto grade-all-btn" onClick={() => handleGradeAll(selectedAssignment._id)}>Grade Assignments</Button>
-                      <Button className=" mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white"  onClick={() => handleNavtoSubs()}>
-                        All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
-                      </Button>
-                    </div>
-                    <div className="w-full rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="font-extrabold">Name</TableHead>
-                            <TableHead className="font-extrabold">Status</TableHead>
-                            <TableHead className="font-extrabold">Score:</TableHead>
-                            <TableHead className="font-extrabold">Delete</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
-                            <TableRow key={submission._id}>
-                              <TableCell className="font-bold">
-                                {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
-                              </TableCell>
-                              <TableCell className="font-bold">{submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</TableCell>
-                              <TableCell className="font-bold">{submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</TableCell>
-                              <TableCell>
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button className="bg-transparent text-red-500 material-symbols-outlined">
-                                      <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Confirm Deletion</DialogTitle>
-                                      <DialogDescription>
-                                        Are you sure you want to delete this submission?
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <DialogFooter>
-                                      <Button onClick={() => handleDeleteSubmission(submission.pdfKey)}>Delete</Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <div className="flex justify-end items-center space-x-4 mt-4">
-                      {isRubricModalOpen && (
-                        <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-                          <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                            <DialogHeader>
-                              <DialogTitle>Upload Rubric</DialogTitle>
-                            </DialogHeader>
-                            <DialogDescription>
-                              <div {...getRootProps({ className: 'dropzone' })}>
-                                <input {...getInputProps()} />
-                                <p>Click here or drag and drop to upload the rubric PDF</p>
-                              </div>
-                              {fileName && (
-                                <p>Selected File: {fileName}</p>
-                              )}
-                            </DialogDescription>
-                            <DialogFooter>
-                              <Button onClick={handleRubricUpload} disabled={!rubricFile}>Upload Rubric</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                      {isTeacherUploadModalOpen && (
-                        <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
-                          <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                            <DialogHeader>
-                              <DialogTitle>Upload PDFs</DialogTitle>
-                            </DialogHeader>
-                            <DialogDescription>
-                              <div {...getRootProps({ className: 'dropzone' })}>
-                                <input {...getInputProps()} />
-                                <p>Click here to upload your students' essay PDFs</p>
-                              </div>
-                              <ul className="file-list">
-                                {teacherFiles && teacherFiles.map((file, index) => (
-                                  <li key={index}>
-                                    {file.name}
-                                    <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
-                                  </li>
-                                ))}
-                              </ul>
-                            </DialogDescription>
-                            <DialogFooter>
-                              <Button
-                                onClick={() => {
-                                  handleTeacherFilesUpload(selectedAssignment._id);
-                                  handleCloseTeacherUploadModal();
-                                }}
-                                disabled={!teacherFiles || teacherFiles.length === 0}
-                              >
-                                Submit Files
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
+                  <div className="flex gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="" className="bg-indigo-600 material-symbols-outlined">apps</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Options</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem onSelect={() => copyPublicLink()}>
+                          <FontAwesomeIcon icon={faLink} className="mr-2" />
+                          Public Link</DropdownMenuItem>
+                          {!selectedAssignment.rubric || selectedAssignment.rubric.length === 0 ? (
+                            <>
+                              <DropdownMenuItem onSelect={handleOpenRubricModal}>
+                                <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                Upload Rubric
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric()}>
+                                <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                                Edit Rubric
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                            <DropdownMenuItem onSelect={handleOpenRubricModal}>
+                                <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                Upload Rubric
+                              </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleNavtoRubric()}>
+                              <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                              Edit Rubric
+                            </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="material-symbols-outlined" variant="destructive">delete</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Are you absolutely sure?</DialogTitle>
+                          <DialogDescription>
+                            This action cannot be undone. This will permanently delete the assignment as well as all submissions.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button className="bg-red-500" onClick={() => deleteAssignment(selectedAssignment._id)}>Continue</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div>
-          <p>Select an assignment to view details</p>
-        </div>
-      )}
-    </main>
-    <Toaster />
-  </div>
-</div>
+              <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
+              <hr className="mb-4"/>
 
+              <div className="flex flex-row w-full">
+                <div className="flex-1">
+                  <div>
+                    <h1 className="font-bold underline text-lg">Rubric:</h1>
+                    <br />
+                  </div>
 
+                  {/* Display the rubric if it exists */}
+                  {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
+                    <div className="rubric-view-section hover:bg-gray-50 cursor-pointer rounded-mb p-2" onClick={() => handleNavtoRubric()}>
+                      <ScrollArea className="scrollable-rubric-view">
+                        {selectedAssignment.rubric.map((rubric, index) => (
+                          <RubricTable key={index} rubric={rubric} />
+                        ))}
+                      </ScrollArea>
+                    </div>
+                  ) : (
+                    <div className="flex justify-center">
+                      <Button onClick={handleOpenRubricModal} className="bg-blue-500 mr-2 ">
+                        <FontAwesomeIcon icon={faUpload} className="mr-5" />
+                        Upload Rubric
+                      </Button>
+                      <Button onClick={handleNavtoRubric} className="bg-green-500">
+                        <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                        Create Rubric
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {user && (user.authority === "student" || user.authority === "teacher") && (
+                  <div className="flex-1">
+                    {user.authority === "student" && (
+                      <div className="m-10 grid w-full items-center gap-1.5">
+                        {selectedAssignment.submissions.map((submission) => (
+                          <Card key={submission._id} className="max-w-sm mb-2">
+                            <CardHeader>
+                              <CardTitle><strong>Name:</strong> {submission.studentName}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p><strong>Email:</strong> {submission.studentEmail}</p>
+                              <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                              <p><strong>Status:</strong> {submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
+                              <p><strong>Grade:</strong> {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</p>
+                            </CardContent>
+                            <CardFooter>
+                              <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                        <div className="max-w-sm">
+                          <Label htmlFor="pdf">Upload your PDF</Label>
+                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
+                          <Button className="mt-8" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                          <br />
+                          <br />
+                          <Button className="submit-button" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
+                            See Potential Grade
+                          </Button>
+                          <div className="feedback-container">
+                            <h2>Feedback</h2>
+                            <div className="feedback-box">
+                              {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {user.authority === "teacher" && (
+                      <div className="ml-5 flex flex-col items-start">
+                        
+                          {selectedAssignment.submissions.length ? (
+                          <div className="flex w-full gap-4">
+                          <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                            <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
+                            Upload Assignments
+                          </Button>
+                          <Button className="bg-orange-500 flex-auto grade-all-btn" onClick={() => handleGradeAll(selectedAssignment._id)}>
+                            <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
+                            Grade Assignments
+                          </Button>
+                          <Button className="mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white" onClick={() => handleNavtoSubs()}>
+                            All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                          </Button>
+                          </div>
+                       
+                          ) : (<div className="flex w-full gap-4">
+                            <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                              <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
+                              Upload Assignments
+                            </Button>
+                            </div> )
+                        }
+                          
+                        
+                        <div className="w-full rounded-md">
+                          {selectedAssignment.submissions.length ? (
+                            <div className="border rounded-md">
+                          <Table >
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="font-extrabold">Name</TableHead>
+                                <TableHead className="font-extrabold">Status</TableHead>
+                                <TableHead className="font-extrabold">Score</TableHead>
+                                <TableHead className="font-extrabold">Delete</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
+                                <TableRow key={submission._id}>
+                                  <TableCell className="font-bold">
+                                    {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
+                                  </TableCell>
+                                  <TableCell className="font-bold">{submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</TableCell>
+                                  <TableCell className="font-bold">{submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</TableCell>
+                                  <TableCell>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button className="bg-transparent text-red-500 material-symbols-outlined">
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>Confirm Deletion</DialogTitle>
+                                          <DialogDescription>
+                                            Are you sure you want to delete this submission?
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                          <Button onClick={() => handleDeleteSubmission(submission.pdfKey)}>Delete</Button>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                          </div>
+                          
+                        ):
+                        (
+                          <div className="flex items-center justify-center border-0 mt-4">
+                          <p className="border-0">No Assignments Yet!</p>
+                          </div>
+                        )}
+                        </div>
+                        <div className="flex justify-end items-center space-x-4 mt-4">
+                          {isRubricModalOpen && (
+                            <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
+                              <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Upload Rubric</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription>
+                                  <div {...getRootProps({ className: 'dropzone' })}>
+                                    <input {...getInputProps()} />
+                                    <p>Click here or drag and drop to upload the rubric PDF</p>
+                                  </div>
+                                  {fileName && (
+                                    <p>Selected File: {fileName}</p>
+                                  )}
+                                </DialogDescription>
+                                <DialogFooter>
+                                  <Button onClick={handleRubricUpload} disabled={!rubricFile}>Upload Rubric</Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          {isTeacherUploadModalOpen && (
+                            <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
+                              <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Upload PDFs</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription>
+                                  <div {...getRootProps({ className: 'dropzone' })}>
+                                    <input {...getInputProps()} />
+                                    <p>Click here to upload your students' essay PDFs</p>
+                                  </div>
+                                  <ul className="file-list">
+                                    {teacherFiles && teacherFiles.map((file, index) => (
+                                      <li key={index}>
+                                        {file.name}
+                                        <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </DialogDescription>
+                                <DialogFooter>
+                                  <Button
+                                    onClick={() => {
+                                      handleTeacherFilesUpload(selectedAssignment._id);
+                                      handleCloseTeacherUploadModal();
+                                    }}
+                                    disabled={!teacherFiles || teacherFiles.length === 0}
+                                  >
+                                    Submit Files
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p>Select an assignment to view details</p>
+            </div>
+          )}
+        </main>
+        <Toaster />
+      </div>
+    </div>
   );
 }
 
