@@ -250,13 +250,15 @@ const Rubric = () => {
           </aside>
         </div>
         <form className="flex-[3] p-4 overflow-auto bg-white rounded-3xl m-3" onSubmit={handleSubmit}>
-          <div>
+          <div className='flex items-center'>
             <Button type="submit" className="m-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
               <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
             </Button>
-            <Button type="button" className="m-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
+            <Button type="button" className="m-2 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
               Add Criteria +
             </Button>
+            </div>
+            <div>
             {rubric.map((category, sectionIndex) => (
               <Card key={sectionIndex} className="mb-4">
                 <CardHeader>
