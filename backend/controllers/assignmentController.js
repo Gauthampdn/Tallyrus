@@ -291,8 +291,9 @@ const updateAssignmentRubric = async (req, res) => {
 
 
 const updateSubmission = async (req, res) => {
+  console.log(req.body);
   const { assignmentId, submissionId } = req.params;
-  const { feedback } = req.body;
+  const { feedback, status } = req.body;
   const user_id = req.user.id;
 
   if (req.user.authority !== "teacher") {
@@ -323,12 +324,17 @@ const updateSubmission = async (req, res) => {
       submission.feedback = feedback;
     }
 
+    if (status) {
+      submission.status = status;
+    }
+
     await assignment.save();
     res.status(200).json(assignment);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 module.exports = {
