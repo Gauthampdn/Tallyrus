@@ -19,7 +19,7 @@ const RedirectToFreeDetector = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate('/freedetector4b4a9a9ba6c14f43bb37b1d3b64ce75e.html');
+    navigate('/420b5dce52947e504f5db18e5eb418ca.html');
   }, [navigate]);
 
   return null;
@@ -127,7 +127,7 @@ const App = () => {
             <Route path="/assignment/:id" element={<Assignment />} />
             <Route path="/publicassignment/:id" element={<PublicAssignment />} />
             <Route path="/rubric/:id" element={<Rubric />} />
-            <Route path="/freedetector4b4a9a9ba6c14f43bb37b1d3b64ce75e.html" element={<RedirectToFreeDetector />} />
+            <Route path="/420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
