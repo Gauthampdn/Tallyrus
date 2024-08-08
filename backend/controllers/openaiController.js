@@ -340,7 +340,7 @@ function convertToRubricSchema(gptOutput) {
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
-    const aiDetectionToken = 'your-token-here'; // Replace with your actual token
+    const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
 
     console.log("starting to grade");
 
@@ -423,7 +423,7 @@ const gradeall = async (req, res) => {
 const gradeSubmission = async (req, res) => {
     const { assignmentId } = req.params;
     const { text } = req.body;
-    const aiDetectionToken = 'your-token-here'; // Replace with your actual token
+    const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
 
     if (!text) {
         return res.status(400).json({ error: "No text provided" });
