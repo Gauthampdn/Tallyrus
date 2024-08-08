@@ -8,6 +8,56 @@ require("dotenv").config();
 
 const { incrementGraded } = require('./authController');
 
+const fetchAIScore = async (text, token) => {
+    const url = "https://www.freedetector.ai/api/content_detector/";
+
+    // Function to split text into chunks of 300 words or less
+    const splitTextIntoChunks = (text, chunkSize = 300) => {
+        const words = text.split(/\s+/);
+        const chunks = [];
+        for (let i = 0; i < words.length; i += chunkSize) {
+            chunks.push(words.slice(i, i + chunkSize).join(' '));
+        }
+        return chunks;
+    };
+
+    const textChunks = splitTextIntoChunks(text);
+    let totalScore = 0;
+    let validChunks = 0;
+
+    for (const chunk of textChunks) {
+        const data = {
+            text: chunk,
+            token: token
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                totalScore += result.score;
+                validChunks++;
+            } else {
+                console.error('API call failed:', result.message);
+            }
+        } catch (error) {
+            console.error('Error making API call:', error);
+        }
+    }
+
+    return validChunks > 0 ? totalScore / validChunks : null;
+};
+
+
 
 const gradingInstructions =
     `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
@@ -290,8 +340,9 @@ function convertToRubricSchema(gptOutput) {
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
+    const aiDetectionToken = 'your-token-here'; // Replace with your actual token
 
-    console.log("starting to grade")
+    console.log("starting to grade");
 
     if (req.user.authority !== "teacher") {
         return res.status(403).json({ error: "Only teachers can grade assignments" });
@@ -305,20 +356,12 @@ const gradeall = async (req, res) => {
         }
 
         for (let submission of assignment.submissions) {
-
             console.log(submission.pdfURL);
             if (submission.status !== 'graded') {
                 let extractedText = ' ';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
-                }
-                // else if (submission.pdfURL.endsWith('.docx')) {
-                //     extractedText = await getTextFromDOCX(submission.pdfURL);
-                // }
-                // else if (['.png', '.jpg', '.jpeg'].some(ext => submission.pdfURL.endsWith(ext))) {
-                //     extractedText = await getTextFromImage(submission.pdfURL);
-                // }
-                else {
+                } else {
                     submission.status = 'error';
                     submission.feedback = 'Unsupported file format';
                     await assignment.save();
@@ -332,6 +375,11 @@ const gradeall = async (req, res) => {
                     continue;
                 }
 
+                const aiScore = await fetchAIScore(extractedText, aiDetectionToken);
+                if (aiScore !== null) {
+                    submission.aiScore = aiScore;
+                }
+
                 const newrubric = rubricToString(assignment.rubric);
                 const gradingResponse = await openai.chat.completions.create({
                     model: "gpt-4o",
@@ -343,8 +391,11 @@ const gradeall = async (req, res) => {
                     ]
                 });
 
-                if (!gradingResponse) { // maybe change this to continue to the next file (skipping so it doenst get stuck on a file every time)
-                    return res.status(400).json({ error: "couldn't grade text" });
+                if (!gradingResponse) {
+                    submission.status = 'error';
+                    submission.feedback = "Couldn't grade text";
+                    await assignment.save();
+                    continue;
                 }
 
                 const gradedfeedback = gradingResponse.choices[0].message.content;
@@ -352,14 +403,12 @@ const gradeall = async (req, res) => {
                 submission.status = 'graded';
 
                 const user = await User.findById(req.user._id);
-                console.log("gonna add orange")
 
                 if (user.numGraded === undefined) {
                     user.numGraded = 0;
                 }
                 user.numGraded++;
                 await user.save();
-
             }
             await assignment.save();
         }
@@ -374,6 +423,7 @@ const gradeall = async (req, res) => {
 const gradeSubmission = async (req, res) => {
     const { assignmentId } = req.params;
     const { text } = req.body;
+    const aiDetectionToken = 'your-token-here'; // Replace with your actual token
 
     if (!text) {
         return res.status(400).json({ error: "No text provided" });
@@ -384,6 +434,11 @@ const gradeSubmission = async (req, res) => {
 
         if (!assignment) {
             return res.status(404).json({ error: "Assignment not found" });
+        }
+
+        const aiScore = await fetchAIScore(text, aiDetectionToken);
+        if (aiScore === null) {
+            return res.status(500).json({ error: "Failed to detect AI content" });
         }
 
         const rubricString = rubricToString(assignment.rubric);
@@ -398,14 +453,32 @@ const gradeSubmission = async (req, res) => {
             ]
         });
 
-        const feedback = gradingResponse.choices[0].message.content;
+        if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+            return res.status(500).json({ error: "Failed to grade submission" });
+        }
 
-        res.json({ feedback });
+        const feedback = gradingResponse.choices[0].message.content;
+        const parsedFeedback = parseFeedback(feedback);
+
+        // Assuming you want to update a specific submission within the assignment
+        const submission = assignment.submissions.id(req.body.submissionId);
+        if (!submission) {
+            return res.status(404).json({ error: "Submission not found" });
+        }
+
+        submission.feedback = parsedFeedback;
+        submission.aiScore = aiScore;
+        submission.status = 'graded';
+
+        await assignment.save();
+
+        res.json({ feedback: parsedFeedback, aiScore: aiScore });
     } catch (error) {
         console.error("Error grading submission:", error);
         res.status(500).send('Error grading submission');
     }
 };
+
 
 const extractText = async (req, res) => {
     try {

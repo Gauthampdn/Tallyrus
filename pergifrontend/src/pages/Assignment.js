@@ -565,6 +565,7 @@ const Assignment = () => {
                     <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
                     <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
                     <p><strong>Status:</strong> {selectedSubmission.status} {selectedSubmission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
+                    <p><strong>AI Score:</strong> {selectedSubmission.aiScore}%</p> {/* Display AI score here */}
                     <p className="pb-3 text-black"><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)}/{selectedSubmission.feedback.reduce((sum, criteria) => sum + criteria.total, 0)} points</p>
                   </CardDescription>
                 </Card>

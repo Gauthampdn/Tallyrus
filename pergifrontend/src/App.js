@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuthContext } from './hooks/useAuthContext';
 import Joyride, { EVENTS, STATUS } from 'react-joyride';
 
@@ -14,6 +14,16 @@ import AboutTallyrus from 'pages/AboutTallyrus';
 import PublicAssignment from 'pages/PublicAssignment';
 import Rubric from 'pages/Rubric';
 import Profile from 'pages/Profile';
+
+const RedirectToFreeDetector = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate('/freedetector4b4a9a9ba6c14f43bb37b1d3b64ce75e.html');
+  }, [navigate]);
+
+  return null;
+};
 
 const App = () => {
   const { user } = useAuthContext();
@@ -117,6 +127,8 @@ const App = () => {
             <Route path="/assignment/:id" element={<Assignment />} />
             <Route path="/publicassignment/:id" element={<PublicAssignment />} />
             <Route path="/rubric/:id" element={<Rubric />} />
+            <Route path="/freedetector4b4a9a9ba6c14f43bb37b1d3b64ce75e.html" element={<RedirectToFreeDetector />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </BrowserRouter>

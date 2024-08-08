@@ -1,6 +1,6 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
 const rubricValueSchema = new Schema({
   point: {
@@ -18,7 +18,6 @@ const rubricSchema = new Schema({
   values: [rubricValueSchema]
 });
 
-//feedback schema
 const feedbackCriteriaSchema = new Schema({
   name: {
     type: String,
@@ -33,7 +32,6 @@ const feedbackCriteriaSchema = new Schema({
     type: String,
   },
 });
-
 
 const submissionSchema = new Schema({
   studentName: {
@@ -52,64 +50,46 @@ const submissionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'submitted', 'graded', 'regrade', 'error'],  // make open, 
-    default: 'open' // Optional: you can set a default status
+    enum: ['open', 'submitted', 'graded', 'regrade', 'error'],
+    default: 'open'
   },
   feedback: {
     type: [feedbackCriteriaSchema],
-    default: [] // Optional: you can set a default status
+    default: []
   },
   pdfURL: {
     type: String,
   },
   pdfKey: {
     type: String,
-  }
-
+  },
+  aiScore: {
+    type: Number,  // Add field for AI score
+  },
 });
-
 
 const assignmentSchema = new Schema({
   name: {
-    type: String,  // name of the assignment
+    type: String,
     required: true
   },
-  description: {  // description of the assignment (what it is about)
+  description: {
     type: String,
     required: true
   },
   classId: {
-    type: String,  // use the class's object id NOT THE JOIN CODE
+    type: String,
     required: true 
   },
   dueDate: {
     type: Date
   },
-  rubric: {  // the rubric we can store as schema type to?? ill do that
+  rubric: {
     type: [rubricSchema],
   },
   submissions: {
-    type: [submissionSchema], // multiple submissions in an assignment
+    type: [submissionSchema],
   }
 }, { timestamps: true });
 
-
-// Create the model based on the schema
-
 module.exports = mongoose.model('assignment', assignmentSchema);
-
-
-
-/*
-classroom
- - assignments
-  - submissions for assignemnt
-
-
-
-  when an assignment is made made an empty submission for all
-  so when a student submits it edits the submissions 
-  than having to make one and then have another one for editting for resubmissions
-  
-
-*/
