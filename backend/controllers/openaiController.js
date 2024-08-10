@@ -354,7 +354,6 @@ const gradeall = async (req, res) => {
 
         // Update the status to 'grading' for all ungraded submissions
         for (let submission of assignment.submissions) {
-            console.log(submission.pdfURL);
             if (submission.status !== 'graded') {
                 submission.status = 'grading';
             }
@@ -367,7 +366,6 @@ const gradeall = async (req, res) => {
                 let extractedText = '';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
-                } else {
                 } else {
                     submission.status = 'error';
                     submission.feedback = 'Unsupported file format';
@@ -391,26 +389,6 @@ const gradeall = async (req, res) => {
                     ]
                 });
 
-                if (!gradingResponse) {
-                    submission.status = 'error';
-                    submission.feedback = "Couldn't grade text";
-                    await assignment.save();
-                    continue;
-                }
-
-                const gradedfeedback = gradingResponse.choices[0].message.content;
-                submission.feedback = parseFeedback(gradedfeedback);
-                submission.status = 'graded';
-
-                const user = await User.findById(req.user._id);
-
-                if (user.numGraded === undefined) {
-                    user.numGraded = 0;
-                }
-                user.numGraded++;
-                await user.save();
-            }
-            await assignment.save();
                 if (!gradingResponse) {
                     submission.status = 'error';
                     submission.feedback = 'Failed to grade the submission';
@@ -438,6 +416,7 @@ const gradeall = async (req, res) => {
         res.status(500).send('Error grading assignments');
     }
 };
+
 
 
 
