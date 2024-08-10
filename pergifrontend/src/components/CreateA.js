@@ -1,9 +1,9 @@
-// components/CreateA.js
-
 import React, { useState } from 'react';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
+import { faSave, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import {
   Card,
@@ -12,24 +12,26 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea" // Assuming you have a Textarea component
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"; 
 import Navbar from './Navbar';
 
-
-
 const CreateA = () => {
-
   const { toast } = useToast();
-
   const navigate = useNavigate();
-  const { id } = useParams(); // This is how you access the classroom ID from the URL
+  const { id } = useParams();
 
-
+  const handleGoBack = () => {
+    if (id) {
+      navigate(`/classroom/${id}`);
+    } else {
+      navigate('/app');
+    }
+  };
 
   const [formData, setFormData] = useState({
     rubric: [],
@@ -65,7 +67,6 @@ const CreateA = () => {
         throw new Error('Network response was not ok');
       }
 
-      // Handle successful submission
       console.log('Assignment created:', await response.json());
       toast("Assignment has been created.");
       navigate(`/classroom/${id}`);
@@ -74,7 +75,7 @@ const CreateA = () => {
       toast({
         variant: "destructive",
         title: "Error Creating Assignment",
-        description: "There was an error creating the assignemnt. Make sure you fill in all areas.",
+        description: "There was an error creating the assignment. Make sure you fill in all areas.",
       });
       console.error('There was an issue submitting the form:', error);
     }
@@ -83,9 +84,15 @@ const CreateA = () => {
   return (
     <div>
       <Navbar />
-
-      <div className="flex justify-center items-center min-h-screen">
-
+      <div className="relative flex justify-center items-center min-h-screen">
+        <Button 
+          className="absolute top-4 left-4 w-max bg-stone-600" 
+          onClick={handleGoBack}
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+          Back
+        </Button>
+        
         <Card className="min-w-full sm:min-w-0 sm:w-1/2">
           <CardHeader>
             <CardTitle>Create New Assignment</CardTitle>
@@ -96,34 +103,58 @@ const CreateA = () => {
               <div className="flex flex-col space-y-4">
                 <div>
                   <Label htmlFor="name">Assignment Name:</Label>
-                  <Textarea id="name" name="name" value={formData.name} onChange={handleChange} required placeholder="Assignment Name" />
+                  <Textarea 
+                    id="name" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="Assignment Name" 
+                    className="focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
                 <div>
                   <Label htmlFor="description">Description:</Label>
-                  <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required placeholder="Brief Description" />
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    value={formData.description} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="Brief Description" 
+                    className="focus:ring-2 focus:ring-blue-500" 
+                  />
                 </div>
-
                 <div>
                   <Label htmlFor="dueDate">Due Date:</Label>
-                  <Input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange} required />
+                  <Input 
+                    type="date" 
+                    id="dueDate" 
+                    name="dueDate" 
+                    value={formData.dueDate} 
+                    onChange={handleChange} 
+                    required 
+                    className="focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
             </form>
           </CardContent>
           <CardFooter className="flex justify-end">
-          <Button type="submit" onClick={handleSubmit} className="create-assignment-btn">Create Assignment</Button>
+            <Button 
+              type="submit" 
+              onClick={handleSubmit} 
+              className="create-assignment-btn bg-blue-500 hover:bg-blue-600 text-white flex items-center"
+            >
+              <FontAwesomeIcon icon={faSave} className="mr-2" />
+              Create Assignment
+            </Button>
           </CardFooter>
         </Card>
       </div>
-
       <Toaster />
-
     </div>
-
   );
 };
 
 export default CreateA;
-
-
-

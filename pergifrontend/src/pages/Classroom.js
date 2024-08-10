@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
-import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle } from '@fortawesome/free-solid-svg-icons'; // Added icons
+import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle, faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'; // Added icons
 
 import './Classroom.css';
 
@@ -171,6 +171,9 @@ const Classroom = () => {
   const [rubricFile, setRubricFile] = useState(null);
   const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState(null); // Add state for interval
+
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -207,6 +210,9 @@ const Classroom = () => {
       return;
     }
 
+    setLoading(true); // Set loading to true when starting the upload
+
+
     const formData = new FormData();
     formData.append('file', rubricFile);
     console.log(rubricFile);
@@ -232,6 +238,8 @@ const Classroom = () => {
       fetchAssignments(); // Refresh the assignments to show the updated rubric
     } catch (error) {
       console.error("There was a problem with the rubric upload:", error);
+    } finally {
+      setLoading(false); // Set loading to false when the upload is complete
     }
   };
 
@@ -283,12 +291,12 @@ const Classroom = () => {
       console.log("No files selected");
       return;
     }
-
+  
     const formData = new FormData();
     Array.from(teacherFiles).forEach(file => {
       formData.append('files', file);
     });
-
+  
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-teacher/${assignmentId}`, {
         method: 'POST',
@@ -296,22 +304,28 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       console.log(data); // Logging the response
       toast({
         title: "Files Uploaded!",
         description: "The files have been successfully uploaded.",
       });
-      window.location.reload();
+  
+      // Update the state to reflect the new teacher files
+      const updatedAssignment = { ...selectedAssignment };
+      updatedAssignment.teacherFiles = data.teacherFiles; // Update with actual response data
+      setSelectedAssignment(updatedAssignment);
+  
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
   };
+  
 
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
@@ -319,7 +333,22 @@ const Classroom = () => {
 
   useEffect(() => {
     fetchAssignments();
-  }, [user]); // Only re-run when the user changes
+    const intervalId = setInterval(fetchAssignments, 5000); // Fetch every 5 seconds
+    setRefreshInterval(intervalId);
+
+    if (id) {
+      // Scroll to the specific submission if the ID is provided
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    return () => {
+      // Clear the interval when the component unmounts
+      clearInterval(intervalId);
+    };
+  }, [user, id]); // Only re-run when the user changes
 
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
@@ -388,6 +417,8 @@ const Classroom = () => {
     }
   }
 
+  
+
   async function getTextFromPdf(file) {
     const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
     const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.entry.js');
@@ -450,12 +481,12 @@ const Classroom = () => {
       console.log("No file selected for upload");
       return;
     }
-
+  
     console.log("Preparing to upload file:", file.name);
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     try {
       console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
@@ -464,27 +495,34 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-
+  
       console.log("Response received:", response.status, response.statusText);
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       console.log("Upload successful, response data:", data);
       toast({
         title: "Congratulations!",
         description: "You submitted your PDF successfully.",
       });
+  
+      // Update the selected assignment's submissions without refreshing the page
+      const updatedAssignment = { ...selectedAssignment };
+      updatedAssignment.submissions.push(data.submission);
+      setSelectedAssignment(updatedAssignment);
+  
       // Clear the file input after successful upload
       setFile(null);
       setFileName('');
-
+  
     } catch (error) {
       console.error("Error during file upload:", error);
     }
   };
+  
 
   const handleGoback = () => {
     navigate("/app");
@@ -492,7 +530,18 @@ const Classroom = () => {
 
   const handleNavtoSubs = () => {
     navigate(`/assignment/${selectedAssignment._id}`);
+    
   };
+
+  const handleNavtoSub = (assignmentId, submissionId) => {
+    if (!assignmentId || !submissionId) {
+        console.error("Assignment ID and Submission ID are required");
+        return;
+    }
+    navigate(`/assignment/${assignmentId}?submissionId=${submissionId}`);
+};
+
+  
 
   const handleNavtoRubric = () => {
     navigate(`/rubric/${selectedAssignment._id}`);
@@ -513,6 +562,13 @@ const Classroom = () => {
 
       const data = await response.json();
       setAllAssignments(data);
+
+      if (data.length > 0) {
+        // Update selected assignment only if it's currently not set or the current one is no longer in the list
+        if (!selectedAssignment || !data.some(assignment => assignment._id === selectedAssignment._id)) {
+          setSelectedAssignment(data[0]);
+        }
+      }
       console.log(data)
       if (data.length > 0) {
         setSelectedAssignment(data[0]); // Select the first assignment by default
@@ -767,38 +823,33 @@ const Classroom = () => {
                                 <TableHead className="font-extrabold">Name</TableHead>
                                 <TableHead className="font-extrabold">Status</TableHead>
                                 <TableHead className="font-extrabold">Score</TableHead>
-                                <TableHead className="font-extrabold">Delete</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
-                                <TableRow key={submission._id}>
-                                  <TableCell className="font-bold">
-                                    {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
-                                  </TableCell>
-                                  <TableCell className="font-bold">{submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</TableCell>
-                                  <TableCell className="font-bold">{submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</TableCell>
-                                  <TableCell>
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button className="bg-transparent text-red-500 material-symbols-outlined">
-                                          <FontAwesomeIcon icon={faTrash} />
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Confirm Deletion</DialogTitle>
-                                          <DialogDescription>
-                                            Are you sure you want to delete this submission?
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <DialogFooter>
-                                          <Button onClick={() => handleDeleteSubmission(submission.pdfKey)}>Delete</Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    </Dialog>
-                                  </TableCell>
-                                </TableRow>
+                            {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
+                                  <TableRow key={submission._id} onClick={() => handleNavtoSub(selectedAssignment._id, submission._id)} className="cursor-pointer hover:bg-gray-100">
+                                      <TableCell className="font-bold">
+                                          {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
+                                      </TableCell>
+                                      <TableCell className="font-bold">
+                                          {submission.status === 'grading' && (
+                                              <FontAwesomeIcon icon={faSpinner} spin className="mr-2 text-orange-500" />
+                                          )}
+                                          {submission.status === 'graded' && (
+                                              <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-green-500" />
+                                          )}
+                                          {submission.status === 'regrade' && (
+                                              <FontAwesomeIcon icon={faFlag} className="mr-2 text-red-500" />
+                                          )}
+                                          {submission.status === 'error' && (
+                                              <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-500" />
+                                          )}
+                                          {submission.status}
+                                      </TableCell>
+                                      <TableCell className="font-bold">
+                                          {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}
+                                      </TableCell>
+                                  </TableRow>
                               ))}
                             </TableBody>
                           </Table>
@@ -828,7 +879,20 @@ const Classroom = () => {
                                   )}
                                 </DialogDescription>
                                 <DialogFooter>
-                                  <Button onClick={handleRubricUpload} disabled={!rubricFile}>Upload Rubric</Button>
+                                  <Button
+                                    onClick={handleRubricUpload}
+                                    disabled={!rubricFile || loading} // Disable the button if no file is selected or during loading
+                                    className={`${
+                                      loading ? 'bg-gray-500' : 'bg-blue-500'
+                                    }`} // Grey out the button while loading
+                                  >
+                                    {loading ? (
+                                      <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+                                    ) : (
+                                      <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                    )}
+                                    {loading ? 'Processing...' : 'Upload Rubric'}
+                                  </Button>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>

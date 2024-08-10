@@ -3,9 +3,11 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
 import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faPen, faTrash, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Form,
@@ -205,19 +207,22 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white-100">
       <Navbar />
       <div className="flex justify-between items-center m-8">
-        <h1 className='text-3xl font-bold'>Here are your Classrooms!</h1>
+        <h1 className='text-4xl font-bold text-gray-800'>Your Classrooms</h1>
         <div className="flex space-x-4">
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
-                <Button className='text-md font-bold bg-indigo-600 create-class-btn'>CREATE CLASS +</Button>
+                <Button className='text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 create-class-btn'>
+                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  CREATE CLASS
+                </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="hover:scale-105">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Create Class</AlertDialogTitle>
+                  <AlertDialogTitle className="text-xl font-bold text-indigo-700">Create Class</AlertDialogTitle>
                 </AlertDialogHeader>
                 <Form {...createForm}>
                   <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8 fill-class-info">
@@ -247,58 +252,69 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                     />
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <Button type="submit">Create</Button>
+                      <Button type="submit">
+                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                        Create
+                      </Button>
                     </AlertDialogFooter>
                   </form>
                 </Form>
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {/*<Button className='text-md font-bold bg-blue-600' onClick={startTour}>?</Button>*/}
+          {user && user.authority === "student" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button className='text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600'>
+                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  JOIN CLASS +
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="transition ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-105">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-xl font-bold text-indigo-700">Join Class</AlertDialogTitle>
+                </AlertDialogHeader>
+                <Form {...joinForm}>
+                  <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
+                    <FormField
+                      control={joinForm.control}
+                      name="joinCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Join Code</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter class join code" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <Button type="submit">
+                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                        Join
+                      </Button>
+                    </AlertDialogFooter>
+                  </form>
+                </Form>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
-        {user && user.authority === "student" && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className='text-md font-bold bg-indigo-600'>JOIN CLASS +</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Join Class</AlertDialogTitle>
-              </AlertDialogHeader>
-              <Form {...joinForm}>
-                <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
-                  <FormField
-                    control={joinForm.control}
-                    name="joinCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Join Code</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter class join code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button type="submit">Join</Button>
-                  </AlertDialogFooter>
-                </form>
-              </Form>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
       </div>
 
       <div className='flex flex-wrap m-4'>
         {currClassrooms.map((classroom) => (
-          <Card key={classroom._id} className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 ${classroom.color}`}>
+          <Card
+            key={classroom._id}
+            className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 transform transition duration-500 hover:scale-105 ${classroom.color}`}
+          >
             <CardHeader>
               <div className='flex justify-between'>
                 <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild>
                     <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56">
@@ -306,9 +322,11 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                       <DropdownMenuItem onSelect={() => handleEditClassroom(classroom._id)}>
+                        <FontAwesomeIcon icon={faPen} className="mr-2" />
                         Edit Classroom
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)}>
+                        <FontAwesomeIcon icon={faTrash} className="mr-2" />
                         Delete Classroom
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
@@ -321,7 +339,13 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </CardContent>
             <CardFooter className="flex justify-between">
               <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
-              <Button className="go-to-class-btn bg-teal-500" onClick={() => handleGoToClass(classroom._id)}>Go to Class</Button>
+              <Button
+                className="go-to-class-btn bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600"
+                onClick={() => handleGoToClass(classroom._id)}
+              >
+                <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
+                Go to Class
+              </Button>
             </CardFooter>
           </Card>
         ))}

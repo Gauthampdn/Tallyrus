@@ -293,7 +293,7 @@ const updateAssignmentRubric = async (req, res) => {
 const updateSubmission = async (req, res) => {
   console.log(req.body);
   const { assignmentId, submissionId } = req.params;
-  const { feedback, status } = req.body;
+  const { feedback,status } = req.body;
   const user_id = req.user.id;
 
   if (req.user.authority !== "teacher") {
@@ -324,7 +324,7 @@ const updateSubmission = async (req, res) => {
       submission.feedback = feedback;
     }
 
-    if (status) {
+    if(status){
       submission.status = status;
     }
 

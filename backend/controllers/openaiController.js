@@ -340,9 +340,6 @@ function convertToRubricSchema(gptOutput) {
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
-    const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
-
-    console.log("starting to grade");
 
     if (req.user.authority !== "teacher") {
         return res.status(403).json({ error: "Only teachers can grade assignments" });
@@ -355,38 +352,41 @@ const gradeall = async (req, res) => {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
+        // Update the status to 'grading' for all ungraded submissions
         for (let submission of assignment.submissions) {
             console.log(submission.pdfURL);
             if (submission.status !== 'graded') {
-                let extractedText = ' ';
+                submission.status = 'grading';
+            }
+        }
+        await assignment.save(); // Save the status updates immediately
+
+        // Create an array of promises for grading submissions
+        const gradingPromises = assignment.submissions.map(async (submission) => {
+            if (submission.status === 'grading') {
+                let extractedText = '';
                 if (submission.pdfURL.endsWith('.pdf')) {
                     extractedText = await getTextFromPDF(submission.pdfURL);
                 } else {
+                } else {
                     submission.status = 'error';
                     submission.feedback = 'Unsupported file format';
-                    await assignment.save();
-                    continue;
+                    return submission;
                 }
 
                 if (!extractedText) {
                     submission.status = 'error';
                     submission.feedback = 'Failed to extract text from file';
-                    await assignment.save();
-                    continue;
+                    return submission;
                 }
 
-                const aiScore = await fetchAIScore(extractedText, aiDetectionToken);
-                if (aiScore !== null) {
-                    submission.aiScore = aiScore;
-                }
-
-                const newrubric = rubricToString(assignment.rubric);
+                const rubricString = rubricToString(assignment.rubric);
                 const gradingResponse = await openai.chat.completions.create({
                     model: "gpt-4o",
                     max_tokens: 3000,
                     messages: [
                         { role: "user", content: gradingInstructions },
-                        { role: "user", content: newrubric },
+                        { role: "user", content: rubricString },
                         { role: "user", content: extractedText }
                     ]
                 });
@@ -411,6 +411,25 @@ const gradeall = async (req, res) => {
                 await user.save();
             }
             await assignment.save();
+                if (!gradingResponse) {
+                    submission.status = 'error';
+                    submission.feedback = 'Failed to grade the submission';
+                } else {
+                    const feedback = gradingResponse.choices[0].message.content;
+                    submission.feedback = parseFeedback(feedback);
+                    submission.status = 'graded';
+                }
+
+                return submission;
+            }
+        });
+
+        // Wait for all grading promises to complete
+        const gradedSubmissions = await Promise.all(gradingPromises);
+
+        // Save each submission individually after all grading is done
+        for (let submission of gradedSubmissions) {
+            await assignment.save(); // Save the entire assignment after modifying the submission
         }
 
         res.json({ message: "All submissions graded successfully" });
@@ -419,6 +438,8 @@ const gradeall = async (req, res) => {
         res.status(500).send('Error grading assignments');
     }
 };
+
+
 
 const gradeSubmission = async (req, res) => {
     const { assignmentId } = req.params;
@@ -436,10 +457,16 @@ const gradeSubmission = async (req, res) => {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        const aiScore = await fetchAIScore(text, aiDetectionToken);
-        if (aiScore === null) {
-            return res.status(500).json({ error: "Failed to detect AI content" });
+        // Find the specific submission
+        const submission = assignment.submissions.find(sub => sub.studentId === req.user._id);
+
+        if (!submission) {
+            return res.status(404).json({ error: "Submission not found" });
         }
+
+        // Set the submission status to 'grading'
+        submission.status = 'grading';
+        await assignment.save();
 
         const rubricString = rubricToString(assignment.rubric);
 
@@ -458,21 +485,13 @@ const gradeSubmission = async (req, res) => {
         }
 
         const feedback = gradingResponse.choices[0].message.content;
-        const parsedFeedback = parseFeedback(feedback);
 
-        // Assuming you want to update a specific submission within the assignment
-        const submission = assignment.submissions.id(req.body.submissionId);
-        if (!submission) {
-            return res.status(404).json({ error: "Submission not found" });
-        }
-
-        submission.feedback = parsedFeedback;
-        submission.aiScore = aiScore;
+        // Set the submission status to 'graded' and save the feedback
         submission.status = 'graded';
-
+        submission.feedback = parseFeedback(feedback);
         await assignment.save();
 
-        res.json({ feedback: parsedFeedback, aiScore: aiScore });
+        res.json({ feedback });
     } catch (error) {
         console.error("Error grading submission:", error);
         res.status(500).send('Error grading submission');

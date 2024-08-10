@@ -50,8 +50,8 @@ const submissionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'submitted', 'graded', 'regrade', 'error'],
-    default: 'open'
+    enum: ['open', 'submitted', 'graded', 'regrade', 'error', 'grading'],  // make open, 
+    default: 'open' // Optional: you can set a default status
   },
   feedback: {
     type: [feedbackCriteriaSchema],
@@ -65,6 +65,7 @@ const submissionSchema = new Schema({
   },
   aiScore: {
     type: Number,  // Add field for AI score
+    default: 0
   },
 });
 

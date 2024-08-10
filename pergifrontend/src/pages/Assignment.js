@@ -1,11 +1,11 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect, createRef } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import ReactMarkdown from 'react-markdown';
 import Navbar from "components/Navbar";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faFlag, faPenToSquare, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faFlag, faPenToSquare, faArrowLeft, faSave } from '@fortawesome/free-solid-svg-icons';
 import './assignments.css';
 import { marked } from 'marked';
 import { jsPDF } from 'jspdf';
@@ -68,6 +68,31 @@ const Assignment = () => {
   const [currentCriteria, setCurrentCriteria] = useState(null);
   const [currentComments, setCurrentComments] = useState('');
   const [currentScore, setCurrentScore] = useState(0); // State for the text box score
+  const [isSaving, setIsSaving] = useState(false);
+
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const submissionId = queryParams.get('submissionId');
+
+
+  useEffect(() => {
+    if (assignment && submissionId) {
+        const selected = assignment.submissions.find(sub => sub._id === submissionId);
+        if (selected) {
+            setSelectedSubmission(selected);
+        }
+    }
+  }, [assignment, submissionId]);
+
+  useEffect(() => {
+    console.log('Assignment updated:', assignment);
+  }, [assignment]);
+  
+  useEffect(() => {
+    console.log('Selected Submission updated:', selectedSubmission);
+  }, [selectedSubmission]);
+  
 
   const calculateTotalScore = (submission) => {
     if (!submission || !submission.feedback) {
@@ -112,29 +137,42 @@ const Assignment = () => {
     }
   };
 
-  const handleMarkForRegrade = async (submissionId) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        mode: 'cors',
-        body: JSON.stringify({ status: 'regrade' })
-      });
+const handleMarkForRegrade = async (submissionId) => {
+  console.log('Marking for regrade...');
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      mode: 'cors',
+      body: JSON.stringify({ status: 'regrade' })
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to mark submission for regrade');
-      }
-
-      const updatedAssignment = await response.json();
-      setAssignment(updatedAssignment);
-      setSelectedSubmission(updatedAssignment.submissions.find(sub => sub._id === submissionId));
-    } catch (error) {
-      console.error(error.message);
+    if (!response.ok) {
+      throw new Error('Failed to mark submission for regrade');
     }
-  };
+
+    const updatedAssignment = await response.json();
+    console.log('Updated Assignment:', updatedAssignment);
+
+    // Find the updated submission within the updatedAssignment
+    const updatedSubmission = updatedAssignment.submissions.find(sub => sub._id === submissionId);
+
+    // Update the state with the new assignment and selected submission
+    setAssignment(updatedAssignment);
+    setSelectedSubmission(updatedSubmission);
+
+    // Log to confirm the state updates
+    console.log('Assignment updated:', updatedAssignment);
+    console.log('Selected Submission updated:', updatedSubmission);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+};
+
+  
 
   const handleScoreChange = async (criteriaId, newScore) => {
     try {
@@ -296,26 +334,27 @@ const Assignment = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/submissions/${id}`, {
-        credentials: 'include',
-        mode: 'cors'
-      });
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/submissions/${id}`, {
+            credentials: 'include',
+            mode: 'cors'
+        });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
 
-      const data = await response.json();
-      setAssignment(data);
+        const data = await response.json();
+        setAssignment(data);
 
-      if (data.submissions && data.submissions.length > 0) {
-        setSelectedSubmission(data.submissions[0]);
-      }
+        if (data.submissions && data.submissions.length > 0) {
+            const selected = data.submissions.find(sub => sub._id === submissionId);
+            setSelectedSubmission(selected || data.submissions[0]);
+        }
 
     } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
+        console.error("There was a problem with the fetch operation:", error);
     }
-  };
+};
 
   useEffect(() => {
     fetchAssignments();
@@ -394,15 +433,24 @@ const Assignment = () => {
     setEditFeedbackModal(true);
   };
 
-  const closeEditFeedbackModal = async () => {
-    console.log('closing modal');
-    if (currentCriteria) {
-      await handleScoreChange(currentCriteria._id, currentCriteria.score);
-      console.log(currentComments);
-      await handleCommentsChange(currentCriteria._id, currentComments);
+  const closeEditFeedbackModal = async (shouldSave = false) => {
+    if (currentCriteria && shouldSave) {
+      setIsSaving(true);
+      try {
+        await handleScoreChange(currentCriteria._id, currentCriteria.score);
+        await handleCommentsChange(currentCriteria._id, currentComments);
+      } catch (error) {
+        console.error('Error saving feedback:', error);
+      } finally {
+        setIsSaving(false);
+        setEditFeedbackModal(false);
+      }
+    } else {
+      setEditFeedbackModal(false);
     }
-    setEditFeedbackModal(false);
   };
+  
+  
 
   return (
     <div>
@@ -612,18 +660,18 @@ const Assignment = () => {
                 </AlertDialogContent>
               </AlertDialog>
 
-              <Dialog  open={editFeedbackModal} onOpenChange={setEditFeedbackModal} onClose={closeEditFeedbackModal}>
-                <DialogContent className="w-full max-w-2xl p-6 h-1/2 mb-4">
-                  <DialogTitle>Edit Feedback</DialogTitle>
-                  <DialogDescription>
-                    <div className="flex flex-row justify-between items-center mb-2">
-                      <Input
-                        type="number"
-                        value={currentScore}
-                        onChange={(e) => handleTextBoxChange(currentCriteria._id, e.target.value)}
-                        className="w-1/4 mr-1"
-                      />
-                      <span className="mr-2">/{currentCriteria ? currentCriteria.total : 0}</span>
+              <Dialog open={editFeedbackModal} onOpenChange={setEditFeedbackModal} onClose={closeEditFeedbackModal}>
+              <DialogContent className="w-full max-w-2xl p-6 h-auto mb-4"> {/* Change h-1/2 to h-auto */}
+                <DialogTitle>Edit Feedback</DialogTitle>
+                <DialogDescription>
+                  <div className="flex flex-row justify-between items-center mb-2">
+                    <Input
+                      type="number"
+                      value={currentScore}
+                      onChange={(e) => handleTextBoxChange(currentCriteria._id, e.target.value)}
+                      className="w-1/4 mr-1"
+                    />
+                    <span className="mr-2">/{currentCriteria ? currentCriteria.total : 0}</span>
                     <input
                       type="range"
                       min="0"
@@ -639,23 +687,38 @@ const Assignment = () => {
                         <option key={idx} value={value.point} label={value.point.toString()}></option>
                       )) : null}
                     </datalist>
-                    </div>
-                    <div className="h-full mb-4">
+                  </div>
+                  <div className="h-auto mb-4"> {/* Change h-full to h-auto */}
                     <Textarea
-                      value={currentComments} // bind to currentComments state
-                      onChange={(e) => setCurrentComments(e.target.value)} // update currentComments state
-                      className="w-full mt-2 p-2 border border-gray-300 rounded overflow-auto h-full mb-2"
-                      rows="auto"
+                      value={currentComments}
+                      onChange={(e) => setCurrentComments(e.target.value)}
+                      className="w-full mt-2 p-2 border border-gray-300 rounded overflow-scroll mb-2" 
+                      rows="8"
                       style={{ overflow: 'scroll' }}
-                      onInput={autoResizeTextarea}
+                      onInput={autoResizeTextarea} 
                     />
-                    </div>
-                  </DialogDescription>
-                  <DialogFooter className="mt-8">
-                  <Button onClick={closeEditFeedbackModal}>Close</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </div>
+                </DialogDescription>
+                <DialogFooter className="mt-8 flex justify-end space-x-4">
+                <Button 
+                  onClick={() => closeEditFeedbackModal(false)}
+                  className="bg-red-500 text-white hover:bg-red-600 focus:ring-4 focus:ring-red-300 rounded-lg py-3 px-6 transition-all duration-200 ease-in-out"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => closeEditFeedbackModal(true)}
+                  disabled={isSaving}
+                  className={`bg-green-500 text-white hover:bg-green-600 focus:ring-4 focus:ring-green-300 rounded-lg py-3 px-6  transition-all duration-200 ease-in-out ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <FontAwesomeIcon icon={faSave} className="mr-2 text-lg" />
+                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                </Button>
+              </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+
             </div>
           )}
         </div>
