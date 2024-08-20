@@ -398,6 +398,15 @@ const gradeall = async (req, res) => {
                     submission.status = 'graded';
                 }
 
+                const user = await User.findById(req.user._id);
+                console.log("gonna add orange")
+
+                if (user.numGraded === undefined) {
+                    user.numGraded = 0;
+                }
+                user.numGraded++;
+                await user.save();
+
                 return submission;
             }
         });
