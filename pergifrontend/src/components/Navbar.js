@@ -42,16 +42,23 @@ const Navbar = ({ resetTemplate }) => {
   }
 
   return (
-    <header className="m-1 mb-0 mt-1 rounded-xl p-4 flex justify-between items-center bg-zinc-700 text-white h-12">
+    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12">
       {user && (
-        <div className="p-1 rounded-xl flex items-center gap-4 cursor-pointer ">
+        <div className=" rounded-xl flex items-center gap-2 cursor-pointer ">
 
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-                <span class="text-2xl material-symbols-outlined hover:text-blue-500">
+              <div className="hover:text-green-400 flex  gap-2 justify-between items-center">
+              <span class="text-3xl material-symbols-outlined ">
                 metabolism
               </span>
+              <div className="">
+                <span className="font-extrabold text-lg">
+                  {user.authority}
+                </span>
+              </div>
+              </div>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -66,11 +73,7 @@ const Navbar = ({ resetTemplate }) => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <div className="">
-                <span className="block font-medium">
-                  {user.authority}
-                </span>
-              </div>
+
 
         </div>
 
@@ -78,18 +81,19 @@ const Navbar = ({ resetTemplate }) => {
 
       {user && (
         <div className="user-info flex gap-2 items-center">
-          <img src={user.picture} alt={user.name} className="user-image rounded-full h-4 w-4 object-cover mr-3" />
           <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
             <span className="block font-bold">
-              {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}
+              Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
             </span>
           </div>
-          <button
+          <img src={user.picture} alt={user.name} className="user-image rounded-full h-10 object-cover mr-1" />
+
+          <Button
             onClick={handleClick}
-            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-5 w-20 text-xs"
+            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-10 w-20 "
           >
             Logout
-          </button>
+          </Button>
         </div>
       )}
     </header>

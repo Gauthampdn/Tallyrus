@@ -624,25 +624,25 @@ const Classroom = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-300">
+    <div className="flex flex-col h-screen">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-3xl m-3 mr-0 bg-indigo-200 p-6 overflow-auto text-gray-700 border border-indigo-300 flex flex-col">
+          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-white border border-white flex flex-col h-full">
             <div className="flex w-full justify-between mb-3 gap-2">
-              <Button className="w-1/4 bg-stone-600" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
+              <Button className="w-1/4 bg-white text-black hover:bg-black hover:text-white" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
               {user && user.authority === "teacher" && (
-                <Button className="w-3/4 p-2 bg-lime-700" onClick={handleCreateA}>
+                <Button className="w-3/4 p-2 bg-amber-500 hover:bg-white hover:text-amber-500 " onClick={handleCreateA}>
                   + New
                 </Button>
               )}
             </div>
-            <h2 className="font-extrabold text-xl mb-4 underline">All Assignments</h2>
+            <h2 className="font-extrabold text-2xl text-center mb-4 underline">All Assignments</h2>
             <ul>
               {allAssignments.map((eachassignment) => (
                 <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                   <button
-                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-indigo-600' : ''}`}
+                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-amber-600' : ''}`}
                     onClick={() => handleSelectAssignment(eachassignment)}
                   >
                     {eachassignment.name}
@@ -653,7 +653,7 @@ const Classroom = () => {
           </aside>
         </div>
 
-        <main className="w-4/5 p-10 overflow-auto bg-white rounded-3xl rounded-tr-md rounded-br-md m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-stone-200 rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -792,7 +792,7 @@ const Classroom = () => {
                         
                           {selectedAssignment.submissions.length ? (
                           <div className="flex w-full gap-4">
-                          <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                          <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
                             <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                             Upload Assignments
                           </Button>

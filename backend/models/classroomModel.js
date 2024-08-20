@@ -29,7 +29,7 @@ const classroomSchema = new Schema({
   },
   color: {
     type: String, // color for the class card background
-    default: 'bg-indigo-100'
+    default: 'bg-stone-100'
   }
 }, { timestamps: true });
 

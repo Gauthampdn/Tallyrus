@@ -455,14 +455,11 @@ const handleMarkForRegrade = async (submissionId) => {
   return (
     <div>
       <Navbar />
-      <div className="m-1 flex justify-start">
-      </div>
-
       {assignment ? (
-        <div className="m-4" >
+        <div className="p-4" >
           <div className="flex mb-2 align-middle justify-between">
             <div className="w-1/5">
-              <Button className="mr-2 w-max bg-stone-600" onClick={handleGoback}>
+              <Button className="mr-2 w-max bg-white text-black" onClick={handleGoback}>
                 <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
               </Button>
             </div>
@@ -589,7 +586,7 @@ const handleMarkForRegrade = async (submissionId) => {
           <hr className="mb-5" />
 
           {selectedSubmission && (
-            <div className="flex flex-col md:flex-row">
+            <div className="flex flex-col md:flex-row gap-3">
               <div className="md:flex-1">
                 {selectedSubmission.pdfURL ? (
                   <iframe
@@ -603,26 +600,25 @@ const handleMarkForRegrade = async (submissionId) => {
                 )}
               </div>
 
-              <div className="md:flex-1 p-4">
-                <Card className="mb-4">
-                  <CardHeader>
-                    <CardTitle className="mb-1 text-2xl">{assignment?.name}</CardTitle>
-                  </CardHeader>
-                  <CardDescription className="ml-8 text-base">
+              <div className="md:flex-1 p">
+                <div className="m-6 text-white">
+                    <h1 className="mb-1 font-extrabold text-2xl">{assignment?.name}</h1>
                     <p><strong>Name:</strong> {selectedSubmission.studentName}</p>
                     <p><strong>Email:</strong> {selectedSubmission.studentEmail}</p>
                     <p><strong>Date Submitted:</strong> {new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}</p>
                     <p><strong>Status:</strong> {selectedSubmission.status} {selectedSubmission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
                     <p><strong>AI Score:</strong> {selectedSubmission.aiScore}%</p> {/* Display AI score here */}
-                    <p className="pb-3 text-black"><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)}/{selectedSubmission.feedback.reduce((sum, criteria) => sum + criteria.total, 0)} points</p>
-                  </CardDescription>
-                </Card>
-                <div className="overflow-y-auto">
+                    <p className=""><strong>Total Score:</strong> {calculateTotalScore(selectedSubmission)}/{selectedSubmission.feedback.reduce((sum, criteria) => sum + criteria.total, 0)} points</p>
+
+                </div>
+                <hr className="m-6" />
+
+                <div className="overflow-y-auto ">
                   {selectedSubmission.feedback.map((criteria, index) => (
-                    <Card key={index} className={`mb-2`}>
+                    <Card key={index} className="mb-3 bg-stone-100">
                       <CardHeader>
                         <div className="flex justify-between">
-                        <CardTitle>{criteria.name.replace(/\*/g, '')}</CardTitle>
+                        <CardTitle className="font-bold">{criteria.name.replace(/\*/g, '')}</CardTitle>
                         <Button onClick={() => openEditFeedbackModal(criteria)} className="ml-2 bg-white text-black border-2 shadow-none  hover:text-white">                      
                         <FontAwesomeIcon icon={faPenToSquare} className="mr-2" />
                         Edit </Button>
@@ -630,7 +626,7 @@ const handleMarkForRegrade = async (submissionId) => {
                         <CardDescription>{criteria.score}/{criteria.total} points</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <ReactMarkdown>{criteria.comments}</ReactMarkdown>
+                        <ReactMarkdown className="text-sm">{criteria.comments}</ReactMarkdown>
                       </CardContent>
                     </Card>
                   ))}

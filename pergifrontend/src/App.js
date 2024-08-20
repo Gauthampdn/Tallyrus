@@ -114,7 +114,7 @@ const App = () => {
         showSkipButton
       />
       <BrowserRouter>
-        <div className="pages">
+        <div className="pages bg-zinc-950 ">
           <Routes>
             <Route path="/" element={<AboutTallyrus />} />
             <Route path="/app" element={user ? <Home startTour={startTour} stepIndex={stepIndex} setStepIndex={setStepIndex} isCreateModalOpen={isCreateModalOpen} setIsCreateModalOpen={setIsCreateModalOpen} /> : <Navigate to="/login" />} />

@@ -207,10 +207,10 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   }
 
   return (
-    <div className="min-h-screen bg-white-100">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex justify-between items-center m-8">
-        <h1 className='text-4xl font-bold text-gray-800'>Your Classrooms</h1>
+        <h1 className='text-4xl font-bold text-white'>Your Classrooms</h1>
         <div className="flex space-x-4">
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -308,18 +308,23 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
         {currClassrooms.map((classroom) => (
           <Card
             key={classroom._id}
-            className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 transform transition duration-500 hover:scale-105 ${classroom.color}`}
+            className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 ${classroom.color}`}
           >
             <CardHeader>
               <div className='flex justify-between'>
-                <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
+                <CardTitle className="text-xl font-extrabold">{classroom.title}</CardTitle>
                 <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
-                  </DropdownMenuTrigger>
+                  <div>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="" className="material-symbols-outlined bg-indigo-600 mr-1">apps</Button>
+                    </DropdownMenuTrigger>
+                    <Button className=""
+                      onClick={() => handleGoToClass(classroom._id)}>
+                      <FontAwesomeIcon icon={faArrowRight} className="" />
+                    </Button>
+                  </div>
                   <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>Options</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                       <DropdownMenuItem onSelect={() => handleEditClassroom(classroom._id)}>
                         <FontAwesomeIcon icon={faPen} className="mr-2" />
@@ -339,13 +344,6 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </CardContent>
             <CardFooter className="flex justify-between">
               <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
-              <Button
-                className="go-to-class-btn bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600"
-                onClick={() => handleGoToClass(classroom._id)}
-              >
-                <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
-                Go to Class
-              </Button>
             </CardFooter>
           </Card>
         ))}

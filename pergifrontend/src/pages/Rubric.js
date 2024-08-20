@@ -54,7 +54,7 @@ const Rubric = () => {
       if (isRubricModalOpen && acceptedFiles.length > 0) {
         setRubricFile(acceptedFiles[0]);
         setFileName(acceptedFiles[0].name);
-      } 
+      }
     },
   });
 
@@ -89,7 +89,7 @@ const Rubric = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     const rubrics = rubric.map(category => ({
       name: category.name,
       values: category.Criteria.map(criterion => ({
@@ -183,11 +183,11 @@ const Rubric = () => {
       console.log("No rubric file selected");
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', rubricFile);
     console.log(rubricFile);
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${id}`, {
         method: 'POST',
@@ -195,13 +195,13 @@ const Rubric = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
       console.log(data);
-  
+
       // Assuming the uploaded rubric data is returned in the response
       const uploadedRubric = data.rubric.map(category => ({
         name: category.name,
@@ -210,10 +210,10 @@ const Rubric = () => {
           description: value.description
         }))
       }));
-  
+
       setRubric(uploadedRubric); // Update the rubric state
       setCurrentRubric(uploadedRubric); // Update the currentRubric state
-  
+
       toast({
         title: "Rubric Uploaded!",
         description: "The rubric has been successfully uploaded and parsed.",
@@ -225,19 +225,30 @@ const Rubric = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-300">
+    <div className="flex flex-col h-screen">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-3xl m-3 mr-0 bg-indigo-200 p-6 overflow-auto text-gray-700 border border-indigo-300 flex flex-col">
-            <div className="flex gap-2">
-              <Button className="w-full mb-3 bg-stone-600 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
-                <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
-              </Button>
-              <Button onClick={handleOpenRubricModal} className="w-full mb-3 bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
-              </Button>
+          <aside className="rounded-xl m-3 mr-0 p-6 overflow-auto text-white border border-white flex flex-col">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-row gap-2">
+                <Button className=" w-1/4 bg-stone-600 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
+                  <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
+                </Button>
+                <Button onClick={handleOpenRubricModal} className="w-3/4 bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
+                </Button>
+              </div>
+              <div className="flex flex-row gap-2 w-full">
+                <Button type="submit" className="w-1/4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                  <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" />
+                </Button>
+                <Button type="button" className=" w-3/4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
+                  Add Criteria+
+                </Button>
+              </div>
             </div>
+            <hr className='mt-5 mb-5'/>
             <h1 className="font-extrabold text-xl mb-4 underline">Select a Rubric</h1>
             <div className="cursor-pointer p-2 hover:bg-gray-200 hover:text-indigo-700 rounded-xl border-2" onClick={() => setRubric(currentRubric)}>
               <strong>Current Rubric</strong>
@@ -249,16 +260,10 @@ const Rubric = () => {
             ))}
           </aside>
         </div>
-        <form className="flex-[3] p-4 overflow-auto bg-white rounded-3xl m-3" onSubmit={handleSubmit}>
+        <form className="flex-[3] pr-4 overflow-auto m-3" onSubmit={handleSubmit}>
           <div className='flex items-center'>
-            <Button type="submit" className="m-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-              <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
-            </Button>
-            <Button type="button" className="m-2 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
-              Add Criteria +
-            </Button>
-            </div>
-            <div>
+          </div>
+          <div>
             {rubric.map((category, sectionIndex) => (
               <Card key={sectionIndex} className="mb-4">
                 <CardHeader>
