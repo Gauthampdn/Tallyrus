@@ -240,7 +240,7 @@ const Rubric = () => {
                 </Button>
               </div>
               <div className="flex flex-row gap-2 w-full">
-                <Button type="submit" className="w-1/4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                <Button type="button" className="w-1/4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded" onClick={handleSubmit}>
                   <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" />
                 </Button>
                 <Button type="button" className=" w-3/4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
