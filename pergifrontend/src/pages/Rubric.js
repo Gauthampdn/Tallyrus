@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button'; // Ensure this path is correct
 import Navbar from 'components/Navbar'; // Adjust the import path as necessary
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { faArrowLeft, faSave, faUpload, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faSave, faUpload, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useDropzone } from 'react-dropzone';
 import { Textarea } from "@/components/ui/textarea";
 import PremadeRubrics from 'components/PremadeRubrics'; // Ensure the path is correct
+import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+
 
 import {
   Table,
@@ -40,7 +42,6 @@ const Rubric = () => {
   const [fileName, setFileName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { state } = useLocation(); // Get the state passed from the navigation
-
 
   const navigate = useNavigate();
 
@@ -181,12 +182,12 @@ const Rubric = () => {
       console.log("No rubric file selected");
       return;
     }
-  
+
     setIsLoading(true);  // Set loading to true when the upload starts
-  
+
     const formData = new FormData();
     formData.append('file', rubricFile);
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${id}`, {
         method: 'POST',
@@ -194,13 +195,13 @@ const Rubric = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
-  
+
       const uploadedRubric = data.rubric.map(category => ({
         name: category.name,
         Criteria: category.values.map(value => ({
@@ -208,15 +209,15 @@ const Rubric = () => {
           description: value.description
         }))
       }));
-  
+
       setRubric(uploadedRubric);
       setCurrentRubric(uploadedRubric);
-  
+
       toast({
         title: "Rubric Uploaded!",
         description: "The rubric has been successfully uploaded and parsed.",
       });
-  
+
       handleCloseRubricModal();
     } catch (error) {
       console.error("There was a problem with the rubric upload:", error);
@@ -224,7 +225,12 @@ const Rubric = () => {
       setIsLoading(false);  // Set loading to false once the upload is complete
     }
   };
-  
+
+  const handleDeleteCategory = (sectionIndex) => {
+    const updatedRubric = rubric.filter((_, index) => index !== sectionIndex);
+    setRubric(updatedRubric);
+  };
+
   useEffect(() => {
     // Automatically open the specific section based on the passed state
     if (state && state.sectionIndex !== undefined) {
@@ -263,29 +269,34 @@ const Rubric = () => {
         </div>
         
         <form className="flex-[3] pr-4 overflow-auto m-3" onSubmit={handleSubmit}>
-        <div className="flex flex-row gap-2 w-full mb-6">
-                <Button type="submit" className="w-1/4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
-                  <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
-                </Button>
-                <Button type="button" className="w-3/4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center" onClick={handleAddCriteria}>
-                  <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" /> Add Criteria
-                </Button>
-              </div>
-              <div>
+          <div className="flex flex-row gap-2 w-full mb-6">
+            <Button type="submit" className="w-1/4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
+              <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
+            </Button>
+            <Button type="button" className="w-3/4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center" onClick={handleAddCriteria}>
+              <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" /> Add Criteria
+            </Button>
+          </div>
+          <div>
             {rubric.map((category, sectionIndex) => (
               <Disclosure key={sectionIndex} defaultOpen={state?.sectionIndex === sectionIndex}>
                 {({ open }) => (
                   <>
-                    <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-gray-800 p-2 rounded-lg hover:bg-gray-700">
-                      <span className="font-bold">{category.name || "Category Name"}</span>
-                    </Disclosure.Button>
+                    <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-gray-800 p-2 rounded-lg hover:bg-gray-700 flex justify-start items-center">
+                    <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} className="mr-2" />
+                    <span className="font-bold">{category.name || "Category Name"}</span>
+                  </Disclosure.Button>
+
+
                     <Disclosure.Panel className="bg-gray-800 text-gray-100 rounded-lg mb-4 p-4">
-                      <Textarea
-                        value={category.name}
-                        onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
-                        className="border p-1 w-full bg-gray-700 text-gray-200 mb-4"
-                        placeholder="Category Name"
-                      />
+                      <div className="flex justify-between items-center">
+                        <Textarea
+                          value={category.name}
+                          onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
+                          className="border p-1 w-full bg-gray-700 text-gray-200 mb-4"
+                          placeholder="Category Name"
+                        />
+                      </div>
                       <Table>
                         <TableBody>
                           {category.Criteria.map((criteria, criteriaIndex) => (
@@ -317,6 +328,13 @@ const Rubric = () => {
                             </TableRow>
                           ))}
                         </TableBody>
+                        <Button
+                          type="button"
+                          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md flex items-center justify-center mt-2"
+                          onClick={() => handleDeleteCategory(sectionIndex)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="ml-2 mr-2" /> Delete Category
+                        </Button>
                       </Table>
                     </Disclosure.Panel>
                   </>
