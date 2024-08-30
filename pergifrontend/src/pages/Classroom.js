@@ -624,25 +624,25 @@ const Classroom = () => {
 
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-white border border-white flex flex-col h-full">
+          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 border border-gray-600 flex flex-col h-full bg-gray-800">
             <div className="flex w-full justify-between mb-3 gap-2">
-              <Button className="w-1/4 bg-white text-black hover:bg-black hover:text-white" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
+              <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
               {user && user.authority === "teacher" && (
-                <Button className="w-3/4 p-2 bg-amber-500 hover:bg-white hover:text-amber-500 " onClick={handleCreateA}>
+                <Button className="w-3/4 p-2 bg-amber-500 hover:bg-gray-700" onClick={handleCreateA}>
                   + New
                 </Button>
               )}
             </div>
-            <h2 className="font-extrabold text-2xl text-center mb-4 underline">All Assignments</h2>
+            <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
             <ul>
               {allAssignments.map((eachassignment) => (
                 <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                   <button
-                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? ' bg-white text-amber-600' : ''}`}
+                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
                     onClick={() => handleSelectAssignment(eachassignment)}
                   >
                     {eachassignment.name}
@@ -653,7 +653,7 @@ const Classroom = () => {
           </aside>
         </div>
 
-        <main className="w-4/5 p-10 overflow-auto bg-stone-200 rounded-3xl rounded-tr-md rounded-br-md m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-gray-800 text-gray-100 rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -664,34 +664,35 @@ const Classroom = () => {
                       <DropdownMenuTrigger asChild>
                         <Button variant="" className="bg-indigo-600 material-symbols-outlined">apps</Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
+                      <DropdownMenuContent className="w-56 bg-gray-700 text-gray-100">
                         <DropdownMenuLabel>Options</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator className="bg-gray-600" />
                         <DropdownMenuGroup>
-                          <DropdownMenuItem onSelect={() => copyPublicLink()}>
-                          <FontAwesomeIcon icon={faLink} className="mr-2" />
-                          Public Link</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => copyPublicLink()} className="hover:bg-gray-600">
+                            <FontAwesomeIcon icon={faLink} className="mr-2" />
+                            Public Link
+                          </DropdownMenuItem>
                           {!selectedAssignment.rubric || selectedAssignment.rubric.length === 0 ? (
                             <>
-                              <DropdownMenuItem onSelect={handleOpenRubricModal}>
+                              <DropdownMenuItem onSelect={handleOpenRubricModal} className="hover:bg-gray-600">
                                 <FontAwesomeIcon icon={faUpload} className="mr-2" />
                                 Upload Rubric
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleNavtoRubric()}>
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
                                 <FontAwesomeIcon icon={faEdit} className="mr-2" />
                                 Edit Rubric
                               </DropdownMenuItem>
                             </>
                           ) : (
                             <>
-                            <DropdownMenuItem onSelect={handleOpenRubricModal}>
+                              <DropdownMenuItem onSelect={handleOpenRubricModal} className="hover:bg-gray-600">
                                 <FontAwesomeIcon icon={faUpload} className="mr-2" />
                                 Upload Rubric
                               </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleNavtoRubric()}>
-                              <FontAwesomeIcon icon={faEdit} className="mr-2" />
-                              Edit Rubric
-                            </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
+                                <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                                Edit Rubric
+                              </DropdownMenuItem>
                             </>
                           )}
                         </DropdownMenuGroup>
@@ -699,9 +700,9 @@ const Classroom = () => {
                     </DropdownMenu>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button className="material-symbols-outlined" variant="destructive">delete</Button>
+                        <Button className="material-symbols-outlined bg-red-600" variant="destructive">delete</Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="bg-gray-800 text-gray-100">
                         <DialogHeader>
                           <DialogTitle>Are you absolutely sure?</DialogTitle>
                           <DialogDescription>
@@ -717,7 +718,7 @@ const Classroom = () => {
                 )}
               </div>
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
-              <hr className="mb-4"/>
+              <hr className="mb-4 border-gray-600" />
 
               <div className="flex flex-row w-full">
                 <div className="flex-1">
@@ -726,9 +727,8 @@ const Classroom = () => {
                     <br />
                   </div>
 
-                  {/* Display the rubric if it exists */}
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
-                    <div className="rubric-view-section hover:bg-gray-50 cursor-pointer rounded-mb p-2" onClick={() => handleNavtoRubric()}>
+                    <div className="rubric-view-section hover:bg-gray-700 cursor-pointer rounded-md p-2" onClick={() => handleNavtoRubric()}>
                       <ScrollArea className="scrollable-rubric-view">
                         {selectedAssignment.rubric.map((rubric, index) => (
                           <RubricTable key={index} rubric={rubric} />
@@ -737,8 +737,8 @@ const Classroom = () => {
                     </div>
                   ) : (
                     <div className="flex justify-center">
-                      <Button onClick={handleOpenRubricModal} className="bg-blue-500 mr-2 ">
-                        <FontAwesomeIcon icon={faUpload} className="mr-5" />
+                      <Button onClick={handleOpenRubricModal} className="bg-blue-500 mr-2">
+                        <FontAwesomeIcon icon={faUpload} className="mr-2" />
                         Upload Rubric
                       </Button>
                       <Button onClick={handleNavtoRubric} className="bg-green-500">
@@ -754,7 +754,7 @@ const Classroom = () => {
                     {user.authority === "student" && (
                       <div className="m-10 grid w-full items-center gap-1.5">
                         {selectedAssignment.submissions.map((submission) => (
-                          <Card key={submission._id} className="max-w-sm mb-2">
+                          <Card key={submission._id} className="max-w-sm mb-2 bg-gray-800 text-gray-100">
                             <CardHeader>
                               <CardTitle><strong>Name:</strong> {submission.studentName}</CardTitle>
                             </CardHeader>
@@ -765,22 +765,22 @@ const Classroom = () => {
                               <p><strong>Grade:</strong> {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</p>
                             </CardContent>
                             <CardFooter>
-                              <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">View Submission</a>
+                              <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-600">View Submission</a>
                             </CardFooter>
                           </Card>
                         ))}
                         <div className="max-w-sm">
                           <Label htmlFor="pdf">Upload your PDF</Label>
-                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} />
-                          <Button className="mt-8" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} className="bg-gray-700 text-gray-100" />
+                          <Button className="mt-8 bg-indigo-600 hover:bg-indigo-700" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
                           <br />
                           <br />
-                          <Button className="submit-button" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
+                          <Button className="bg-teal-500 hover:bg-teal-600" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
                             See Potential Grade
                           </Button>
                           <div className="feedback-container">
                             <h2>Feedback</h2>
-                            <div className="feedback-box">
+                            <div className="feedback-box bg-gray-800 text-gray-200 p-4 rounded-lg">
                               {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
                             </div>
                           </div>
@@ -789,83 +789,78 @@ const Classroom = () => {
                     )}
                     {user.authority === "teacher" && (
                       <div className="ml-5 flex flex-col items-start">
-                        
-                          {selectedAssignment.submissions.length ? (
+                        {selectedAssignment.submissions.length ? (
                           <div className="flex w-full gap-4">
-                          <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
-                            <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
-                            Upload Assignments
-                          </Button>
-                          <Button className="bg-orange-500 flex-auto grade-all-btn" onClick={() => handleGradeAll(selectedAssignment._id)}>
-                            <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
-                            Grade Assignments
-                          </Button>
-                          <Button className="mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white" onClick={() => handleNavtoSubs()}>
-                            All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
-                          </Button>
+                            <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                              <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
+                              Upload Assignments
+                            </Button>
+                            <Button className="bg-orange-500 flex-auto grade-all-btn" onClick={() => handleGradeAll(selectedAssignment._id)}>
+                              <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
+                              Grade Assignments
+                            </Button>
+                            <Button className="mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white" onClick={() => handleNavtoSubs()}>
+                              All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                            </Button>
                           </div>
-                       
-                          ) : (<div className="flex w-full gap-4">
+                        ) : (
+                          <div className="flex w-full gap-4">
                             <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
                               <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                               Upload Assignments
                             </Button>
-                            </div> )
-                        }
-                          
-                        
-                        <div className="w-full rounded-md">
-                          {selectedAssignment.submissions.length ? (
-                            <div className="border rounded-md">
-                          <Table >
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="font-extrabold">Name</TableHead>
-                                <TableHead className="font-extrabold">Status</TableHead>
-                                <TableHead className="font-extrabold">Score</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {selectedAssignment && selectedAssignment.submissions.map((submission, index) => (
-                                  <TableRow key={submission._id} onClick={() => handleNavtoSub(selectedAssignment._id, submission._id)} className="cursor-pointer hover:bg-gray-100">
-                                      <TableCell className="font-bold">
-                                          {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
-                                      </TableCell>
-                                      <TableCell className="font-bold">
-                                          {submission.status === 'grading' && (
-                                              <FontAwesomeIcon icon={faSpinner} spin className="mr-2 text-orange-500" />
-                                          )}
-                                          {submission.status === 'graded' && (
-                                              <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-green-500" />
-                                          )}
-                                          {submission.status === 'regrade' && (
-                                              <FontAwesomeIcon icon={faFlag} className="mr-2 text-red-500" />
-                                          )}
-                                          {submission.status === 'error' && (
-                                              <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-500" />
-                                          )}
-                                          {submission.status}
-                                      </TableCell>
-                                      <TableCell className="font-bold">
-                                          {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                          </div>
-                          
-                        ):
-                        (
-                          <div className="flex items-center justify-center border-0 mt-4">
-                          <p className="border-0">No Assignments Yet!</p>
                           </div>
                         )}
+                        <div className="w-full rounded-md">
+                          {selectedAssignment.submissions.length ? (
+                            <div className="border rounded-md bg-gray-800 text-gray-100">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="font-extrabold text-gray-300">Name</TableHead>
+                                    <TableHead className="font-extrabold text-gray-300">Status</TableHead>
+                                    <TableHead className="font-extrabold text-gray-300">Score</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {selectedAssignment.submissions.map((submission) => (
+                                    <TableRow key={submission._id} onClick={() => handleNavtoSub(selectedAssignment._id, submission._id)} className="cursor-pointer hover:bg-gray-700">
+                                      <TableCell className="font-bold">
+                                        {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
+                                      </TableCell>
+                                      <TableCell className="font-bold">
+                                        {submission.status === 'grading' && (
+                                          <FontAwesomeIcon icon={faSpinner} spin className="mr-2 text-orange-500" />
+                                        )}
+                                        {submission.status === 'graded' && (
+                                          <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-green-500" />
+                                        )}
+                                        {submission.status === 'regrade' && (
+                                          <FontAwesomeIcon icon={faFlag} className="mr-2 text-red-500" />
+                                        )}
+                                        {submission.status === 'error' && (
+                                          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-500" />
+                                        )}
+                                        {submission.status}
+                                      </TableCell>
+                                      <TableCell className="font-bold">
+                                        {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center border-0 mt-4">
+                              <p className="border-0">No Assignments Yet!</p>
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-end items-center space-x-4 mt-4">
                           {isRubricModalOpen && (
                             <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-                              <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
                                 <DialogHeader>
                                   <DialogTitle>Upload Rubric</DialogTitle>
                                 </DialogHeader>
@@ -881,10 +876,8 @@ const Classroom = () => {
                                 <DialogFooter>
                                   <Button
                                     onClick={handleRubricUpload}
-                                    disabled={!rubricFile || loading} // Disable the button if no file is selected or during loading
-                                    className={`${
-                                      loading ? 'bg-gray-500' : 'bg-blue-500'
-                                    }`} // Grey out the button while loading
+                                    disabled={!rubricFile || loading}
+                                    className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
                                   >
                                     {loading ? (
                                       <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
@@ -899,7 +892,7 @@ const Classroom = () => {
                           )}
                           {isTeacherUploadModalOpen && (
                             <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
-                              <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
                                 <DialogHeader>
                                   <DialogTitle>Upload PDFs</DialogTitle>
                                 </DialogHeader>
@@ -909,13 +902,20 @@ const Classroom = () => {
                                     <p>Click here to upload your students' essay PDFs</p>
                                   </div>
                                   <ul className="file-list">
-                                    {teacherFiles && teacherFiles.map((file, index) => (
-                                      <li key={index}>
-                                        {file.name}
-                                        <button className="delete-btn" onClick={() => removeFile(index)}>&times;</button>
-                                      </li>
-                                    ))}
-                                  </ul>
+  {teacherFiles && teacherFiles.map((file, index) => (
+    <li key={index} className="text-gray-200 flex items-center justify-between">
+      {file.name}
+      <button 
+        className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none" 
+        onClick={() => removeFile(index)}
+        style={{ backgroundColor: 'transparent', border: 'none' }}>
+        &times;
+      </button>
+    </li>
+  ))}
+</ul>
+
+
                                 </DialogDescription>
                                 <DialogFooter>
                                   <Button
@@ -940,7 +940,7 @@ const Classroom = () => {
             </div>
           ) : (
             <div>
-              <p>Select an assignment to view details</p>
+              <p className="text-gray-400">Select an assignment to view details</p>
             </div>
           )}
         </main>

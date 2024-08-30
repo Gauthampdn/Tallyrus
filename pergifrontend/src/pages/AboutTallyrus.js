@@ -10,14 +10,14 @@ const AboutTallyrus = () => {
     return (
       <header className="py-4 mt-2 rounded-3xl fade-in" style={{ animationDelay: '0.2s' }}>
         <div className="container mx-auto flex items-center justify-between">
-          <div className='flex'>
+          <div className='flex items-center'>
             <img src="/tallyrus2white.png" alt="Tally Illustration" className="m-0.5 mr-2 w-5 h-5" />
-            <div className="text-xl font-bold">Tallyrus</div>
+            <div className="text-xl font-bold text-white">Tallyrus</div>
           </div>
 
           <div>
             <Button
-              className="ml-4 text-white px-4 py-2 rounded-md hover:bg-green-400"
+              className="ml-4 bg-green-600 hover:bg-green-400 text-white px-4 py-2 rounded-md"
               onClick={() => navigate('/app')} // Navigate to root path on click
             >
               Go To App
@@ -82,17 +82,11 @@ const AboutTallyrus = () => {
             <img src="/tallyrus2green.png" className="w-[80px]" />
           </div>
           <div className="w-full ">
-            <h1 className="text-6xl font-extrabold mb-6">The AI-Powered <br /> Essay Grader.</h1>
-            <h1 className="text-xl font-semibold mb-6 text-gray-500">
-              Tallyrus 2.0 -  saving teachers time and providing more in-depth feedback
+            <h1 className="text-6xl font-extrabold mb-6 text-white">The AI-Powered <br /> Essay Grader.</h1>
+            <h1 className="text-xl font-semibold mb-6 text-gray-400">
+              Tallyrus 2.0 - saving teachers time and providing more in-depth feedback
             </h1>
             <div className="flex justify-center gap-4">
-              {/* <Button
-                className="ml-4 text-white px-4 py-2 rounded-md bg-green-600 hover:bg-green-800"
-                onClick={() => navigate('/')} // Navigate to root path on click
-              >
-                Go To App →
-              </Button>  */}
               <a href="https://docs.google.com/forms/d/1u6flS76PDzomzjtAG1S_AI5Mh8RDi5JoP4EnZFCelFI/edit" target="_blank" rel="noopener noreferrer">
                 <Button className="text-white bg-blue-600 hover:bg-blue-800 mr-4">Join Our Team!</Button>
               </a>
@@ -102,8 +96,8 @@ const AboutTallyrus = () => {
             <button onClick={() => navigate('/login')} className="flex items-center border-[1px] border-white rounded-lg px-8 py-2 bg-transparent hover:bg-gray-200 hover:text-black">
               <img src="/tryme.gif" alt="Image" className="w-20 h-20 mr-5" />
               <div className=''>
-                <h1 className='text-md font-semibold'>Tallyrus 2.0 → </h1>
-                <h1 className='text-xs font-normal'> Try our live app!</h1>
+                <h1 className='text-md font-semibold text-white'>Tallyrus 2.0 → </h1>
+                <h1 className='text-xs font-normal text-white'> Try our live app!</h1>
               </div>
             </button>
           </div>
@@ -143,8 +137,8 @@ const AboutTallyrus = () => {
     return (
       <div className="py-16 fade-in" style={{ animationDelay: '0.6s' }}>
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-center mb-4">About</h1>
-          <h1 className="text-xl font-semibold text-center mb-20 text-gray-500"> Here's how Tallyrus works to save both <br /> teachers and students' time</h1>
+          <h1 className="text-4xl font-bold text-center mb-4 text-white">About</h1>
+          <h1 className="text-xl font-semibold text-center mb-20 text-gray-400"> Here's how Tallyrus works to save both <br /> teachers and students' time</h1>
           <div className="grid grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <div key={index} className="w-full cursor-pointer transition-transform duration-200 ease-in-out overflow-hidden rounded-xl hover:scale-105" style={{ animationDelay: `${0.8 + index * 0.2}s` }}>
@@ -201,10 +195,10 @@ const AboutTallyrus = () => {
     return (
       <div className="py-16 fade-in" style={{ animationDelay: '1.6s' }}>
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-20"> Benefits of Using <br /> Tallyrus in the classroom</h1>
+          <h1 className="text-4xl font-bold mb-20 text-white"> Benefits of Using <br /> Tallyrus in the classroom</h1>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {items.map((item, index) => (
-              <div key={index} className="flex flex-col items-center">
+              <div key={index} className="flex flex-col items-center text-white">
                 <h1 className="text-8xl font-bold mb-2">{item.number}</h1>
                 <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
               </div>
@@ -219,8 +213,8 @@ const AboutTallyrus = () => {
     return (
       <div className={`container mx-auto flex flex-col md:flex-row items-center justify-between fade-in ${reverse ? 'md:flex-row-reverse' : ''}`} style={{ animationDelay: '2.0s' }}>
         <div className="md:w-1/2">
-          <h2 className="text-4xl font-bold mb-6">{title}</h2>
-          <p className="text-lg">{content}</p>
+          <h2 className="text-4xl font-bold mb-6 text-white">{title}</h2>
+          <p className="text-lg text-gray-400">{content}</p>
         </div>
         <div className="md:w-1/2 flex justify-center">
           <img src={imageSrc} alt={imageAlt} className="rounded-3xl max-w-md" />

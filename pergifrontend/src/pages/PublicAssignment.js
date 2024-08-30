@@ -225,9 +225,9 @@ const PublicAssignment = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-300">
+    <div className="flex flex-col h-screen bg-gray-950 text-white">
       <div className="flex flex-grow overflow-hidden">
-        <main className="w-full p-10 overflow-auto bg-white rounded-3xl m-3">
+        <main className="w-full p-10 overflow-auto bg-gray-900 rounded-3xl m-3">
           <div>
             {selectedAssignment && (
               <h1 className="text-2xl font-extrabold underline">
@@ -235,13 +235,11 @@ const PublicAssignment = () => {
               </h1>
             )}
             {selectedAssignment && (
-              <p className="my-4 font-semibold text-sm">
+              <p className="my-4 font-semibold text-sm text-gray-400">
                 {selectedAssignment.description}
               </p>
             )}
-            {/* Flex container for two columns */}
             <div className="flex flex-row w-full">
-              {/* First Column for Rubric */}
               <div className="flex-1">
                 <div>
                   <h1 className="font-bold underline text-lg">Rubric:</h1>
@@ -260,7 +258,6 @@ const PublicAssignment = () => {
                   </div>
                 )}
               </div>
-              {/* Second Column for Upload and Feedback */}
               <div className="flex-1 p-10">
                 <Label htmlFor="pdf">Upload your PDF</Label>
                 <Input
@@ -268,13 +265,14 @@ const PublicAssignment = () => {
                   type="file"
                   accept=".pdf"
                   onChange={handleFileChange}
+                  className="bg-gray-800 text-white border-gray-700"
                 />
-                <Button onClick={() => handleGrade(id)} className="mt-4">
+                <Button onClick={() => handleGrade(id)} className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
                   See Potential Grade
                 </Button>
                 <div className="feedback-container mt-4">
-                  <h2 className="text-lg font-bold mb-4" >Feedback</h2>
-                  <div className="feedback-box">
+                  <h2 className="text-lg font-bold mb-4">Feedback</h2>
+                  <div className="feedback-box bg-gray-800 p-4 rounded-md">
                     {feedback ? (
                       <ReactMarkdown>{feedback}</ReactMarkdown>
                     ) : (
@@ -289,7 +287,6 @@ const PublicAssignment = () => {
         <Toaster />
       </div>
     </div>
-
   );
 
 }

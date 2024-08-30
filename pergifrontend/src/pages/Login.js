@@ -72,32 +72,31 @@ const Login = () => {
 
 
   return (
-    <div className="flex flex-row min-h-screen bg-stone-600  ">
-
+    <div className="flex flex-row min-h-screen bg-gray-900">
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div className="flex justify-between items-center">
-          <img src="/tallyrus2white.png" alt="" className="h-10" />
-          <Button onClick={navigateAbout}>About Tallyrus!</Button>
+          <img src="/tallyrus2white.png" alt="Tallyrus Logo" className="h-10" />
+          <Button onClick={navigateAbout} className="bg-blue-500 hover:bg-blue-600 text-white">About Tallyrus!</Button>
         </div>
         <div className="mb-10">
-          <blockquote className="italic text-white">
+          <blockquote className="italic text-gray-300">
             “I feel as though Tallyrus was made just for me as I 
             used to spend countless hours grading assignments before
             and now I'm able to give students their papers graded back within hours”
           </blockquote>
-          <p className="mt-4  text-white">- Mrs.M - Grade 6 English Teacher</p>
+          <p className="mt-4 text-gray-400">- Mrs. M - Grade 6 English Teacher</p>
         </div>
       </div>
 
-      <div className="basis-1/2 flex flex-col justify-center items-center p-10 bg-white">
+      <div className="basis-1/2 flex flex-col justify-center items-center p-10 bg-gray-800">
         <div className="w-full max-w-md">
-          <h2 className="text-4xl font-extrabold text-center mb-6">Welcome to Tallyrus!</h2>
-          <p className="text-sm text-center mb-6">Log in or automatically sign up using your Google account</p>
+          <h2 className="text-4xl font-extrabold text-center text-white mb-6">Welcome to Tallyrus!</h2>
+          <p className="text-sm text-center text-gray-300 mb-6">Log in or automatically sign up using your Google account</p>
 
           <div className="my-4 flex items-center justify-center">
-            <span className="bg-gray-300 h-px flex-grow t-2 relative top-2"></span>
+            <span className="bg-gray-600 h-px flex-grow"></span>
             <span className="flex-none uppercase px-4 text-sm text-gray-400">continue with</span>
-            <span className="bg-gray-300 h-px flex-grow t-2 relative top-2"></span>
+            <span className="bg-gray-600 h-px flex-grow"></span>
           </div>
           <div className="flex justify-center">
             <button onClick={handleButtonClick} aria-label="Sign in with Google"
@@ -106,15 +105,13 @@ const Login = () => {
               <img src="/glog.png" alt="Google" className="h-10" />
             </button>
           </div>
-          <p className="text-xs text-center mt-4">
+          <p className="text-xs text-center mt-4 text-gray-400">
             By signing in, you agree to our{" "}
-            <a href="/terms" className="underline">Terms of Service</a>{" "}
-            and <a href="/privacy" className="underline">Privacy Policy</a>.
+            <a href="/terms" className="underline text-gray-400 hover:text-gray-200">Terms of Service</a>{" "}
+            and <a href="/privacy" className="underline text-gray-400 hover:text-gray-200">Privacy Policy</a>.
           </p>
-
         </div>
       </div>
-
     </div>
   );
 

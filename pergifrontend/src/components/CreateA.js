@@ -84,16 +84,16 @@ const CreateA = () => {
   return (
     <div>
       <Navbar />
-      <div className="relative flex justify-center items-center min-h-screen">
+      <div className="relative flex justify-center items-center min-h-screen bg-gray-900 text-white">
         <Button 
-          className="absolute top-4 left-4 w-max bg-stone-600" 
+          className="absolute top-4 left-4 w-max bg-gray-600 hover:bg-gray-700 text-white" 
           onClick={handleGoBack}
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Back
         </Button>
         
-        <Card className="min-w-full sm:min-w-0 sm:w-1/2">
+        <Card className="min-w-full sm:min-w-0 sm:w-1/2 bg-gray-800 text-gray-100">
           <CardHeader>
             <CardTitle>Create New Assignment</CardTitle>
             <CardDescription>Fill in the details for the new assignment.</CardDescription>
@@ -110,7 +110,7 @@ const CreateA = () => {
                     onChange={handleChange} 
                     required 
                     placeholder="Assignment Name" 
-                    className="focus:ring-2 focus:ring-blue-500" 
+                    className="focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100"
                   />
                 </div>
                 <div>
@@ -122,7 +122,7 @@ const CreateA = () => {
                     onChange={handleChange} 
                     required 
                     placeholder="Brief Description" 
-                    className="focus:ring-2 focus:ring-blue-500" 
+                    className="focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100"
                   />
                 </div>
                 <div>
@@ -134,7 +134,7 @@ const CreateA = () => {
                     value={formData.dueDate} 
                     onChange={handleChange} 
                     required 
-                    className="focus:ring-2 focus:ring-blue-500"
+                    className="focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100"
                   />
                 </div>
               </div>

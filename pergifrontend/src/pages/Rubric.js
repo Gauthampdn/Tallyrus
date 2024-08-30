@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'; // Ensure this path is correct
 import Navbar from 'components/Navbar'; // Adjust the import path as necessary
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { faArrowLeft, faSave, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faSave, faUpload, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useDropzone } from 'react-dropzone';
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +44,8 @@ const Rubric = () => {
   const [rubricFile, setRubricFile] = useState(null);
   const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -183,11 +185,12 @@ const Rubric = () => {
       console.log("No rubric file selected");
       return;
     }
-
+  
+    setIsLoading(true);  // Set loading to true when the upload starts
+  
     const formData = new FormData();
     formData.append('file', rubricFile);
-    console.log(rubricFile);
-
+  
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${id}`, {
         method: 'POST',
@@ -195,14 +198,13 @@ const Rubric = () => {
         credentials: 'include',
         mode: 'cors',
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
+  
       const data = await response.json();
-      console.log(data);
-
-      // Assuming the uploaded rubric data is returned in the response
+  
       const uploadedRubric = data.rubric.map(category => ({
         name: category.name,
         Criteria: category.values.map(value => ({
@@ -210,68 +212,71 @@ const Rubric = () => {
           description: value.description
         }))
       }));
-
-      setRubric(uploadedRubric); // Update the rubric state
-      setCurrentRubric(uploadedRubric); // Update the currentRubric state
-
+  
+      setRubric(uploadedRubric);
+      setCurrentRubric(uploadedRubric);
+  
       toast({
         title: "Rubric Uploaded!",
         description: "The rubric has been successfully uploaded and parsed.",
       });
+  
       handleCloseRubricModal();
     } catch (error) {
       console.error("There was a problem with the rubric upload:", error);
+    } finally {
+      setIsLoading(false);  // Set loading to false once the upload is complete
     }
   };
+  
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-xl m-3 mr-0 p-6 overflow-auto text-white border border-white flex flex-col">
+          <aside className="rounded-xl m-3 mr-0 p-6 overflow-auto text-white border border-gray-600 flex flex-col bg-gray-800">
             <div className="flex flex-col gap-2">
               <div className="flex flex-row gap-2">
-                <Button className=" w-1/4 bg-stone-600 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
+                <Button className="w-1/4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
                   <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
                 </Button>
-                <Button onClick={handleOpenRubricModal} className="w-3/4 bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                <Button onClick={handleOpenRubricModal} className="w-3/4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                   <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
                 </Button>
               </div>
-              <div className="flex flex-row gap-2 w-full">
-                <Button type="button" className="w-1/4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded" onClick={handleSubmit}>
-                  <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" />
-                </Button>
-                <Button type="button" className=" w-3/4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded" onClick={handleAddCriteria}>
-                  Add Criteria+
-                </Button>
-              </div>
             </div>
-            <hr className='mt-5 mb-5'/>
+            <hr className='mt-5 mb-5 border-gray-600'/>
             <h1 className="font-extrabold text-xl mb-4 underline">Select a Rubric</h1>
-            <div className="cursor-pointer p-2 hover:bg-gray-200 hover:text-indigo-700 rounded-xl border-2" onClick={() => setRubric(currentRubric)}>
+            <div className="cursor-pointer p-2 hover:bg-gray-700 text-gray-300 rounded-xl border-2 border-gray-600" onClick={() => setRubric(currentRubric)}>
               <strong>Current Rubric</strong>
             </div>
             {PremadeRubrics.map((template, index) => (
-              <div key={index} className="cursor-pointer p-2 hover:bg-gray-200 hover:text-indigo-700 rounded-xl" onClick={() => setRubric(template.values)}>
+              <div key={index} className="cursor-pointer p-2 hover:bg-gray-700 text-gray-300 rounded-xl" onClick={() => setRubric(template.values)}>
                 <strong>{template.Template}</strong>
               </div>
             ))}
           </aside>
         </div>
+        
         <form className="flex-[3] pr-4 overflow-auto m-3" onSubmit={handleSubmit}>
-          <div className='flex items-center'>
-          </div>
+        <div className="flex flex-row gap-2 w-full mb-6">
+                <Button type="submit" className="w-1/4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
+                  <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
+                </Button>
+                <Button type="button" className="w-3/4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center" onClick={handleAddCriteria}>
+                  <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" /> Add Criteria
+                </Button>
+              </div>
           <div>
             {rubric.map((category, sectionIndex) => (
-              <Card key={sectionIndex} className="mb-4">
+              <Card key={sectionIndex} className="mb-4 bg-gray-800 text-gray-100">
                 <CardHeader>
                   <CardTitle>
                     <Textarea
                       value={category.name}
                       onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
-                      className="border p-1 w-full"
+                      className="border p-1 w-full bg-gray-700 text-gray-200"
                       placeholder="Category Name"
                     />
                   </CardTitle>
@@ -280,12 +285,12 @@ const Rubric = () => {
                   <Table>
                     <TableBody>
                       {category.Criteria.map((criteria, criteriaIndex) => (
-                        <TableRow key={criteriaIndex}>
+                        <TableRow key={criteriaIndex} className="hover:bg-gray-700">
                           <TableCell className="w-2/12">
                             <Textarea
                               value={criteria.point}
                               onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'point', e.target.value)}
-                              className="border p-1 resize-none"
+                              className="border p-1 resize-none bg-gray-700 text-gray-200"
                               placeholder="Number of points"
                             />
                           </TableCell>
@@ -293,7 +298,7 @@ const Rubric = () => {
                             <Textarea
                               value={criteria.description}
                               onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'description', e.target.value)}
-                              className="border p-1 w-full resize-none overflow-hidden min-h-[2em]"
+                              className="border p-1 w-full resize-none overflow-hidden min-h-[2em] bg-gray-700 text-gray-200"
                               placeholder="Type your rubric description here"
                               ref={(el) => {
                                 if (el) adjustTextareaHeight(el);
@@ -301,7 +306,9 @@ const Rubric = () => {
                             />
                           </TableCell>
                           <TableCell>
-                            <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}><span className="material-symbols-outlined">delete</span></span>
+                            <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>
+                              <span className="material-symbols-outlined text-gray-200">delete</span>
+                            </span>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -309,10 +316,10 @@ const Rubric = () => {
                   </Table>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button type="button" className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-2 rounded" onClick={() => addCriteriaToSection(sectionIndex)}>
+                  <Button type="button" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-2 rounded" onClick={() => addCriteriaToSection(sectionIndex)}>
                     Add points +
                   </Button>
-                  <Button type="button" className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded" onClick={() => handleRemoveCriteriaSection(sectionIndex)}>
+                  <Button type="button" className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" onClick={() => handleRemoveCriteriaSection(sectionIndex)}>
                     Delete Category
                   </Button>
                 </CardFooter>
@@ -325,7 +332,7 @@ const Rubric = () => {
       <div className="flex justify-end items-center space-x-4 mt-4">
         {isRubricModalOpen && (
           <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-            <DialogContent className="bg-white p-4 rounded-lg shadow-lg max-w-md mx-auto">
+            <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
               <DialogHeader>
                 <DialogTitle>Upload Rubric</DialogTitle>
               </DialogHeader>
@@ -339,10 +346,21 @@ const Rubric = () => {
                 )}
               </DialogDescription>
               <DialogFooter>
-                <Button onClick={handleRubricUpload} disabled={!rubricFile}>
-                  <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
-                </Button>
-              </DialogFooter>
+  {isLoading ? (
+    <div className="flex justify-center items-center">
+      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"></path>
+      </svg>
+      <span className="ml-2">Processing...</span>
+    </div>
+  ) : (
+    <Button onClick={handleRubricUpload} disabled={!rubricFile}>
+      <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
+    </Button>
+  )}
+</DialogFooter>
+
             </DialogContent>
           </Dialog>
         )}

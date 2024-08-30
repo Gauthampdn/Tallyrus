@@ -207,10 +207,10 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-900 text-white">
       <Navbar />
       <div className="flex justify-between items-center m-8">
-        <h1 className='text-4xl font-bold text-white'>Your Classrooms</h1>
+        <h1 className='text-4xl font-bold text-gray-100'>Your Classrooms</h1>
         <div className="flex space-x-4">
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -220,9 +220,9 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                   CREATE CLASS
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="hover:scale-105">
+              <AlertDialogContent className="hover:scale-105 bg-gray-800 text-gray-100">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold text-indigo-700">Create Class</AlertDialogTitle>
+                  <AlertDialogTitle className="text-xl font-bold text-indigo-400">Create Class</AlertDialogTitle>
                 </AlertDialogHeader>
                 <Form {...createForm}>
                   <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8 fill-class-info">
@@ -233,7 +233,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                         <FormItem>
                           <FormLabel>Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter class title" {...field} />
+                            <Input placeholder="Enter class title" {...field} className="bg-gray-700 text-gray-100" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -245,14 +245,14 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                         <FormItem>
                           <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter class description" {...field} />
+                            <Input placeholder="Enter class description" {...field} className="bg-gray-700 text-gray-100" />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <Button type="submit">
+                      <AlertDialogCancel className="text-gray-400">Cancel</AlertDialogCancel>
+                      <Button type="submit" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
                         <FontAwesomeIcon icon={faPlus} className="mr-2" />
                         Create
                       </Button>
@@ -270,9 +270,9 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                   JOIN CLASS +
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="transition ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-105">
+              <AlertDialogContent className="transition ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-105 bg-gray-800 text-gray-100">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold text-indigo-700">Join Class</AlertDialogTitle>
+                  <AlertDialogTitle className="text-xl font-bold text-indigo-400">Join Class</AlertDialogTitle>
                 </AlertDialogHeader>
                 <Form {...joinForm}>
                   <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
@@ -283,15 +283,15 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
                         <FormItem>
                           <FormLabel>Join Code</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter class join code" {...field} />
+                            <Input placeholder="Enter class join code" {...field} className="bg-gray-700 text-gray-100" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <Button type="submit">
+                      <AlertDialogCancel className="text-gray-400">Cancel</AlertDialogCancel>
+                      <Button type="submit" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
                         <FontAwesomeIcon icon={faPlus} className="mr-2" />
                         Join
                       </Button>
@@ -308,29 +308,24 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
         {currClassrooms.map((classroom) => (
           <Card
             key={classroom._id}
-            className={`min-w-1/4 w-1/4 h-[300px] m-4 text-slate-700 ${classroom.color}`}
+            className={`min-w-1/4 w-1/4 h-[300px] m-4 bg-gray-800 text-gray-100 transform transition duration-500 hover:scale-105`}
           >
             <CardHeader>
               <div className='flex justify-between'>
-                <CardTitle className="text-xl font-extrabold">{classroom.title}</CardTitle>
+                <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
                 <DropdownMenu>
-                  <div>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="" className="material-symbols-outlined bg-indigo-600 mr-1">apps</Button>
-                    </DropdownMenuTrigger>
-                    <Button className=""
-                      onClick={() => handleGoToClass(classroom._id)}>
-                      <FontAwesomeIcon icon={faArrowRight} className="" />
-                    </Button>
-                  </div>
-                  <DropdownMenuContent className="w-56">
+                <DropdownMenuTrigger asChild>
+                    <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-gray-700 text-gray-100">
                     <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-600" />
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onSelect={() => handleEditClassroom(classroom._id)}>
+                      <DropdownMenuItem onSelect={() => handleEditClassroom(classroom._id)} className="hover:bg-gray-600">
                         <FontAwesomeIcon icon={faPen} className="mr-2" />
                         Edit Classroom
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)}>
+                      <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)} className="hover:bg-gray-600">
                         <FontAwesomeIcon icon={faTrash} className="mr-2" />
                         Delete Classroom
                       </DropdownMenuItem>
@@ -344,6 +339,13 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </CardContent>
             <CardFooter className="flex justify-between">
               <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
+              <Button
+                className="go-to-class-btn bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600"
+                onClick={() => handleGoToClass(classroom._id)}
+              >
+                <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
+                Go to Class
+              </Button>
             </CardFooter>
           </Card>
         ))}

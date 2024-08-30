@@ -147,13 +147,13 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       <Navbar />
-      <div className='flex flex-grow '>
-        <div className="w-1/2 bg-white rounded-3xl m-4 mr-0 flex flex-grow overflow-auto bg-stone-200">
+      <div className='flex flex-grow'>
+        <div className="w-1/2 bg-gray-800 rounded-3xl m-4 mr-0 flex flex-grow overflow-auto">
           <div ref={scene} className="w-full m-10 overflow-auto" />
         </div>
-        <div className="w-1/2 m-4 text-white rounded-3xl p-5 flex flex-col items-center justify-center ">
+        <div className="w-1/2 m-4 text-white bg-gray-800 rounded-3xl p-5 flex flex-col items-center justify-center">
           <h1 className="text-3xl font-bold mb-4">Your Tallyrus Tracker!</h1>
           <div className="text-center">
             <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>

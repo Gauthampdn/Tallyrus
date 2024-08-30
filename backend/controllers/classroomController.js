@@ -117,8 +117,14 @@ const createClassroom = async (req, res) => {
     return joincode;
   };
 
-  const colors = ["bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "bg-purple-100"];
-  const getRandomColor = () => {
+  const colors = [
+    "bg-red-800",    // A deep red that contrasts well with dark mode
+    "bg-green-800",  // A dark green that fits the theme
+    "bg-blue-800",   // A deep blue that blends nicely with dark mode
+    "bg-yellow-800", // A darker yellow that is not too bright
+    "bg-purple-800"  // A deep purple that works well in dark mode
+  ];
+    const getRandomColor = () => {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
