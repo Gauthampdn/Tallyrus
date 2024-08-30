@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button'; // Ensure this path is correct
 import Navbar from 'components/Navbar'; // Adjust the import path as necessary
 import { useToast } from "@/components/ui/use-toast";
@@ -27,13 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Disclosure } from '@headlessui/react';
 
 const Rubric = () => {
   const { toast } = useToast();
@@ -45,6 +39,8 @@ const Rubric = () => {
   const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { state } = useLocation(); // Get the state passed from the navigation
+
 
   const navigate = useNavigate();
 
@@ -229,6 +225,13 @@ const Rubric = () => {
     }
   };
   
+  useEffect(() => {
+    // Automatically open the specific section based on the passed state
+    if (state && state.sectionIndex !== undefined) {
+      console.log('here');
+      document.getElementById(`disclosure-${state.sectionIndex}`)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [state]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -268,62 +271,57 @@ const Rubric = () => {
                   <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" /> Add Criteria
                 </Button>
               </div>
-          <div>
+              <div>
             {rubric.map((category, sectionIndex) => (
-              <Card key={sectionIndex} className="mb-4 bg-gray-800 text-gray-100">
-                <CardHeader>
-                  <CardTitle>
-                    <Textarea
-                      value={category.name}
-                      onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
-                      className="border p-1 w-full bg-gray-700 text-gray-200"
-                      placeholder="Category Name"
-                    />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableBody>
-                      {category.Criteria.map((criteria, criteriaIndex) => (
-                        <TableRow key={criteriaIndex} className="hover:bg-gray-700">
-                          <TableCell className="w-2/12">
-                            <Textarea
-                              value={criteria.point}
-                              onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'point', e.target.value)}
-                              className="border p-1 resize-none bg-gray-700 text-gray-200"
-                              placeholder="Number of points"
-                            />
-                          </TableCell>
-                          <TableCell className="w-10/12">
-                            <Textarea
-                              value={criteria.description}
-                              onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'description', e.target.value)}
-                              className="border p-1 w-full resize-none overflow-hidden min-h-[2em] bg-gray-700 text-gray-200"
-                              placeholder="Type your rubric description here"
-                              ref={(el) => {
-                                if (el) adjustTextareaHeight(el);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>
-                              <span className="material-symbols-outlined text-gray-200">delete</span>
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button type="button" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-2 rounded" onClick={() => addCriteriaToSection(sectionIndex)}>
-                    Add points +
-                  </Button>
-                  <Button type="button" className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" onClick={() => handleRemoveCriteriaSection(sectionIndex)}>
-                    Delete Category
-                  </Button>
-                </CardFooter>
-              </Card>
+              <Disclosure key={sectionIndex} defaultOpen={state?.sectionIndex === sectionIndex}>
+                {({ open }) => (
+                  <>
+                    <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-gray-800 p-2 rounded-lg hover:bg-gray-700">
+                      <span className="font-bold">{category.name || "Category Name"}</span>
+                    </Disclosure.Button>
+                    <Disclosure.Panel className="bg-gray-800 text-gray-100 rounded-lg mb-4 p-4">
+                      <Textarea
+                        value={category.name}
+                        onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
+                        className="border p-1 w-full bg-gray-700 text-gray-200 mb-4"
+                        placeholder="Category Name"
+                      />
+                      <Table>
+                        <TableBody>
+                          {category.Criteria.map((criteria, criteriaIndex) => (
+                            <TableRow key={criteriaIndex} className="hover:bg-gray-700">
+                              <TableCell className="w-2/12">
+                                <Textarea
+                                  value={criteria.point}
+                                  onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'point', e.target.value)}
+                                  className="border p-1 resize-none bg-gray-700 text-gray-200"
+                                  placeholder="Number of points"
+                                />
+                              </TableCell>
+                              <TableCell className="w-10/12">
+                                <Textarea
+                                  value={criteria.description}
+                                  onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'description', e.target.value)}
+                                  className="border p-1 w-full resize-none overflow-hidden min-h-[2em] bg-gray-700 text-gray-200"
+                                  placeholder="Type your rubric description here"
+                                  ref={(el) => {
+                                    if (el) adjustTextareaHeight(el);
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>
+                                  <span className="material-symbols-outlined text-gray-200">delete</span>
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Disclosure.Panel>
+                  </>
+                )}
+              </Disclosure>
             ))}
           </div>
         </form>
@@ -346,21 +344,20 @@ const Rubric = () => {
                 )}
               </DialogDescription>
               <DialogFooter>
-  {isLoading ? (
-    <div className="flex justify-center items-center">
-      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"></path>
-      </svg>
-      <span className="ml-2">Processing...</span>
-    </div>
-  ) : (
-    <Button onClick={handleRubricUpload} disabled={!rubricFile}>
-      <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
-    </Button>
-  )}
-</DialogFooter>
-
+                {isLoading ? (
+                  <div className="flex justify-center items-center">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"></path>
+                    </svg>
+                    <span className="ml-2">Processing...</span>
+                  </div>
+                ) : (
+                  <Button onClick={handleRubricUpload} disabled={!rubricFile}>
+                    <FontAwesomeIcon icon={faUpload} className="ml-2 mr-2" /> Upload Rubric
+                  </Button>
+                )}
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         )}

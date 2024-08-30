@@ -543,9 +543,10 @@ const Classroom = () => {
 
   
 
-  const handleNavtoRubric = () => {
-    navigate(`/rubric/${selectedAssignment._id}`);
-  };
+const handleNavtoRubric = (sectionIndex) => {
+  navigate(`/rubric/${selectedAssignment._id}`, { state: { sectionIndex } });
+};
+
 
   const fetchAssignments = async () => {
     try {
@@ -728,25 +729,28 @@ const Classroom = () => {
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
-                    <div className="rubric-view-section hover:bg-gray-700 cursor-pointer rounded-md p-2" onClick={() => handleNavtoRubric()}>
-                      <ScrollArea className="scrollable-rubric-view">
-                        {selectedAssignment.rubric.map((rubric, index) => (
-                          <RubricTable key={index} rubric={rubric} />
-                        ))}
-                      </ScrollArea>
-                    </div>
-                  ) : (
-                    <div className="flex justify-center">
-                      <Button onClick={handleOpenRubricModal} className="bg-blue-500 mr-2">
-                        <FontAwesomeIcon icon={faUpload} className="mr-2" />
-                        Upload Rubric
-                      </Button>
-                      <Button onClick={handleNavtoRubric} className="bg-green-500">
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" />
-                        Create Rubric
-                      </Button>
-                    </div>
-                  )}
+  <div className="rubric-view-section hover:bg-gray-700 cursor-pointer rounded-md p-2">
+    <ScrollArea className="scrollable-rubric-view">
+      {selectedAssignment.rubric.map((rubric, index) => (
+        <div key={index} onClick={() => handleNavtoRubric(index)}>
+          <RubricTable rubric={rubric} />
+        </div>
+      ))}
+    </ScrollArea>
+  </div>
+) : (
+  <div className="flex justify-center">
+    <Button onClick={() => handleNavtoRubric(0)} className="bg-blue-500 mr-2">
+      <FontAwesomeIcon icon={faUpload} className="mr-2" />
+      Upload Rubric
+    </Button>
+    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
+      <FontAwesomeIcon icon={faEdit} className="mr-2" />
+      Create Rubric
+    </Button>
+  </div>
+)}
+
                 </div>
 
                 {user && (user.authority === "student" || user.authority === "teacher") && (
