@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useAuthContext } from './hooks/useAuthContext';
 import Joyride, { EVENTS, STATUS } from 'react-joyride';
 
+
 // pages & components
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -14,6 +15,8 @@ import AboutTallyrus from 'pages/AboutTallyrus';
 import PublicAssignment from 'pages/PublicAssignment';
 import Rubric from 'pages/Rubric';
 import Profile from 'pages/Profile';
+import UploadOldEssays from 'pages/Upload'; // Import the new component
+
 
 const RedirectToFreeDetector = () => {
   const navigate = useNavigate();
@@ -127,6 +130,7 @@ const App = () => {
             <Route path="/assignment/:id" element={<Assignment />} />
             <Route path="/publicassignment/:id" element={<PublicAssignment />} />
             <Route path="/rubric/:id" element={<Rubric />} />
+            <Route path="/upload-old-essays" element={user && user.authority === 'teacher' ? <UploadOldEssays /> : <Navigate to="/app" />} />
             <Route path="/freedetector420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

@@ -318,6 +318,42 @@ const uploadRubric = async (req, res) => {
   }
 };
 
+// New function to handle teacher's old graded essay uploads
+const uploadOldEssays = async (req, res, next) => {
+  const user_id = req.user.id;
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: 'No files uploaded.' });
+  }
+
+  if (req.user.authority !== "teacher") {
+    return res.status(403).json({ error: "Only teachers can upload old graded essays" });
+  }
+
+  try {
+    // Iterate through each file and upload it
+    const uploadedFiles = [];
+    for (const file of req.files) {
+      const fileData = {
+        teacherId: user_id,
+        dateUploaded: new Date(),
+        pdfURL: file.location,
+        pdfKey: file.key
+      };
+
+      // Store the file data
+      uploadedFiles.push(fileData);
+    }
+
+    // Save to database or perform additional operations as needed
+
+    res.status(201).json({ message: 'Files uploaded successfully', files: uploadedFiles });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 
 
 module.exports = {
@@ -327,5 +363,6 @@ module.exports = {
   deleteFile,
   upload, // Export the multer configuration
   uploadTeacherFile,
-  uploadRubric
+  uploadRubric,
+  uploadOldEssays
 };

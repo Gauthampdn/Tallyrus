@@ -9,7 +9,8 @@ const {
     deleteFile,
     uploadTeacherFile,
     upload,
-    uploadRubric
+    uploadRubric,
+    uploadOldEssays
 } = require('../controllers/filesController');
 
 
@@ -26,6 +27,8 @@ router.get('/list', listFiles);
 router.get('/download/:filename', downloadFile);
 router.delete('/delete/:filename', deleteFile);
 router.post('/upload-rubric/:id', upload.single('file'), uploadRubric);
+router.post('/teacher/upload-old-essays', upload.array('files'), uploadOldEssays);
+
 
 
 module.exports = router;

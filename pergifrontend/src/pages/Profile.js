@@ -145,6 +145,9 @@ const Profile = () => {
   if (!user || user.numGraded == null) {
     return <div>Loading...</div>;
   }
+  const handleUploadNavigation = () => {
+    navigate('/upload-old-essays'); // Adjust the route as necessary
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -158,6 +161,11 @@ const Profile = () => {
           <div className="text-center">
             <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>
             <img src="/orange.png" alt="Orange" className="w-16 h-16 mx-auto mt-4 animate-bounce" />
+            {user.authority === "teacher" && (
+              <Button onClick={handleUploadNavigation} className="mt-6 bg-indigo-600 hover:bg-indigo-700">
+                Upload Old Graded Essays
+              </Button>
+            )}
           </div>
         </div>
       </div>
