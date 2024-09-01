@@ -11,8 +11,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = ({ resetTemplate }) => {
   const { logout } = useLogout();
@@ -21,11 +23,15 @@ const Navbar = ({ resetTemplate }) => {
 
   const handleClick = () => {
     logout();
-  }
+  };
 
   const goToProfile = () => {
     navigate("/profile");
-  }
+  };
+
+  const goToHome = () => {
+    navigate("/app");
+  };
 
   const switchAuthority = async () => {
     const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/auth/switchAuthority`, {
@@ -37,30 +43,27 @@ const Navbar = ({ resetTemplate }) => {
 
     if (response.ok) {
       dispatch({ type: "LOGIN", payload: json });
-      navigate("/app")
+      navigate("/app");
     }
-  }
+  };
 
   return (
-    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12">
+    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-gray-900">
       {user && (
-        <div className=" rounded-xl flex items-center gap-2 cursor-pointer ">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center bg-gray-800 hover:bg-gray-700 text-white font-bold rounded h-10 px-4 cursor-pointer" onClick={goToHome}>
+            <FontAwesomeIcon icon={faHome} className="mr-2" />
+            <span className="mr-2">Home</span>
+          </div>
 
-          
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <div className="hover:text-green-400 flex  gap-2 justify-between items-center">
-              <span class="text-3xl material-symbols-outlined ">
-                metabolism
-              </span>
-              <div className="">
-                <span className="font-extrabold text-lg">
-                  {user.authority}
-                </span>
-              </div>
+              <div className="flex items-center bg-gray-800 hover:bg-gray-700 text-white font-bold rounded h-10 px-4 cursor-pointer">
+                <span className="text-3xl material-symbols-outlined mr-2">swap_horiz</span>
+                <span>{user.authority}</span>
               </div>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="bg-gray-900 text-gray-100">
               <AlertDialogHeader>
                 <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -68,15 +71,14 @@ const Navbar = ({ resetTemplate }) => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={switchAuthority}>Yes</AlertDialogAction>
+                <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 text-white">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={switchAuthority} className="bg-green-600 hover:bg-green-700 text-white">
+                  Yes
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-
         </div>
-
       )}
 
       {user && (
@@ -90,7 +92,7 @@ const Navbar = ({ resetTemplate }) => {
 
           <Button
             onClick={handleClick}
-            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-10 w-20 "
+            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-10 w-20"
           >
             Logout
           </Button>
@@ -98,6 +100,6 @@ const Navbar = ({ resetTemplate }) => {
       )}
     </header>
   );
-}
+};
 
 export default Navbar;

@@ -320,6 +320,7 @@ const uploadRubric = async (req, res) => {
 
 // New function to handle teacher's old graded essay uploads
 const uploadOldEssays = async (req, res, next) => {
+  console.log("called");
   const user_id = req.user.id;
 
   if (!req.files || req.files.length === 0) {
@@ -331,28 +332,41 @@ const uploadOldEssays = async (req, res, next) => {
   }
 
   try {
-    // Iterate through each file and upload it
+    // Find the teacher's user document using the id field instead of _id
+    const teacher = await User.findOne({ id: user_id });
+
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
+    }
+
+    // Iterate through each file and prepare data for storage
     const uploadedFiles = [];
     for (const file of req.files) {
       const fileData = {
-        teacherId: user_id,
-        dateUploaded: new Date(),
+        studentName: `Old Graded Essay by ${req.user.name}`,
         pdfURL: file.location,
-        pdfKey: file.key
+        pdfKey: file.key,
+        dateSubmitted: new Date(),
+        status: 'graded',
+        isOldGradedEssay: true // Marking the file as an old graded essay
       };
 
-      // Store the file data
+      // Store the file data in the teacher's uploadedFiles array
+      teacher.uploadedFiles.push(fileData);
+
+      // Also add it to the response data
       uploadedFiles.push(fileData);
     }
 
-    // Save to database or perform additional operations as needed
+    // Save the updated teacher document to the database
+    await teacher.save();
 
-    res.status(201).json({ message: 'Files uploaded successfully', files: uploadedFiles });
+    res.status(201).json({ message: 'Files uploaded and saved successfully', files: uploadedFiles });
   } catch (error) {
+    console.error("Error uploading old graded essays:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
 
 
 
