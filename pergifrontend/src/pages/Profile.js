@@ -92,7 +92,7 @@ const Profile = () => {
 
     const stack = Composites.stack(20, -200, columns, rows, 1, 1, function (x, y, column, row) {
       if (column * rows + row < numberOfCircles) {
-        const radius = Common.random(10, 15);
+        const radius = Common.random(15, 20);
         const scale = radius / 45 * 0.1; // Calculate the scale based on radius
         const fruitOptions = {
           render: {
@@ -150,22 +150,22 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-zinc-900 text-white">
       <Navbar />
       <div className='flex flex-grow'>
-        <div className="w-1/2 bg-gray-800 rounded-3xl m-4 mr-0 flex flex-grow overflow-auto">
+        <div className="w-1/2 bg-zinc-800 rounded-3xl m-4 mr-0 flex flex-grow overflow-auto">
           <div ref={scene} className="w-full m-10 overflow-auto" />
         </div>
-        <div className="w-1/2 m-4 text-white bg-gray-800 rounded-3xl p-5 flex flex-col items-center justify-center">
+        <div className="w-1/2 m-4 text-white rounded-3xl p-5 flex flex-col items-center justify-center">
           <h1 className="text-3xl font-bold mb-4">Your Tallyrus Tracker!</h1>
           <div className="text-center">
             <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>
             <img src="/orange.png" alt="Orange" className="w-16 h-16 mx-auto mt-4 animate-bounce" />
-            {user.authority === "teacher" && (
+            {/* {user.authority === "teacher" && (
               <Button onClick={handleUploadNavigation} className="mt-6 bg-indigo-600 hover:bg-indigo-700">
                 Upload Old Graded Essays
               </Button>
-            )}
+            )} */}
           </div>
         </div>
       </div>

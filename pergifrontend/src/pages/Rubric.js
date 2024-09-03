@@ -255,7 +255,7 @@ const Rubric = () => {
                 </Button>
               </div>
             </div>
-            <hr className='mt-5 mb-5 border-gray-600'/>
+            <hr className='mt-5 mb-5 border-gray-600' />
             <h1 className="font-extrabold text-xl mb-4 underline">Select a Rubric</h1>
             <div className="cursor-pointer p-2 hover:bg-gray-700 text-gray-300 rounded-xl border-2 border-gray-600" onClick={() => setRubric(currentRubric)}>
               <strong>Current Rubric</strong>
@@ -267,7 +267,7 @@ const Rubric = () => {
             ))}
           </aside>
         </div>
-        
+
         <form className="flex-[3] pr-4 overflow-auto m-3" onSubmit={handleSubmit}>
           <div className="flex flex-row gap-2 w-full mb-6">
             <Button type="submit" className="w-1/4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
@@ -283,9 +283,9 @@ const Rubric = () => {
                 {({ open }) => (
                   <>
                     <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-gray-800 p-2 rounded-lg hover:bg-gray-700 flex justify-start items-center">
-                    <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} className="mr-2" />
-                    <span className="font-bold">{category.name || "Category Name"}</span>
-                  </Disclosure.Button>
+                      <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} className="mr-2" />
+                      <span className="font-bold">{category.name || "Category Name"}</span>
+                    </Disclosure.Button>
 
 
                     <Disclosure.Panel className="bg-gray-800 text-gray-100 rounded-lg mb-4 p-4">
@@ -321,20 +321,30 @@ const Rubric = () => {
                                 />
                               </TableCell>
                               <TableCell>
-                                <span type="button" onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>
-                                  <span className="material-symbols-outlined text-gray-200">delete</span>
+                                <span
+                                  type="button"
+                                  className=" cursor-pointer"
+                                  onClick={() => deleteCriterion(sectionIndex, criteriaIndex)}>
+                                  <span className="material-symbols-outlined text-gray-200 hover:text-red-500">delete</span>
                                 </span>
                               </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
-                        <Button
-                          type="button"
-                          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md flex items-center justify-center mt-2"
-                          onClick={() => handleDeleteCategory(sectionIndex)}
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="ml-2 mr-2" /> Delete Category
-                        </Button>
+                        <div className='flex justify-between items-center gap-2'>
+                          <Button
+                            type="button"
+                            onClick={() => addCriteriaToSection(sectionIndex)}>
+                            <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" />Add
+                          </Button>
+                          <Button
+                            type="button"
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md flex items-center justify-center "
+                            onClick={() => handleDeleteCategory(sectionIndex)}
+                          >
+                            <FontAwesomeIcon icon={faTrash} className="ml-2 mr-2" />Delete
+                          </Button>
+                        </div>
                       </Table>
                     </Disclosure.Panel>
                   </>

@@ -72,7 +72,7 @@ const Login = () => {
 
 
   return (
-    <div className="flex flex-row min-h-screen bg-gray-900">
+    <div className="flex flex-row min-h-screen bg-zinc-900">
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div className="flex justify-between items-center">
           <img src="/tallyrus2white.png" alt="Tallyrus Logo" className="h-10" />
@@ -88,7 +88,7 @@ const Login = () => {
         </div>
       </div>
 
-      <div className="basis-1/2 flex flex-col justify-center items-center p-10 bg-gray-800">
+      <div className="basis-1/2 flex flex-col justify-center items-center p-10 bg-zinc-800">
         <div className="w-full max-w-md">
           <h2 className="text-4xl font-extrabold text-center text-white mb-6">Welcome to Tallyrus!</h2>
           <p className="text-sm text-center text-gray-300 mb-6">Log in or automatically sign up using your Google account</p>

@@ -5,6 +5,7 @@ const {
   getClassroomsForUser,
   createClassroom,
   joinClassroomByCode,
+  updateClassroom,
   deleteClassroom
 } = require("../controllers/classroomController")
 
@@ -18,6 +19,8 @@ router.get("/", getClassroomsForUser)
 router.post("/createclass", createClassroom)
 
 router.patch("/join", joinClassroomByCode);
+
+router.patch("/:id", updateClassroom);
 
 router.delete("/:id", deleteClassroom)
 
