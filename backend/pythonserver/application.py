@@ -7,7 +7,6 @@ import re
 from flask import Flask, request, jsonify
 import os
 import re
-import fitz  # PyMuPDF
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
