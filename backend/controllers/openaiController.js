@@ -9,7 +9,7 @@ require("dotenv").config();
 const { incrementGraded } = require('./authController');
 
 const fetchAIScore = async (text) => {
-    const url = "http://127.0.0.1:5001/ai-detection";  // Flask server URL
+    const url = "http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/ai-detection";  // Flask server URL
 
     try {
         const response = await fetch(url, {
@@ -355,7 +355,7 @@ const grade = async (rubric, essay, gradingPrompt, teacherId) => {
 
     // Send the grading request to the Python server
     try {
-        const response = await fetch("http://127.0.0.1:5001/grade-essay", {
+        const response = await fetch("http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/grade-essay", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
