@@ -64,8 +64,12 @@ const submissionSchema = new Schema({
     type: String,
   },
   aiScore: {
-    type: Number,  // Add field for AI score
+    type: String,  // Add field for AI score
     default: 0
+  },
+  isOldGradedEssay: {
+    type: Boolean,  // Add field for AI score
+    default: false
   },
 });
 

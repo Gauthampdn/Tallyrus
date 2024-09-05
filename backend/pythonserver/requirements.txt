@@ -1,0 +1,12 @@
+flask
+transformers
+torch
+langchain
+openai
+cachetools
+joblib
+numpy
+faiss-cpu
+python-dotenv
+langchain_community
+tiktoken

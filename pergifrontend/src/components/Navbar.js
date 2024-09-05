@@ -48,38 +48,20 @@ const Navbar = ({ resetTemplate }) => {
   };
 
   return (
-    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-zinc-900">
+    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-gray-900">
       {user && (
-        <div className="flex items-center gap-1">
-          {/* <img src="/tallyrus2white.png" alt="Tally Illustration" className="m-0.5 mr-2 w-5 h-5" /> */}
-        </div>
-      )}
-
-      {user && (
-        <div className="user-info flex gap-2 items-center">
-          {/* <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
-            <span className="block font-bold">
-            Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
-            </span>
-          </div> */}
-          <img onClick={goToProfile} src={user.picture} alt={user.name} className="user-image rounded-full h-10 object-cover mr-1" />
-
-          <Button
-            onClick={handleClick}
-            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15"
-          >
-            Logout
-          </Button>
-          {/* <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 cursor-pointer" onClick={goToHome}>
-            <span className="">Home</span>
-          </Button> */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center bg-gray-800 hover:bg-gray-700 text-white font-bold rounded h-10 px-4 cursor-pointer" onClick={goToHome}>
+            <FontAwesomeIcon icon={faHome} className="mr-2" />
+            <span className="mr-2">Home</span>
+          </div>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15  cursor-pointer">
-                <span className="text-xl material-symbols-outlined ">metabolism</span>
+              <div className="flex items-center bg-gray-800 hover:bg-gray-700 text-white font-bold rounded h-10 px-4 cursor-pointer">
+                <span className="text-3xl material-symbols-outlined mr-2">swap_horiz</span>
                 <span>{user.authority}</span>
-              </Button>
+              </div>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-gray-900 text-gray-100">
               <AlertDialogHeader>
@@ -96,6 +78,24 @@ const Navbar = ({ resetTemplate }) => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+      )}
+
+      {user && (
+        <div className="user-info flex gap-2 items-center">
+          <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
+            <span className="block font-bold">
+              Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
+            </span>
+          </div>
+          <img src={user.picture} alt={user.name} className="user-image rounded-full h-10 object-cover mr-1" />
+
+          <Button
+            onClick={handleClick}
+            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-10 w-20"
+          >
+            Logout
+          </Button>
         </div>
       )}
     </header>
