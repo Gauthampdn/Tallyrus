@@ -8,54 +8,39 @@ require("dotenv").config();
 
 const { incrementGraded } = require('./authController');
 
-const fetchAIScore = async (text, token) => {
-    const url = "https://www.freedetector.ai/api/content_detector/";
+const fetchAIScore = async (text) => {
+    const url = "http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/ai-detection";  // Flask server URL
 
-    // Function to split text into chunks of 300 words or less
-    const splitTextIntoChunks = (text, chunkSize = 300) => {
-        const words = text.split(/\s+/);
-        const chunks = [];
-        for (let i = 0; i < words.length; i += chunkSize) {
-            chunks.push(words.slice(i, i + chunkSize).join(' '));
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch AI score');
         }
-        return chunks;
-    };
 
-    const textChunks = splitTextIntoChunks(text);
-    let totalScore = 0;
-    let validChunks = 0;
-
-    for (const chunk of textChunks) {
-        const data = {
-            text: chunk,
-            token: token
-        };
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                totalScore += result.score;
-                validChunks++;
-            } else {
-                console.error('API call failed:', result.message);
-            }
-        } catch (error) {
-            console.error('Error making API call:', error);
-        }
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error("Error fetching AI score:", error);
+        return null; // Handle the error appropriately in your application
     }
-
-    return validChunks > 0 ? totalScore / validChunks : null;
 };
+
+const formatAIScore = (aiScore, decimalPoints = 2) => {
+    return (aiScore * 100).toFixed(decimalPoints);
+};
+
+
+
+
+
+
 
 
 
@@ -336,7 +321,80 @@ function convertToRubricSchema(gptOutput) {
 }
 
 
+const grade = async (rubric, essay, gradingPrompt, teacherId) => {
+    // Convert rubric to a string format suitable for grading
+    const rubricString = rubricToString(rubric);
 
+    // Fetch old graded essays for the specific teacher
+    const oldEssays = await fetchOldGradedEssays(teacherId);
+    console.log("oldessays", oldEssays);
+    let oldEssaysText = '';
+
+    // Extract text from each old graded essay
+    for (let oldEssay of oldEssays) {
+        let extractedText = '';
+        if (oldEssay.pdfURL.endsWith('.pdf')) {
+            extractedText = await getTextFromPDF(oldEssay.pdfURL);
+        }
+
+        if (extractedText) {
+            oldEssaysText += extractedText + '\n\n'; // Concatenate texts
+        }
+    }
+
+    console.log(oldEssaysText);
+
+
+    // Prepare the payload for the Python server
+    const payload = {
+        rubric: rubricString,
+        essay: essay,
+        prompt: gradingInstructions,
+        old_essays: oldEssaysText
+    };
+
+    // Send the grading request to the Python server
+    try {
+        const response = await fetch("http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/grade-essay", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to grade the essay');
+        }
+
+        const result = await response.json();
+        return result;  // This result contains the grading feedback and scores
+    } catch (error) {
+        console.error("Error grading essay:", error);
+        return null;
+    }
+};
+
+// Helper function to fetch old graded essays for a specific teacher
+const fetchOldGradedEssays = async (teacherId) => {
+
+    try {
+        // Find the teacher by their ID
+        const teacher = await User.findOne({ id: teacherId });
+
+        console.log(teacherId)
+
+        if (!teacher) {
+            throw new Error("Teacher not found");
+        }
+
+        // Filter and return only the old graded essays
+        return teacher.uploadedFiles.filter(file => file.isOldGradedEssay);
+    } catch (error) {
+        console.error("Error fetching old graded essays:", error);
+        return [];
+    }
+};
 
 const gradeall = async (req, res) => {
     const assignmentId = req.params.id;
@@ -352,15 +410,13 @@ const gradeall = async (req, res) => {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        // Update the status to 'grading' for all ungraded submissions
         for (let submission of assignment.submissions) {
             if (submission.status !== 'graded') {
                 submission.status = 'grading';
             }
         }
-        await assignment.save(); // Save the status updates immediately
+        await assignment.save(); 
 
-        // Create an array of promises for grading submissions
         const gradingPromises = assignment.submissions.map(async (submission) => {
             if (submission.status === 'grading') {
                 let extractedText = '';
@@ -378,28 +434,47 @@ const gradeall = async (req, res) => {
                     return submission;
                 }
 
-                const rubricString = rubricToString(assignment.rubric);
-                const gradingResponse = await openai.chat.completions.create({
-                    model: "gpt-4o",
-                    max_tokens: 3000,
-                    messages: [
-                        { role: "user", content: gradingInstructions },
-                        { role: "user", content: rubricString },
-                        { role: "user", content: extractedText }
-                    ]
-                });
-
-                if (!gradingResponse) {
+                const aiScore = await fetchAIScore(extractedText);
+                if (!aiScore) {
                     submission.status = 'error';
-                    submission.feedback = 'Failed to grade the submission';
-                } else {
-                    const feedback = gradingResponse.choices[0].message.content;
-                    submission.feedback = parseFeedback(feedback);
-                    submission.status = 'graded';
+                    submission.feedback = 'Failed to fetch AI detection score';
+                    return submission;
                 }
 
+                submission.aiScore = formatAIScore(aiScore.Fake);  // Save formatted AI score
+                
+                const gradingResult = await grade(assignment.rubric, extractedText, gradingInstructions, req.user.id);
+                console.log("Grading Result:", gradingResult);
+
+                if (gradingResult && gradingResult.feedback) {
+                    // Use the grading result from the Python server
+                    submission.feedback = parseFeedback(gradingResult.feedback);
+                    submission.status = 'graded';
+                } else {
+                    // If gradingResult is not available, fallback to the OpenAI-based grading
+                    const rubricString = rubricToString(assignment.rubric);
+                    const gradingResponse = await openai.chat.completions.create({
+                        model: "gpt-4o",
+                        max_tokens: 3000,
+                        messages: [
+                            { role: "user", content: gradingInstructions },
+                            { role: "user", content: rubricString },
+                            { role: "user", content: extractedText }
+                        ]
+                    });
+
+                    if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+                        submission.status = 'error';
+                        submission.feedback = 'Failed to grade the submission';
+                    } else {
+                        const feedback = gradingResponse.choices[0].message.content;
+                        submission.feedback = parseFeedback(feedback);
+                        submission.status = 'graded';
+                    }
+                }
+
+
                 const user = await User.findById(req.user._id);
-                console.log("gonna add orange")
 
                 if (user.numGraded === undefined) {
                     user.numGraded = 0;
@@ -411,12 +486,10 @@ const gradeall = async (req, res) => {
             }
         });
 
-        // Wait for all grading promises to complete
         const gradedSubmissions = await Promise.all(gradingPromises);
 
-        // Save each submission individually after all grading is done
         for (let submission of gradedSubmissions) {
-            await assignment.save(); // Save the entire assignment after modifying the submission
+            await assignment.save(); 
         }
 
         res.json({ message: "All submissions graded successfully" });
@@ -425,6 +498,7 @@ const gradeall = async (req, res) => {
         res.status(500).send('Error grading assignments');
     }
 };
+
 
 
 

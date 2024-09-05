@@ -28,12 +28,12 @@ const UploadOldEssays = () => {
     }
 
     const formData = new FormData();
-    for (let i = 0; i < selectedFiles.length; i++) {
-      formData.append("files", selectedFiles[i]);
-    }
+    selectedFiles.forEach(file => {
+      formData.append("files", file);
+    });
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/teacher/upload-old-essays`, {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/teacher/upload-old-essays`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -74,10 +74,22 @@ const UploadOldEssays = () => {
           <h2 className="text-4xl font-bold mb-8 text-white text-center">
             {isDragActive ? "Drop the files here..." : "Drag & drop old graded essays here or click to select files"}
           </h2>
-          <Button onClick={handleUpload} className="w-full py-4 text-xl bg-indigo-600 hover:bg-indigo-700 text-white mt-4">
-            Upload Files
-          </Button>
         </div>
+      </div>
+      <div className="flex flex-col items-center mt-8">
+        {selectedFiles.length > 0 && (
+          <div className="w-full max-w-4xl bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h3 className="text-2xl font-semibold mb-4">Selected Essays:</h3>
+            <ul className="list-disc list-inside">
+              {selectedFiles.map((file, index) => (
+                <li key={index} className="text-lg">{file.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <Button onClick={handleUpload} className="w-full max-w-4xl py-4 text-xl bg-indigo-600 hover:bg-indigo-700 text-white mt-4">
+          Upload Files
+        </Button>
       </div>
       <Toaster />
     </div>
