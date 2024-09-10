@@ -128,8 +128,10 @@ const Assignment = () => {
       if (!response.ok) {
         throw new Error('Failed to update submission name');
       }
-
       const updatedAssignment = await response.json();
+
+      console.log("submission changed", updatedAssignment)
+
       setAssignment(updatedAssignment);
       setSelectedSubmission(updatedAssignment.submissions.find(sub => sub._id === submissionId));
     } catch (error) {
@@ -453,7 +455,7 @@ const handleMarkForRegrade = async (submissionId) => {
   
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="bg-zinc-900 text-white min-h-screen">
       <Navbar />
       {assignment ? (
         <div className="p-4">
@@ -606,7 +608,7 @@ const handleMarkForRegrade = async (submissionId) => {
 
                 <div className="overflow-y-auto">
                   {selectedSubmission.feedback.map((criteria, index) => (
-                    <Card key={index} className="mb-3 bg-gray-800 text-gray-200">
+                    <Card key={index} className="mb-3 bg-white text-neutral-900">
                       <CardHeader>
                         <div className="flex justify-between">
                           <CardTitle className="font-bold">{criteria.name.replace(/\*/g, '')}</CardTitle>

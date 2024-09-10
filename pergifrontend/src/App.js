@@ -7,7 +7,7 @@ import Joyride, { EVENTS, STATUS } from 'react-joyride';
 // pages & components
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Mail from './pages/Mail';
+import Terms from './pages/Terms';
 import Classroom from 'pages/Classroom';
 import CreateA from 'components/CreateA';
 import Assignment from 'pages/Assignment';
@@ -122,7 +122,7 @@ const App = () => {
             <Route path="/" element={<AboutTallyrus />} />
             <Route path="/app" element={user ? <Home startTour={startTour} stepIndex={stepIndex} setStepIndex={setStepIndex} isCreateModalOpen={isCreateModalOpen} setIsCreateModalOpen={setIsCreateModalOpen} /> : <Navigate to="/login" />} />
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/app" />} />
-            <Route path="/mail" element={<Mail />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/classroom/:id" element={<Classroom />} />
             <Route path="/createassignment/:id" element={<CreateA />} />
