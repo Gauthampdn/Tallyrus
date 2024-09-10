@@ -5,7 +5,6 @@ var GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 require("dotenv").config();
 
-https://bcknd.tallyrus.com
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -33,7 +32,7 @@ passport.use(new GoogleStrategy({
           id: profile.id,
           picture: profile.picture,
           name: profile.given_name,
-          authority: "student",
+          authority: "teacher",
           numGraded: 0
         });
         await user.save();
@@ -75,7 +74,7 @@ const logout = (req, res) => {
   req.logout(() => {
     req.session.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('https://tallyrus.com/login');
+      res.redirect('https://tallyrus.com');
     });
   });
 }
