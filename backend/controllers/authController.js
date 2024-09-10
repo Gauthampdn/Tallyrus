@@ -67,15 +67,15 @@ passport.deserializeUser(async function (id, done) {
 const getAuth = passport.authenticate("google", { scope: ["email", "profile"] });
 
 const redirectGoogle = passport.authenticate("google", {
-  successRedirect: "http://localhost:3000/app",
-  failureRedirect: "http://localhost:3000/login",
+  successRedirect: "https://tallyrus.com/app",
+  failureRedirect: "https://tallyrus.com/login",
 });
 
 const logout = (req, res) => {
   req.logout(() => {
     req.session.destroy(() => {
       res.clearCookie('connect.sid');
-      res.redirect('http://localhost:3000/login');
+      res.redirect('https://tallyrus.com/login');
     });
   });
 }
