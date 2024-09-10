@@ -82,7 +82,7 @@ const Login = () => {
           <blockquote className="italic text-gray-300">
             “I feel as though Tallyrus was made just for me as I 
             used to spend countless hours grading assignments before
-            and now I'm able to give students their papers graded back within hours”
+            and now I'm able to give students their papers graded back within seconds”
           </blockquote>
           <p className="mt-4 text-gray-400">- Mrs. M - Grade 6 English Teacher</p>
         </div>
