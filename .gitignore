@@ -4,3 +4,6 @@ frontend/.env
 frontend/node_modules/
 pergifrontend/.env
 pergifrontend/node_modules/
+backend/pythonserver/.env
+backend/pythonserver.zip
+backend/pythonserver.zip

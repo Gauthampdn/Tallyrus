@@ -74,16 +74,20 @@ const Assignment = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const submissionId = queryParams.get('submissionId');
-
-
+  
   useEffect(() => {
     if (assignment && submissionId) {
-        const selected = assignment.submissions.find(sub => sub._id === submissionId);
-        if (selected) {
-            setSelectedSubmission(selected);
-        }
+      const selected = assignment.submissions.find(sub => sub._id === submissionId);
+      if (selected) {
+        setSelectedSubmission(selected);
+      } else if (assignment.submissions.length > 0) {
+        // Fallback to the first submission if the ID is not found
+        setSelectedSubmission(assignment.submissions[0]);
+        navigate(`?submissionId=${assignment.submissions[0]._id}`, { replace: true });
+      }
     }
   }, [assignment, submissionId]);
+  
 
   useEffect(() => {
     console.log('Assignment updated:', assignment);
@@ -139,40 +143,37 @@ const Assignment = () => {
     }
   };
 
-const handleMarkForRegrade = async (submissionId) => {
-  console.log('Marking for regrade...');
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      mode: 'cors',
-      body: JSON.stringify({ status: 'regrade' })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to mark submission for regrade');
+  const handleMarkForRegrade = async (submissionId) => {
+    console.log('Marking for regrade...');
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${submissionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify({ status: 'regrade' })
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to mark submission for regrade');
+      }
+  
+      const updatedAssignment = await response.json();
+      const updatedSubmission = updatedAssignment.submissions.find(sub => sub._id === submissionId);
+  
+      setAssignment(updatedAssignment);
+      setSelectedSubmission(updatedSubmission);
+  
+      // Ensure the URL reflects the current submission
+      navigate(`?submissionId=${submissionId}`, { replace: true });
+  
+    } catch (error) {
+      console.error('Error:', error.message);
     }
-
-    const updatedAssignment = await response.json();
-    console.log('Updated Assignment:', updatedAssignment);
-
-    // Find the updated submission within the updatedAssignment
-    const updatedSubmission = updatedAssignment.submissions.find(sub => sub._id === submissionId);
-
-    // Update the state with the new assignment and selected submission
-    setAssignment(updatedAssignment);
-    setSelectedSubmission(updatedSubmission);
-
-    // Log to confirm the state updates
-    console.log('Assignment updated:', updatedAssignment);
-    console.log('Selected Submission updated:', updatedSubmission);
-  } catch (error) {
-    console.error('Error:', error.message);
-  }
-};
+  };
+  
 
   
 
@@ -373,8 +374,13 @@ const handleMarkForRegrade = async (submissionId) => {
   const handleSelectSubmission = (selectedId) => {
     const selected = assignment.submissions.find(sub => sub._id === selectedId);
     setSelectedSubmission(selected);
+  
+    // Update the URL with the selected submission's ID
+    navigate(`?submissionId=${selectedId}`, { replace: true });
+  
     setOpen(false);
   };
+  
 
   const getSubmissionLabel = (submission) => {
     return `${submission.studentName} - ${submission.studentEmail}`;
@@ -388,17 +394,26 @@ const handleMarkForRegrade = async (submissionId) => {
     const currentIndex = assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id);
     if (currentIndex > 0) {
       const previousIndex = currentIndex - 1;
-      setSelectedSubmission(assignment.submissions[previousIndex]);
+      const previousSubmission = assignment.submissions[previousIndex];
+      setSelectedSubmission(previousSubmission);
+  
+      // Update the URL with the previous submission's ID
+      navigate(`?submissionId=${previousSubmission._id}`, { replace: true });
     }
   };
-
+  
   const navigateToNextSubmission = () => {
     const currentIndex = assignment.submissions.findIndex(sub => sub._id === selectedSubmission._id);
     if (currentIndex < assignment.submissions.length - 1) {
       const nextIndex = currentIndex + 1;
-      setSelectedSubmission(assignment.submissions[nextIndex]);
+      const nextSubmission = assignment.submissions[nextIndex];
+      setSelectedSubmission(nextSubmission);
+  
+      // Update the URL with the next submission's ID
+      navigate(`?submissionId=${nextSubmission._id}`, { replace: true });
     }
   };
+  
 
   const handleSliderChange = (criteriaId, value) => {
     setCurrentScore(value); // Update the text box value
