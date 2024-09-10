@@ -658,6 +658,10 @@ const Classroom = () => {
                             <FontAwesomeIcon icon={faLink} className="mr-2" />
                             Public Link
                           </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleNavtoRubric(0)} className="hover:bg-gray-600">
+                          <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                            Edit Rubric
+                          </DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -686,10 +690,6 @@ const Classroom = () => {
               <div className="flex flex-row w-full">
                 <div className="flex-1">
                   <div className="mb-4">
-                    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
-                      <FontAwesomeIcon icon={faEdit} className="mr-1" />
-                      Edit Rubric
-                    </Button>
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
@@ -703,8 +703,12 @@ const Classroom = () => {
                       </ScrollArea>
                     </div>
                   ) : (
-                    <div className="flex justify-center">
-
+                    <div className="flex justify-center items-center flex-col">
+                      <p>No rubric available for this assignment.</p>
+                      <Button className="mt-4 bg-teal-500" onClick={handleOpenRubricModal}>
+                        <FontAwesomeIcon icon={faUpload}  className="mr-1"></FontAwesomeIcon>
+                        Upload Rubric
+                      </Button>
                     </div>
                   )}
 
