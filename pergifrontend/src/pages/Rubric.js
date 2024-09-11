@@ -184,6 +184,7 @@ const Rubric = () => {
     }
 
     setIsLoading(true);  // Set loading to true when the upload starts
+    console.log(id);
 
     const formData = new FormData();
     formData.append('file', rubricFile);

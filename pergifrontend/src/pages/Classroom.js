@@ -216,6 +216,8 @@ const Classroom = () => {
     const formData = new FormData();
     formData.append('file', rubricFile);
     console.log(rubricFile);
+    console.log(id);
+
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${selectedAssignment._id}`, {
@@ -473,8 +475,8 @@ const Classroom = () => {
     formData.append('file', file);
 
     try {
-      console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${id}`);
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${id}`, {
+      console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
