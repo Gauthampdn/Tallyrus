@@ -132,12 +132,12 @@ const RubricTable = ({ rubric }) => {
 const Classroom = () => {
 
   const calculateTotalScore = (submission) => {
-    console.log('Submission:', submission); // Log the submission object
+    // console.log('Submission:', submission); // Log the submission object
     if (!submission || !submission.feedback) {
       return 0; // Return 0 if submission or feedback is undefined
     }
     const returnstatement = submission.feedback.reduce((total, criteria) => total + criteria.score, 0);
-    console.log(returnstatement);
+    // console.log(returnstatement);
     return returnstatement;
   };
 
@@ -216,8 +216,6 @@ const Classroom = () => {
     const formData = new FormData();
     formData.append('file', rubricFile);
     console.log(rubricFile);
-    console.log(id);
-
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${selectedAssignment._id}`, {
@@ -312,7 +310,7 @@ const Classroom = () => {
       }
 
       const data = await response.json();
-      console.log(data); // Logging the response
+      console.log("the data is", data); // Logging the response
       toast({
         title: "Files Uploaded!",
         description: "The files have been successfully uploaded.",
@@ -322,6 +320,7 @@ const Classroom = () => {
       const updatedAssignment = { ...selectedAssignment };
       updatedAssignment.teacherFiles = data.teacherFiles; // Update with actual response data
       setSelectedAssignment(updatedAssignment);
+      window.location.reload();
 
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
@@ -660,10 +659,6 @@ const Classroom = () => {
                             <FontAwesomeIcon icon={faLink} className="mr-2" />
                             Public Link
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleNavtoRubric(0)} className="hover:bg-gray-600">
-                          <FontAwesomeIcon icon={faEdit} className="mr-1" />
-                            Edit Rubric
-                          </DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -691,7 +686,11 @@ const Classroom = () => {
 
               <div className="flex flex-row w-full">
                 <div className="flex-1">
-                  <div className="mb-4">
+                  <div className="mb-4 justify-center">
+                    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
+                      <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                      Edit Rubric
+                    </Button>
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
@@ -705,12 +704,8 @@ const Classroom = () => {
                       </ScrollArea>
                     </div>
                   ) : (
-                    <div className="flex justify-center items-center flex-col">
-                      <p>No rubric available for this assignment.</p>
-                      <Button className="mt-4 bg-teal-500" onClick={handleOpenRubricModal}>
-                        <FontAwesomeIcon icon={faUpload}  className="mr-1"></FontAwesomeIcon>
-                        Upload Rubric
-                      </Button>
+                    <div className="flex justify-center">
+
                     </div>
                   )}
 
@@ -772,7 +767,7 @@ const Classroom = () => {
                           </div>
                         ) : (
                           <div className="flex w-full gap-4">
-                            <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                            <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
                               <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                               Upload Assignments
                             </Button>

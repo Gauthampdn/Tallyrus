@@ -244,14 +244,14 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       <Navbar />
-      <div className="flex justify-between items-center m-8">
+      <div className="flex justify-between items-center m-8 ">
         <h1 className='text-4xl font-bold'>Your Classrooms</h1>
         <div className="flex space-x-4">
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
                 <Button className='text-md font-bold bg-indigo-600 create-class-btn'>
-                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  <FontAwesomeIcon icon={faPlus} className="" />
                   CREATE CLASS
                 </Button>
               </AlertDialogTrigger>

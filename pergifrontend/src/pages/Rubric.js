@@ -241,14 +241,14 @@ const Rubric = () => {
   }, [state]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-zinc-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-xl m-3 mr-0 p-6 overflow-auto text-white border border-gray-600 flex flex-col bg-gray-800">
+          <aside className="rounded-xl m-3 mr-0 p-6 overflow-auto text-white border border-gray-600 flex flex-col bg-zinc-800">
             <div className="flex flex-col gap-2">
               <div className="flex flex-row gap-2">
-                <Button className="w-1/4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
+                <Button className="w-1/4 bg-zinc-600 hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded" onClick={() => navigate(`/classroom/${classId}`)}>
                   <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
                 </Button>
                 <Button onClick={handleOpenRubricModal} className="w-3/4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -258,11 +258,11 @@ const Rubric = () => {
             </div>
             <hr className='mt-5 mb-5 border-gray-600' />
             <h1 className="font-extrabold text-xl mb-4 underline">Select a Rubric</h1>
-            <div className="cursor-pointer p-2 hover:bg-gray-700 text-gray-300 rounded-xl border-2 border-gray-600" onClick={() => setRubric(currentRubric)}>
+            <div className="cursor-pointer p-2 hover:bg-zinc-700 text-gray-300 rounded-xl border-2 border-gray-600" onClick={() => setRubric(currentRubric)}>
               <strong>Current Rubric</strong>
             </div>
             {PremadeRubrics.map((template, index) => (
-              <div key={index} className="cursor-pointer p-2 hover:bg-gray-700 text-gray-300 rounded-xl" onClick={() => setRubric(template.values)}>
+              <div key={index} className="cursor-pointer p-2 hover:bg-zinc-700 text-gray-300 rounded-xl" onClick={() => setRubric(template.values)}>
                 <strong>{template.Template}</strong>
               </div>
             ))}
@@ -271,10 +271,10 @@ const Rubric = () => {
 
         <form className="flex-[3] pr-4 overflow-auto m-3" onSubmit={handleSubmit}>
           <div className="flex flex-row gap-2 w-full mb-6">
-            <Button type="submit" className="w-1/4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
+            <Button type="submit" className="w-1/8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center">
               <FontAwesomeIcon icon={faSave} className="ml-2 mr-2" /> Save Rubric
             </Button>
-            <Button type="button" className="w-3/4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center" onClick={handleAddCriteria}>
+            <Button type="button" className="w-1/8 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-5 rounded-lg shadow-md flex items-center justify-center" onClick={handleAddCriteria}>
               <FontAwesomeIcon icon={faPlus} className="ml-2 mr-2" /> Add Criteria
             </Button>
           </div>
@@ -283,30 +283,30 @@ const Rubric = () => {
               <Disclosure key={sectionIndex} defaultOpen={state?.sectionIndex === sectionIndex}>
                 {({ open }) => (
                   <>
-                    <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-gray-800 p-2 rounded-lg hover:bg-gray-700 flex justify-start items-center">
+                    <Disclosure.Button id={`disclosure-${sectionIndex}`} className="mb-2 w-full text-left bg-zinc-800 p-2 rounded-lg hover:bg-zinc-700 flex justify-start items-center">
                       <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown} className="mr-2" />
                       <span className="font-bold">{category.name || "Category Name"}</span>
                     </Disclosure.Button>
 
 
-                    <Disclosure.Panel className="bg-gray-800 text-gray-100 rounded-lg mb-4 p-4">
+                    <Disclosure.Panel className="bg-zinc-800 text-gray-100 rounded-lg mb-4 p-4">
                       <div className="flex justify-between items-center">
                         <Textarea
                           value={category.name}
                           onChange={(e) => handleChange(sectionIndex, null, 'name', e.target.value)}
-                          className="border p-1 w-full bg-gray-700 text-gray-200 mb-4"
+                          className="border p-1 w-full bg-zinc-700 text-gray-200 mb-4"
                           placeholder="Category Name"
                         />
                       </div>
                       <Table>
                         <TableBody>
                           {category.Criteria.map((criteria, criteriaIndex) => (
-                            <TableRow key={criteriaIndex} className="hover:bg-gray-700">
+                            <TableRow key={criteriaIndex} className="hover:bg-zinc-700">
                               <TableCell className="w-2/12">
                                 <Textarea
                                   value={criteria.point}
                                   onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'point', e.target.value)}
-                                  className="border p-1 resize-none bg-gray-700 text-gray-200"
+                                  className="border p-1 resize-none bg-zinc-700 text-gray-200"
                                   placeholder="Number of points"
                                 />
                               </TableCell>
@@ -314,7 +314,7 @@ const Rubric = () => {
                                 <Textarea
                                   value={criteria.description}
                                   onChange={(e) => handleChange(sectionIndex, criteriaIndex, 'description', e.target.value)}
-                                  className="border p-1 w-full resize-none overflow-hidden min-h-[2em] bg-gray-700 text-gray-200"
+                                  className="border p-1 w-full resize-none overflow-hidden min-h-[2em] bg-zinc-700 text-gray-200"
                                   placeholder="Type your rubric description here"
                                   ref={(el) => {
                                     if (el) adjustTextareaHeight(el);
@@ -359,7 +359,7 @@ const Rubric = () => {
       <div className="flex justify-end items-center space-x-4 mt-4">
         {isRubricModalOpen && (
           <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-            <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
+            <DialogContent className="bg-zinc-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
               <DialogHeader>
                 <DialogTitle>Upload Rubric</DialogTitle>
               </DialogHeader>

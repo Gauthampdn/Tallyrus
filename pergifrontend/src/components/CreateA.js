@@ -84,7 +84,7 @@ const CreateA = () => {
   return (
     <div>
       <Navbar />
-      <div className="relative flex justify-center items-center min-h-screen bg-gray-900 text-white">
+      <div className="relative flex justify-center items-center min-h-screen bg-zinc-900 text-white">
         <Button 
           className="absolute top-4 left-4 w-max bg-gray-600 hover:bg-gray-700 text-white" 
           onClick={handleGoBack}
