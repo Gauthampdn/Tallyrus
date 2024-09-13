@@ -132,12 +132,12 @@ const RubricTable = ({ rubric }) => {
 const Classroom = () => {
 
   const calculateTotalScore = (submission) => {
-    // console.log('Submission:', submission); // Log the submission object
+    console.log('Submission:', submission); // Log the submission object
     if (!submission || !submission.feedback) {
       return 0; // Return 0 if submission or feedback is undefined
     }
     const returnstatement = submission.feedback.reduce((total, criteria) => total + criteria.score, 0);
-    // console.log(returnstatement);
+    console.log(returnstatement);
     return returnstatement;
   };
 
@@ -173,22 +173,6 @@ const Classroom = () => {
   const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(null); // Add state for interval
-
-  const clearAutoRefresh = () => {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-      setRefreshInterval(null);
-    }
-  };
-
-  const startAutoRefresh = () => {
-    const interval = setInterval(() => {
-      console.log("Checking for assignment updates...");
-      fetchAssignments();
-    }, 30000); // Refresh every 30 seconds
-
-    setRefreshInterval(interval);
-  };
 
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -307,12 +291,12 @@ const Classroom = () => {
       console.log("No files selected");
       return;
     }
-
+  
     const formData = new FormData();
     Array.from(teacherFiles).forEach(file => {
       formData.append('files', file);
     });
-
+  
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-teacher/${assignmentId}`, {
         method: 'POST',
@@ -320,41 +304,76 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
-      console.log("the data is", data); // Logging the response
+      console.log(data); // Logging the response
       toast({
         title: "Files Uploaded!",
         description: "The files have been successfully uploaded.",
       });
-
+  
       // Update the state to reflect the new teacher files
       const updatedAssignment = { ...selectedAssignment };
       updatedAssignment.teacherFiles = data.teacherFiles; // Update with actual response data
       setSelectedAssignment(updatedAssignment);
-      window.location.reload();
-
+  
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
   };
-
+  
 
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
   };
+  
 
   useEffect(() => {
-    startAutoRefresh();
-
+    const fetchAssignments = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`, {
+          credentials: 'include',
+          mode: 'cors',
+        });
+  
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+  
+        const data = await response.json();
+        setAllAssignments(data);
+  
+        if (id) {
+          // Find the assignment that matches the ID in the URL
+          const assignmentFromUrl = data.find((a) => a._id === id);
+          if (assignmentFromUrl) {
+            setSelectedAssignment(assignmentFromUrl);
+          } else if (!selectedAssignment) {
+            // If no assignment is selected, default to the first assignment
+            setSelectedAssignment(data[0]);
+          }
+        } else if (!selectedAssignment) {
+          // If no ID is in the URL and no assignment is selected, default to the first assignment
+          setSelectedAssignment(data[0]);
+        }
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
+    };
+  
     fetchAssignments();
-
-    return () => clearAutoRefresh();
-  }, [user]); // Only re-run when the user changes
+    const intervalId = setInterval(fetchAssignments, 5000); // Fetch every 5 seconds
+  
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [id, selectedAssignment, user]);
+  
+  
 
   const handleCreateA = () => {
     navigate(`/createassignment/${id}`);
@@ -423,7 +442,7 @@ const Classroom = () => {
     }
   }
 
-
+  
 
   async function getTextFromPdf(file) {
     const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
@@ -487,12 +506,12 @@ const Classroom = () => {
       console.log("No file selected for upload");
       return;
     }
-
+  
     console.log("Preparing to upload file:", file.name);
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     try {
       console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
@@ -501,34 +520,34 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-
+  
       console.log("Response received:", response.status, response.statusText);
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       console.log("Upload successful, response data:", data);
       toast({
         title: "Congratulations!",
         description: "You submitted your PDF successfully.",
       });
-
+  
       // Update the selected assignment's submissions without refreshing the page
       const updatedAssignment = { ...selectedAssignment };
       updatedAssignment.submissions.push(data.submission);
       setSelectedAssignment(updatedAssignment);
-
+  
       // Clear the file input after successful upload
       setFile(null);
       setFileName('');
-
+  
     } catch (error) {
       console.error("Error during file upload:", error);
     }
   };
-
+  
 
   const handleGoback = () => {
     navigate("/app");
@@ -536,22 +555,22 @@ const Classroom = () => {
 
   const handleNavtoSubs = () => {
     navigate(`/assignment/${selectedAssignment._id}`);
-
+    
   };
 
   const handleNavtoSub = (assignmentId, submissionId) => {
     if (!assignmentId || !submissionId) {
-      console.error("Assignment ID and Submission ID are required");
-      return;
+        console.error("Assignment ID and Submission ID are required");
+        return;
     }
     navigate(`/assignment/${assignmentId}?submissionId=${submissionId}`);
-  };
+};
 
+  
 
-
-  const handleNavtoRubric = (sectionIndex) => {
-    navigate(`/rubric/${selectedAssignment._id}`, { state: { sectionIndex } });
-  };
+const handleNavtoRubric = (sectionIndex) => {
+  navigate(`/rubric/${selectedAssignment._id}`, { state: { sectionIndex } });
+};
 
 
   const fetchAssignments = async () => {
@@ -631,13 +650,13 @@ const Classroom = () => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-900 text-white">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
         <div className="flex flex-col w-1/5">
-          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto  flex flex-col h-full ">
+          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 border border-gray-600 flex flex-col h-full bg-gray-800">
             <div className="flex w-full justify-between mb-3 gap-2">
-              <Button className="w-1/4 bg-gray text-white hover:bg-gray-700" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
+              <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
               {user && user.authority === "teacher" && (
                 <Button className="w-3/4 p-2 bg-amber-500 hover:bg-gray-700" onClick={handleCreateA}>
                   + New
@@ -649,7 +668,7 @@ const Classroom = () => {
               {allAssignments.map((eachassignment) => (
                 <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
                   <button
-                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'bg-white text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
+                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
                     onClick={() => handleSelectAssignment(eachassignment)}
                   >
                     {eachassignment.name}
@@ -660,12 +679,12 @@ const Classroom = () => {
           </aside>
         </div>
 
-        <main className="w-4/5 p-10 overflow-auto bg-stone-200 text-black rounded-3xl rounded-tr-md rounded-br-md m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-gray-800 text-gray-100 rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-extrabold underline">{selectedAssignment.name}</h1>
-                {user && user.authority === "teacher" && (
+                {user.authority === "teacher" && (
                   <div className="flex gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -679,6 +698,29 @@ const Classroom = () => {
                             <FontAwesomeIcon icon={faLink} className="mr-2" />
                             Public Link
                           </DropdownMenuItem>
+                          {!selectedAssignment.rubric || selectedAssignment.rubric.length === 0 ? (
+                            <>
+                              <DropdownMenuItem onSelect={handleOpenRubricModal} className="hover:bg-gray-600">
+                                <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                Upload Rubric
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
+                                <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                                Edit Rubric
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuItem onSelect={handleOpenRubricModal} className="hover:bg-gray-600">
+                                <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                Upload Rubric
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
+                                <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                                Edit Rubric
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -706,28 +748,33 @@ const Classroom = () => {
 
               <div className="flex flex-row w-full">
                 <div className="flex-1">
-                  <div className="mb-4 justify-center">
-                    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
-                      <FontAwesomeIcon icon={faEdit} className="mr-1" />
-                      Edit Rubric
-                    </Button>
+                  <div>
+                    <h1 className="font-bold underline text-lg">Rubric:</h1>
+                    <br />
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
-                    <div className="rubric-view-section rounded-md p-2">
-                      <ScrollArea className="scrollable-rubric-view">
-                        {selectedAssignment.rubric.map((rubric, index) => (
-                          <div key={index} onClick={() => handleNavtoRubric(index)}>
-                            <RubricTable rubric={rubric} />
-                          </div>
-                        ))}
-                      </ScrollArea>
-                    </div>
-                  ) : (
-                    <div className="flex justify-center">
-
-                    </div>
-                  )}
+  <div className="rubric-view-section hover:bg-gray-700 cursor-pointer rounded-md p-2">
+    <ScrollArea className="scrollable-rubric-view">
+      {selectedAssignment.rubric.map((rubric, index) => (
+        <div key={index} onClick={() => handleNavtoRubric(index)}>
+          <RubricTable rubric={rubric} />
+        </div>
+      ))}
+    </ScrollArea>
+  </div>
+) : (
+  <div className="flex justify-center">
+    <Button onClick={() => handleNavtoRubric(0)} className="bg-blue-500 mr-2">
+      <FontAwesomeIcon icon={faUpload} className="mr-2" />
+      Upload Rubric
+    </Button>
+    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
+      <FontAwesomeIcon icon={faEdit} className="mr-2" />
+      Create Rubric
+    </Button>
+  </div>
+)}
 
                 </div>
 
@@ -787,7 +834,7 @@ const Classroom = () => {
                           </div>
                         ) : (
                           <div className="flex w-full gap-4">
-                            <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                            <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
                               <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                               Upload Assignments
                             </Button>
@@ -834,24 +881,9 @@ const Classroom = () => {
                               </Table>
                             </div>
                           ) : (
-                            <div className="flex flex-col items-center justify-center border-0 mt-4 text-center ">
-                              <p className="text-xl font-extrabold mb-4">No Assignments Yet!</p>
-                              <p className="">
-                                To get started, follow these steps:
-                              </p>
-                              <ul className="mt-2 text-left list-disc list-inside">
-                                <li>
-                                  <strong>Upload assignments</strong> as PDF files to the platform.
-                                </li>
-                                <li>
-                                  <strong>Select "Grade All"</strong> to begin grading all the submitted assignments at once.
-                                </li>
-                                <li>
-                                  <strong>Review and check</strong> all submissions to ensure everything is complete.
-                                </li>
-                              </ul>
+                            <div className="flex items-center justify-center border-0 mt-4">
+                              <p className="border-0">No Assignments Yet!</p>
                             </div>
-
                           )}
                         </div>
                         <div className="flex justify-end items-center space-x-4 mt-4">
@@ -899,18 +931,18 @@ const Classroom = () => {
                                     <p>Click here to upload your students' essay PDFs</p>
                                   </div>
                                   <ul className="file-list">
-                                    {teacherFiles && teacherFiles.map((file, index) => (
-                                      <li key={index} className="text-gray-200 flex items-center justify-between">
-                                        {file.name}
-                                        <button
-                                          className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none"
-                                          onClick={() => removeFile(index)}
-                                          style={{ backgroundColor: 'transparent', border: 'none' }}>
-                                          &times;
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
+  {teacherFiles && teacherFiles.map((file, index) => (
+    <li key={index} className="text-gray-200 flex items-center justify-between">
+      {file.name}
+      <button 
+        className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none" 
+        onClick={() => removeFile(index)}
+        style={{ backgroundColor: 'transparent', border: 'none' }}>
+        &times;
+      </button>
+    </li>
+  ))}
+</ul>
 
 
                                 </DialogDescription>
@@ -936,26 +968,9 @@ const Classroom = () => {
               </div>
             </div>
           ) : (
-            <div className="p-4 text-center text-black">
-              <h3 className="text-3xl font-extrabold mb-5">Get Started with Your First Assignment!</h3>
-              <p className="mb-4">Follow these simple steps to create and manage your first assignment:</p>
-              <ol className="text-left space-y-2 list-decimal list-inside">
-                <li>
-                  <strong>Press <span className="text-orange-500">"+ New"</span></strong> to begin.
-                </li>
-                <li>
-                  Set the <strong>title, description, and due date</strong> for your assignment.
-                </li>
-                <li>
-                  <strong>Edit the rubric</strong> to define your grading criteria and expectations.
-                </li>
-                <li>
-                  <strong>Add the essays</strong> that need to be graded. You're all set!
-                </li>
-              </ol>
-              <p className="mt-4 ">Once you’ve completed these steps, you can view all the details and manage submissions with ease.</p>
+            <div>
+              <p className="text-gray-400">Select an assignment to view details</p>
             </div>
-
           )}
         </main>
         <Toaster />
