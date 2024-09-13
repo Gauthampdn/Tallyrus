@@ -174,6 +174,22 @@ const Classroom = () => {
   const [loading, setLoading] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(null); // Add state for interval
 
+  const clearAutoRefresh = () => {
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+  };
+
+  const startAutoRefresh = () => {
+    const interval = setInterval(() => {
+      console.log("Checking for assignment updates...");
+      fetchAssignments();
+    }, 30000); // Refresh every 30 seconds
+
+    setRefreshInterval(interval);
+  };
+
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -333,7 +349,11 @@ const Classroom = () => {
   };
 
   useEffect(() => {
+    startAutoRefresh();
+
     fetchAssignments();
+
+    return () => clearAutoRefresh();
   }, [user]); // Only re-run when the user changes
 
   const handleCreateA = () => {

@@ -433,19 +433,22 @@ const gradeall = async (req, res) => {
                     submission.feedback = 'Failed to extract text from file';
                     return submission;
                 }
-
+                /*
                 const aiScore = await fetchAIScore(extractedText);
                 if (!aiScore) {
                     submission.status = 'error';
                     submission.feedback = 'Failed to fetch AI detection score';
                     return submission;
                 }
-
-                submission.aiScore = formatAIScore(aiScore.Fake);  // Save formatted AI score
+                    
+                //submission.aiScore = formatAIScore(aiScore.Fake);  // Save formatted AI score
                 
+                submission.aiScore = 0;
                 const gradingResult = await grade(assignment.rubric, extractedText, gradingInstructions, req.user.id);
                 console.log("Grading Result:", gradingResult);
+                */
 
+                const gradingResult = null;
                 if (gradingResult && gradingResult.feedback) {
                     // Use the grading result from the Python server
                     submission.feedback = parseFeedback(gradingResult.feedback);
