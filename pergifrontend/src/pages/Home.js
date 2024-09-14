@@ -114,10 +114,10 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   const { user } = useAuthContext();
   const [currClassrooms, setCurrClassrooms] = useState([]);
 
-  const handleGoToClass = (classroomId) => {
-    navigate(`/classroom/${classroomId}`);
+  const handleGoToClass = (classroomId, assignmentId = null) => {
+    const path = assignmentId ? `/classroom/${classroomId}/${assignmentId}` : `/classroom/${classroomId}`;
+    navigate(path);
   };
-
   const handleNavigateToCreate = () => {
     navigate('/create');
   };

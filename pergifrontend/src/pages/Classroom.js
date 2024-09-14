@@ -160,7 +160,6 @@ const Classroom = () => {
 
   const { user } = useAuthContext();
 
-  const { id } = useParams(); // This is how you access the classroom ID from the URL
 
   const [allAssignments, setAllAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -172,7 +171,8 @@ const Classroom = () => {
   const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(null); // Add state for interval
+  const [refreshIntervalId, setRefreshIntervalId] = useState(null);
+  const { classroomId, assignmentId } = useParams();
 
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -327,57 +327,106 @@ const Classroom = () => {
   };
   
 
-  const handleSelectAssignment = (assignment) => {
-    setSelectedAssignment(assignment);
+
+  
+
+  // Fetch assignments when component mounts or user changes
+  useEffect(() => {
+    console.log('refresh');
+    fetchAssignments();
+  }, [classroomId, assignmentId]);
+
+  // Fetch all assignments
+  const fetchAssignments = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${classroomId}`, {
+        credentials: 'include',
+        mode: 'cors',
+      });
+  
+      if (!response.ok) throw new Error("Failed to fetch assignments");
+  
+      const data = await response.json();
+  
+      // Only update the state if assignments have actually changed
+      if (JSON.stringify(allAssignments) !== JSON.stringify(data)) {
+        setAllAssignments(data);
+      }
+  
+      // Set the selected assignment if it's not already set
+      if (!selectedAssignment || !assignmentId) {
+        const defaultAssignment = assignmentId
+          ? data.find((assignment) => assignment._id === assignmentId)
+          : data[0];
+        setSelectedAssignment(defaultAssignment);
+      }
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+    }
+  };
+  
+
+  const fetchSubmissions = async () => {
+    if (!selectedAssignment) return;
+  
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/submissions/${selectedAssignment._id}`, {
+        credentials: "include",
+        mode: "cors",
+      });
+  
+      if (!response.ok) throw new Error("Failed to fetch submissions");
+  
+      const data = await response.json();
+  
+      // Check if the submissions have changed before updating the state
+      if (JSON.stringify(selectedAssignment.submissions) !== JSON.stringify(data)) {
+        setSelectedAssignment((prevAssignment) => ({
+          ...prevAssignment,
+          submissions: data.submissions,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+    }
   };
   
 
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`, {
-          credentials: 'include',
-          mode: 'cors',
-        });
+    if (selectedAssignment) {
+      // Fetch immediately when assignment is selected
   
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+      // Set a longer interval for refreshing the submission status
+      const intervalId = setInterval(() => {
+        console.log('Fetching submissions...');
+        fetchSubmissions();
+      }, 3000); // Refresh every 60 seconds
   
-        const data = await response.json();
-        setAllAssignments(data);
+      // Cleanup the interval when component unmounts or assignment changes
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [selectedAssignment]);
   
-        if (id) {
-          // Find the assignment that matches the ID in the URL
-          const assignmentFromUrl = data.find((a) => a._id === id);
-          if (assignmentFromUrl) {
-            setSelectedAssignment(assignmentFromUrl);
-          } else if (!selectedAssignment) {
-            // If no assignment is selected, default to the first assignment
-            setSelectedAssignment(data[0]);
-          }
-        } else if (!selectedAssignment) {
-          // If no ID is in the URL and no assignment is selected, default to the first assignment
-          setSelectedAssignment(data[0]);
-        }
-      } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
-      }
-    };
   
-    fetchAssignments();
-    const intervalId = setInterval(fetchAssignments, 5000); // Fetch every 5 seconds
   
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [id, selectedAssignment, user]);
+  
   
   
 
-  const handleCreateA = () => {
-    navigate(`/createassignment/${id}`);
+  // Handle assignment selection (and update URL)
+  const handleSelectAssignment = (assignment) => {
+    setSelectedAssignment(assignment);
+    // Update the URL to include the selected assignment's ID
+    navigate(`/classroom/${classroomId}/${assignment._id}`);
   };
+  
+
+  const handleCreateA = () => {
+    navigate(`/createassignment/${classroomId}`);
+  };
+  
   const doToast = () => {
     toast({
       variant: "destructive",
@@ -573,36 +622,7 @@ const handleNavtoRubric = (sectionIndex) => {
 };
 
 
-  const fetchAssignments = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${id}`,
-        {
-          credentials: 'include',
-          mode: 'cors'
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      setAllAssignments(data);
-
-      if (data.length > 0) {
-        // Update selected assignment only if it's currently not set or the current one is no longer in the list
-        if (!selectedAssignment || !data.some(assignment => assignment._id === selectedAssignment._id)) {
-          setSelectedAssignment(data[0]);
-        }
-      }
-      console.log(data)
-      if (data.length > 0) {
-        setSelectedAssignment(data[0]); // Select the first assignment by default
-      }
-    } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
-    }
-  };
 
   const deleteAssignment = async (assignmentId) => {
     try {
@@ -653,31 +673,28 @@ const handleNavtoRubric = (sectionIndex) => {
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
-        <div className="flex flex-col w-1/5">
-          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 border border-gray-600 flex flex-col h-full bg-gray-800">
-            <div className="flex w-full justify-between mb-3 gap-2">
-              <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}><FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" /></Button>
-              {user && user.authority === "teacher" && (
-                <Button className="w-3/4 p-2 bg-amber-500 hover:bg-gray-700" onClick={handleCreateA}>
-                  + New
-                </Button>
-              )}
-            </div>
-            <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
-            <ul>
-              {allAssignments.map((eachassignment) => (
-                <li key={eachassignment._id} className="mb-2 text-sm font-semibold">
-                  <button
-                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachassignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
-                    onClick={() => handleSelectAssignment(eachassignment)}
-                  >
-                    {eachassignment.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </aside>
-        </div>
+      <div className="flex flex-col w-1/5">
+        <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 border border-gray-600 flex flex-col h-full bg-gray-800">
+          <div className="flex w-full justify-between mb-3 gap-2">
+            <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
+              <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
+            </Button>
+          </div>
+          <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
+          <ul>
+            {allAssignments.map((eachAssignment) => (
+              <li key={eachAssignment._id} className="mb-2 text-sm font-semibold">
+                <button
+                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachAssignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
+                  onClick={() => handleSelectAssignment(eachAssignment)}
+                >
+                  {eachAssignment.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </div>
 
         <main className="w-4/5 p-10 overflow-auto bg-gray-800 text-gray-100 rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (

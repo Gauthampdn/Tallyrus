@@ -245,6 +245,8 @@ const getSubmissions = async (req, res) => {
     return res.status(200).json(modifiedAssignment);
   }
 
+  console.log("assignment", assignment);
+
   res.status(200).json(assignment);
 }
 
