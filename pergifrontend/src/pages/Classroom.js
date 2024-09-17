@@ -409,12 +409,6 @@ const Classroom = () => {
     }
   }, [selectedAssignment]);
   
-  
-  
-  
-  
-  
-
   // Handle assignment selection (and update URL)
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
@@ -678,6 +672,10 @@ const handleNavtoRubric = (sectionIndex) => {
           <div className="flex w-full justify-between mb-3 gap-2">
             <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
               <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
+            </Button>
+            <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
+              <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
+              Create Assignment
             </Button>
           </div>
           <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
