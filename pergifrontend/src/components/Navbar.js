@@ -52,7 +52,12 @@ const Navbar = ({ resetTemplate }) => {
       {user && (
         <div className="flex items-center gap-1">
           {/* <img src="/tallyrus2white.png" alt="Tally Illustration" className="m-0.5 mr-2 w-5 h-5" /> */}
+          <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 cursor-pointer mb-1.5" onClick={goToHome}>
+            <FontAwesomeIcon icon={faHome} className="mr-2" />
+            <span className="">Home</span>
+          </Button>
         </div>
+        
       )}
 
       {user && (
@@ -70,9 +75,7 @@ const Navbar = ({ resetTemplate }) => {
           >
             Logout
           </Button>
-          {/* <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 cursor-pointer" onClick={goToHome}>
-            <span className="">Home</span>
-          </Button> */}
+          
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
