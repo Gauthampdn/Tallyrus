@@ -189,8 +189,8 @@ const Classroom = () => {
     },
   });
 
-
   const handleOpenRubricModal = () => {
+    console.log("Opening rubric upload modal new");
     setIsRubricModalOpen(true);
     setRubricFile(null);
     setFileName('');
@@ -719,7 +719,8 @@ const handleNavtoRubric = (sectionIndex) => {
                                 <FontAwesomeIcon icon={faUpload} className="mr-2" />
                                 Upload Rubric
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
+
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric(0)} className="hover:bg-gray-600">
                                 <FontAwesomeIcon icon={faEdit} className="mr-2" />
                                 Edit Rubric
                               </DropdownMenuItem>
@@ -730,7 +731,7 @@ const handleNavtoRubric = (sectionIndex) => {
                                 <FontAwesomeIcon icon={faUpload} className="mr-2" />
                                 Upload Rubric
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleNavtoRubric()} className="hover:bg-gray-600">
+                              <DropdownMenuItem onSelect={() => handleNavtoRubric(0)} className="hover:bg-gray-600">
                                 <FontAwesomeIcon icon={faEdit} className="mr-2" />
                                 Edit Rubric
                               </DropdownMenuItem>
@@ -780,7 +781,7 @@ const handleNavtoRubric = (sectionIndex) => {
   </div>
 ) : (
   <div className="flex justify-center">
-    <Button onClick={() => handleNavtoRubric(0)} className="bg-blue-500 mr-2">
+    <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
       <FontAwesomeIcon icon={faUpload} className="mr-2" />
       Upload Rubric
     </Button>
@@ -902,38 +903,46 @@ const handleNavtoRubric = (sectionIndex) => {
                           )}
                         </div>
                         <div className="flex justify-end items-center space-x-4 mt-4">
-                          {isRubricModalOpen && (
-                            <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Upload Rubric</DialogTitle>
-                                </DialogHeader>
-                                <DialogDescription>
-                                  <div {...getRootProps({ className: 'dropzone' })}>
-                                    <input {...getInputProps()} />
-                                    <p>Click here or drag and drop to upload the rubric PDF</p>
-                                  </div>
-                                  {fileName && (
-                                    <p>Selected File: {fileName}</p>
-                                  )}
-                                </DialogDescription>
-                                <DialogFooter>
-                                  <Button
-                                    onClick={handleRubricUpload}
-                                    disabled={!rubricFile || loading}
-                                    className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
-                                  >
-                                    {loading ? (
-                                      <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-                                    ) : (
-                                      <FontAwesomeIcon icon={faUpload} className="mr-2" />
-                                    )}
-                                    {loading ? 'Processing...' : 'Upload Rubric'}
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                        {isRubricModalOpen && (
+  <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
+    <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
+      <DialogHeader>
+        <DialogTitle>Upload Rubric</DialogTitle>
+      </DialogHeader>
+      <DialogDescription>
+        <div {...getRootProps({ className: 'dropzone bg-gray-700 p-6 rounded-lg border-2 border-dashed border-gray-500 text-center' })}>
+          <input {...getInputProps()} />
+          <p className="text-gray-300">
+            Drag & drop your rubric file here, or click to select a file (PDF only)
+          </p>
+        </div>
+        {fileName && (
+          <p className="text-gray-400 mt-4">Selected File: {fileName}</p>
+        )}
+      </DialogDescription>
+      <DialogFooter>
+        <Button
+          onClick={handleRubricUpload}
+          disabled={!rubricFile || loading}
+          className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
+        >
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+          ) : (
+            <FontAwesomeIcon icon={faUpload} className="mr-2" />
+          )}
+          {loading ? 'Processing...' : 'Upload Rubric'}
+        </Button>
+        <Button
+          onClick={handleCloseRubricModal}
+          className="bg-red-500 ml-2"
+        >
+          Cancel
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+)}
                           {isTeacherUploadModalOpen && (
                             <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
                               <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
