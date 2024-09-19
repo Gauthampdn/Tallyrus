@@ -310,21 +310,19 @@ const Classroom = () => {
       }
   
       const data = await response.json();
-      console.log(data); // Logging the response
       toast({
         title: "Files Uploaded!",
         description: "The files have been successfully uploaded.",
       });
-  
-      // Update the state to reflect the new teacher files
-      const updatedAssignment = { ...selectedAssignment };
-      updatedAssignment.teacherFiles = data.teacherFiles; // Update with actual response data
-      setSelectedAssignment(updatedAssignment);
+
+      // Automatically trigger grading for all assignments
+      await handleGradeAll(assignmentId);
   
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
-  };
+};
+
   
 
 
@@ -544,19 +542,15 @@ const Classroom = () => {
   };
 
   const handleSubmit = async (assignmentId) => {
-    console.log("Submit button clicked");
     if (!file) {
       console.log("No file selected for upload");
       return;
     }
   
-    console.log("Preparing to upload file:", file.name);
-  
     const formData = new FormData();
     formData.append('file', file);
   
     try {
-      console.log("Sending upload request to:", `${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
         method: 'POST',
         body: formData,
@@ -564,32 +558,25 @@ const Classroom = () => {
         mode: 'cors',
       });
   
-      console.log("Response received:", response.status, response.statusText);
-  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
   
       const data = await response.json();
-      console.log("Upload successful, response data:", data);
       toast({
         title: "Congratulations!",
         description: "You submitted your PDF successfully.",
       });
-  
-      // Update the selected assignment's submissions without refreshing the page
-      const updatedAssignment = { ...selectedAssignment };
-      updatedAssignment.submissions.push(data.submission);
-      setSelectedAssignment(updatedAssignment);
-  
-      // Clear the file input after successful upload
-      setFile(null);
-      setFileName('');
-  
+
+      // Automatically trigger grading for all assignments
+      await handleGradeAll(assignmentId);
+
+      setFile(null);  // Clear the file input
     } catch (error) {
       console.error("Error during file upload:", error);
     }
-  };
+};
+
   
 
   const handleGoback = () => {
@@ -839,10 +826,6 @@ const handleNavtoRubric = (sectionIndex) => {
                             <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
                               <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                               Upload Assignments
-                            </Button>
-                            <Button className="bg-orange-500 flex-auto grade-all-btn" onClick={() => handleGradeAll(selectedAssignment._id)}>
-                              <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
-                              Grade Assignments
                             </Button>
                             <Button className="mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white" onClick={() => handleNavtoSubs()}>
                               All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
