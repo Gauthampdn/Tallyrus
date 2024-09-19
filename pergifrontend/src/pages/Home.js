@@ -250,10 +250,6 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
-                <Button className='text-md font-bold bg-indigo-600 create-class-btn'>
-                  <FontAwesomeIcon icon={faPlus} className="" />
-                  CREATE CLASS
-                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-gray-800 text-gray-100">
                 <AlertDialogHeader>
@@ -379,6 +375,21 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </CardFooter>
           </Card>
         ))}
+        {user && user.authority === "teacher" && (
+    <Card
+      className="min-w-1/4 w-1/4 h-[300px] m-4 border-2 border-indigo-600 text-indigo-600 cursor-pointer hover:bg-indigo-600 hover:text-white transition-all"
+      onClick={() => setIsCreateModalOpen(true)} 
+    >
+      <CardContent className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center">
+          <FontAwesomeIcon icon={faPlus} size="3x" className="mb-2" />
+          <span className="text-lg font-bold">New Class</span>
+        </div>
+      </CardContent>
+    </Card>
+  )}
+
+
       </div>
 
       {/* Edit Class Modal */}
