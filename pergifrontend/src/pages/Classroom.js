@@ -336,6 +336,7 @@ const Classroom = () => {
 
   // Fetch all assignments
   const fetchAssignments = async () => {
+    console.log('inside fetch assignments classroom', `${process.env.REACT_APP_API_BACKEND}/assignments/${classroomId}`);
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/${classroomId}`, {
         credentials: 'include',
