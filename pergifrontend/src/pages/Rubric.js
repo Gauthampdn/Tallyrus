@@ -31,6 +31,7 @@ import {
 
 import { Disclosure } from '@headlessui/react';
 
+
 const Rubric = () => {
   const { toast } = useToast();
   const { id } = useParams();

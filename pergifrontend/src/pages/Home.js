@@ -7,7 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPen, faTrash, faArrowRight, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPen, faTrash, faArrowRight, faSave, faUpload, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useDropzone } from 'react-dropzone';
+import RubricCard from '../components/RubricCard';
+import AssignmentSubmission from '../components/AssignmentSubmission';
+import AssignmentStatusTable from '../components/AssignmentStatusTable';
+
+
+
 
 import {
   Form,
@@ -62,6 +69,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
 const joinFormSchema = z.object({
   joinCode: z.string().min(1, "Please enter a join code"),
 });
@@ -79,7 +94,28 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   const [selectedClassroom, setSelectedClassroom] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [isCreateAssignmentModalOpen, setIsCreateAssignmentModalOpen] = useState(false);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [rubricFile, setRubricFile] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [loading, setLoading] = useState(false);
   const { user } = useAuthContext();
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: 'application/pdf',
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles.length > 0) {
+        setRubricFile(acceptedFiles[0]);
+        setFileName(acceptedFiles[0].name);
+      }
+    },
+  });
+  
+  const handleAssignmentClick = (assignment) => {
+    setSelectedAssignment(assignment);
+    setIsAssignmentModalOpen(true);
+  };
+  
   
   const [assignmentData, setAssignmentData] = useState({
     name: '',
@@ -93,6 +129,32 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
       ...prevState,
       [name]: value
     }));
+  };
+
+  const handleRubricUpload = async (rubricFile, assignmentId, setLoading) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', rubricFile);
+  
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-rubric/${assignmentId}`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        mode: 'cors',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log(data);
+      // Display success toast or message
+    } catch (error) {
+      console.error("Error uploading rubric:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -364,6 +426,8 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     window.location.href = "https://buy.stripe.com/dR617Q1sRbK2fVC7st";
   };
 
+  console.log("selected assignment", selectedAssignment?._id);
+
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
@@ -491,7 +555,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           classroom.title !== 'Personal Classroom' && (
             <Card
               key={classroom._id}
-              className="min-w-1/4 w-1/4 h-[300px] m-4 text-black cursor-pointer hover:bg-slate-200"
+              className="w-[300px] h-[300px] m-4 text-black cursor-pointer hover:bg-slate-200"
               onClick={() => handleGoToClass(classroom._id)}
             >
               <CardHeader>
@@ -531,30 +595,52 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
         {assignments && assignments.map((assignment) => (
   <Card
     key={assignment._id}
-    className="min-w-1/4 w-1/4 h-[300px] m-4 text-black cursor-pointer hover:bg-purple-600 bg-purple-500"
+    className="w-full w-[300px] h-[300px] m-4 text-white bg-black rounded-lg shadow-lg cursor-pointer transition-transform transform hover:scale-105 hover:bg-gray-900"
+    onClick={() => handleAssignmentClick(assignment)}
   >
-    <CardHeader className="flex justify-between items-center">
-      <CardTitle className="text-xl font-bold">{assignment.name}</CardTitle>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="ml-2">
-            <FontAwesomeIcon icon={faTrash} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onSelect={() => handleDeleteAssignment(assignment._id)}>
-            <FontAwesomeIcon icon={faTrash} className="mr-2" />
-            Delete Assignment
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </CardHeader>
-    <CardContent>
-      <p>{assignment.description}</p>
-      <p>Due: {assignment.dueDate}</p>
+    <CardHeader className="flex p-4 border-b border-gray-700">
+  <div className="flex items-center justify-between">
+  <CardTitle className="text-lg font-semibold text-gray-200 truncate flex-shrink-0">
+    {assignment.name}
+  </CardTitle>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          className="ml-2 p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-red-500 rounded-full"
+          onClick={(e) => { e.stopPropagation(); }} // Stop event bubbling
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        onClick={(e) => e.stopPropagation()} // Stop DropdownMenu click propagation as well
+        className="bg-gray-800 shadow-lg rounded-lg p-2"
+      >
+        <DropdownMenuItem 
+          onSelect={() => handleDeleteAssignment(assignment._id)}
+          className="flex items-center p-2 hover:bg-gray-700 rounded-md cursor-pointer"
+        >
+          <FontAwesomeIcon icon={faTrash} className="mr-2 text-red-500" />
+          Delete Assignment
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+</CardHeader>
+
+
+    <CardContent className="p-4">
+      <p className="text-gray-300 mb-2 truncate">{assignment.description}</p>
+      <p className="text-gray-400 font-light">Due: {assignment.dueDate}</p>
     </CardContent>
   </Card>
 ))}
+
+
+
+
+
 
 
 
@@ -562,6 +648,56 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     </div>
 
 </div>
+
+<AlertDialog open={isAssignmentModalOpen} onOpenChange={setIsAssignmentModalOpen}>
+  <AlertDialogContent 
+    className="bg-gray-800 text-gray-100 max-w-screen-lg max-h-screen h-[95vh] max-w-full overflow-y-none mx-auto my-auto"
+  >
+    <AlertDialogHeader>
+      <AlertDialogTitle className="text-2xl">Assignment: {selectedAssignment?.name || "Assignment"}</AlertDialogTitle>
+    </AlertDialogHeader>
+
+    {/* Carousel */}
+    <Carousel className="max-w-full h-full mt-4 relative">
+      <CarouselContent className="max-w-full h-full mt-5">
+        {/* First Card: Title with Dropzone */}
+        <CarouselItem className="max-w-full h-full">
+          <h2 className="text-xl font-bold mb-4 text-center">Rubric</h2> 
+          <RubricCard assignmentId={selectedAssignment?._id} />
+        </CarouselItem>
+
+        {/* Description Card */}
+        <CarouselItem className="max-w-full  h-full">
+          <h2 className="text-xl font-bold mb-4 text-center">Upload Submissions</h2> 
+          <div className="p-1">
+            <AssignmentSubmission className="max-w-full"assignmentId={selectedAssignment?._id} />
+          </div>
+        </CarouselItem>
+
+        {/* Due Date Card */}
+        <CarouselItem className="max-w-full h-full">
+          <h2 className="text-xl font-bold mb-4 text-center">Submissions</h2> 
+          <AssignmentStatusTable assignmentId={selectedAssignment?._id} />
+        </CarouselItem>
+      </CarouselContent>
+
+      <CarouselPrevious className="absolute top-0 left-0 transform bg-gray-700 p-2 rounded-full z-50 mb-2 ">
+        &#8592;
+      </CarouselPrevious>
+
+      <CarouselNext className="absolute top-0 right-0 transform bg-gray-700 p-2 rounded-full z-50 mb-2">
+        &#8594;
+      </CarouselNext>
+    </Carousel>
+
+    <AlertDialogFooter className="flex justify-end mt-4">
+      <Button onClick={() => setIsAssignmentModalOpen(false)} className="bg-blue-500 hover:bg-blue-600 text-white">
+        Close
+      </Button>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
 
 
 
