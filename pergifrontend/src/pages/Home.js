@@ -438,6 +438,10 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
+                <Button className='text-md font-bold bg-indigo-600 create-class-btn'>
+                  <FontAwesomeIcon icon={faPlus} className="" />
+                  CREATE CLASS
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-gray-800 text-gray-100">
                 <AlertDialogHeader>
@@ -591,6 +595,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </Card>
           )
         ))}
+<<<<<<< HEAD
         
         {assignments && assignments.map((assignment) => (
   <Card
@@ -644,6 +649,8 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
 
 
 
+=======
+>>>>>>> parent of ed1f715 (new class)
       </div>
     </div>
 
