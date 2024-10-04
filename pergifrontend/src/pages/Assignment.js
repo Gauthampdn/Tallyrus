@@ -9,6 +9,8 @@ import { faSearch, faFlag, faPenToSquare, faArrowLeft, faSave } from '@fortaweso
 import './assignments.css';
 import { marked } from 'marked';
 import { jsPDF } from 'jspdf';
+import { useToast } from "@/components/ui/use-toast";
+
 import html2canvas from 'html2canvas';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +54,8 @@ const Assignment = () => {
     return tailwindColors[Math.floor(Math.random() * tailwindColors.length)];
   };
   
+  const { toast } = useToast();
+
   const contentRef = createRef();
 
   const navigate = useNavigate();
@@ -143,6 +147,36 @@ const Assignment = () => {
     }
   };
 
+  const handleGradeAll = async (assignmentId) => {
+    toast({
+      title: "Grading Now!",
+      description: "Our systems are grading all assignments - check back in a bit!",
+    });
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradeall/${assignmentId}`, {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'cors',
+      });
+
+      if (!response.ok) {
+        toast({
+          variant: "destructive",
+          title: "Error In Grading All",
+          description: "Try grading all later.",
+        });
+
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log(data); // Logging the response
+    } catch (error) {
+      console.error("There was a problem trying to grade", error);
+    }
+  }
+
   const handleMarkForRegrade = async (submissionId) => {
     console.log('Marking for regrade...');
     try {
@@ -165,6 +199,8 @@ const Assignment = () => {
   
       setAssignment(updatedAssignment);
       setSelectedSubmission(updatedSubmission);
+
+      handleGradeAll(assignment._id);
   
       // Ensure the URL reflects the current submission
       navigate(`?submissionId=${submissionId}`, { replace: true });

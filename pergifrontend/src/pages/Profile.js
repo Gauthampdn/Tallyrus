@@ -161,11 +161,11 @@ const Profile = () => {
           <div className="text-center">
             <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>
             <img src="/orange.png" alt="Orange" className="w-16 h-16 mx-auto mt-4 animate-bounce" />
-            {user.authority === "teacher" && (
+            {/* {user.authority === "teacher" && (
               <Button onClick={handleUploadNavigation} className="mt-6 bg-indigo-600 hover:bg-indigo-700">
                 Upload Old Graded Essays
               </Button>
-            )}
+            )} */}
           </div>
         </div>
       </div>

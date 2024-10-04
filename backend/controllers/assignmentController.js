@@ -37,25 +37,6 @@ const s3 = new S3({
 
 //-----------------------------------------------------------------------------------------------------------------------
 
-const generateJoinCode = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 7; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
-const colors = [
-  "bg-red-800",    // A deep red that contrasts well with dark mode
-  "bg-green-800",  // A dark green that fits the theme
-  "bg-blue-800",   // A deep blue that blends nicely with dark mode
-  "bg-yellow-800", // A darker yellow that is not too bright
-  "bg-purple-800"  // A deep purple that works well in dark mode
-];
-  const getRandomColor = () => {
-  return colors[Math.floor(Math.random() * colors.length)];
-};
 
 const getAssignment = async (req, res) => {
 
@@ -135,79 +116,41 @@ const getAssignments = async (req, res) => {  // returns all the assignments in 
 
 const createAssignment = async (req, res) => {
   const { name, description, classId, dueDate } = req.body;
-  const user_id = req.user._id;
-  console.log("Assignment Details:");
-  console.log("Name:", name);
-  console.log("Description:", description);
-  console.log("Class ID:", classId);
-  console.log("Due Date:", dueDate);
-  console.log("User ID:", user_id);
-
-  
+  const user_id = req.user.id;
 
   // Check user's authority
   if (req.user.authority !== "teacher") {
     return res.status(403).json({ error: "Only teachers can create assignments" });
   }
 
+  // Validate classId
+  if (!mongoose.Types.ObjectId.isValid(classId)) {
+    return res.status(400).json({ error: "Invalid classroom ID" });
+  }
+
   try {
-    let classroom;
-    console.log("inside try");
+    // Check if the user is a teacher in the specified classroom
+    const classroom = await Classroom.findOne({ _id: classId, teachers: user_id });
 
-    if (!classId) {
-      // If no classId is provided, check if the user has their own personal classroom
-      console.log("user_id:", user_id, "Type:", typeof user_id);
-      classroom = await Classroom.findOne({ _id: user_id });
-      console.log("classroom", classroom);
-
-      // If no classroom exists, create a new personal classroom
-      if (!classroom) {
-        console.log('No personal classroom found, creating a new one');
-        const joincode = await generateJoinCode();
-        const color = getRandomColor();
-        classroom = await Classroom.create({
-          _id: user_id, // Use the user ID as the classroom ID
-          title: "Personal Classroom",
-          description: "This is your personal classroom",
-          joincode,
-          teachers: [req.user.id],
-          students: [],
-          assignments: [],
-          color
-        });
-      }
-      console.log('Personal classroom created or found');
-    } else {
-      // Validate the provided classId and check if the user is a teacher in the classroom
-      classroom = await Classroom.findOne({ _id: classId, teachers: user_id });
-      if (!classroom) {
-        console.log('User is not authorized to create assignments in this class');
-        return res.status(400).json({ error: "Not authorized to create assignments in this class" });
-      }
+    if (!classroom) {
+      return res.status(400).json({ error: "Not authorized to create assignments in this class" });
     }
 
     // Create a new assignment
     const assignment = await Assignment.create({
+      rubric: [],
       name,
       description,
-      classId: classroom._id, // Use the found or newly created classroom ID
+      classId,
       dueDate,
       submissions: [] // Initialize submissions as an empty array
     });
 
-    // Add the assignment ID to the classroom's assignments array and save the classroom
-    classroom.assignments.push(assignment._id);
-    await classroom.save();
-
-    console.log('Assignment created and added to the classroom:', assignment, classroom);
     res.status(201).json(assignment);
   } catch (error) {
-    console.log('Failed to create assignment or add it to the classroom');
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 
 const deleteAssignment = async (req, res) => {

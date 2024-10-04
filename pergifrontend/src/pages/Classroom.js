@@ -291,12 +291,12 @@ const Classroom = () => {
       console.log("No files selected");
       return;
     }
-  
+
     const formData = new FormData();
     Array.from(teacherFiles).forEach(file => {
       formData.append('files', file);
     });
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-teacher/${assignmentId}`, {
         method: 'POST',
@@ -304,29 +304,31 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
       toast({
         title: "Files Uploaded!",
         description: "The files have been successfully uploaded.",
       });
-
+      fetchSubmissions();
       // Automatically trigger grading for all assignments
       await handleGradeAll(assignmentId);
-  
+      fetchSubmissions();
+
+
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
     }
-};
-
-  
+  };
 
 
-  
+
+
+
 
   // Fetch assignments when component mounts or user changes
   useEffect(() => {
@@ -342,16 +344,16 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch assignments");
-  
+
       const data = await response.json();
-  
+
       // Only update the state if assignments have actually changed
       if (JSON.stringify(allAssignments) !== JSON.stringify(data)) {
         setAllAssignments(data);
       }
-  
+
       // Set the selected assignment if it's not already set
       if (!selectedAssignment || !assignmentId) {
         const defaultAssignment = assignmentId
@@ -363,21 +365,21 @@ const Classroom = () => {
       console.error("Error fetching assignments:", error);
     }
   };
-  
+
 
   const fetchSubmissions = async () => {
     if (!selectedAssignment) return;
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/assignments/submissions/${selectedAssignment._id}`, {
         credentials: "include",
         mode: "cors",
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch submissions");
-  
+
       const data = await response.json();
-  
+
       // Check if the submissions have changed before updating the state
       if (JSON.stringify(selectedAssignment.submissions) !== JSON.stringify(data)) {
         setSelectedAssignment((prevAssignment) => ({
@@ -389,37 +391,37 @@ const Classroom = () => {
       console.error("Error fetching submissions:", error);
     }
   };
-  
+
 
   useEffect(() => {
     if (selectedAssignment) {
       // Fetch immediately when assignment is selected
-  
+
       // Set a longer interval for refreshing the submission status
       const intervalId = setInterval(() => {
         console.log('Fetching submissions...');
-        fetchSubmissions();
-      }, 3000); // Refresh every 60 seconds
-  
+        // fetchSubmissions();
+      }, 10000); // Refresh every 60 seconds
+
       // Cleanup the interval when component unmounts or assignment changes
       return () => {
         clearInterval(intervalId);
       };
     }
   }, [selectedAssignment]);
-  
+
   // Handle assignment selection (and update URL)
   const handleSelectAssignment = (assignment) => {
     setSelectedAssignment(assignment);
     // Update the URL to include the selected assignment's ID
     navigate(`/classroom/${classroomId}/${assignment._id}`);
   };
-  
+
 
   const handleCreateA = () => {
     navigate(`/createassignment/${classroomId}`);
   };
-  
+
   const doToast = () => {
     toast({
       variant: "destructive",
@@ -484,7 +486,7 @@ const Classroom = () => {
     }
   }
 
-  
+
 
   async function getTextFromPdf(file) {
     const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
@@ -547,10 +549,10 @@ const Classroom = () => {
       console.log("No file selected for upload");
       return;
     }
-  
+
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
         method: 'POST',
@@ -558,11 +560,11 @@ const Classroom = () => {
         credentials: 'include',
         mode: 'cors',
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
       toast({
         title: "Congratulations!",
@@ -576,9 +578,9 @@ const Classroom = () => {
     } catch (error) {
       console.error("Error during file upload:", error);
     }
-};
+  };
 
-  
+
 
   const handleGoback = () => {
     navigate("/app");
@@ -586,22 +588,22 @@ const Classroom = () => {
 
   const handleNavtoSubs = () => {
     navigate(`/assignment/${selectedAssignment._id}`);
-    
+
   };
 
   const handleNavtoSub = (assignmentId, submissionId) => {
     if (!assignmentId || !submissionId) {
-        console.error("Assignment ID and Submission ID are required");
-        return;
+      console.error("Assignment ID and Submission ID are required");
+      return;
     }
     navigate(`/assignment/${assignmentId}?submissionId=${submissionId}`);
-};
+  };
 
-  
 
-const handleNavtoRubric = (sectionIndex) => {
-  navigate(`/rubric/${selectedAssignment._id}`, { state: { sectionIndex } });
-};
+
+  const handleNavtoRubric = (sectionIndex) => {
+    navigate(`/rubric/${selectedAssignment._id}`, { state: { sectionIndex } });
+  };
 
 
 
@@ -652,37 +654,37 @@ const handleNavtoRubric = (sectionIndex) => {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-zinc-900 text-white">
       <Navbar />
       <div className="flex flex-grow overflow-hidden justify-center">
-      <div className="flex flex-col w-1/5">
-        <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 border border-gray-600 flex flex-col h-full bg-gray-800">
-          <div className="flex w-full justify-between mb-3 gap-2">
-            <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
-              <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
-            </Button>
-            <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
-              <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
-              Create Assignment
-            </Button>
-          </div>
-          <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
-          <ul>
-            {allAssignments.map((eachAssignment) => (
-              <li key={eachAssignment._id} className="mb-2 text-sm font-semibold">
-                <button
-                  className={`p-2 rounded-lg ${selectedAssignment?._id === eachAssignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
-                  onClick={() => handleSelectAssignment(eachAssignment)}
-                >
-                  {eachAssignment.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
+        <div className="flex flex-col w-1/5">
+          <aside className="rounded-3xl m-3 mr-0 p-6 overflow-auto text-gray-200 flex flex-col h-full bg-zinc-900">
+            <div className="flex w-full justify-between mb-3 gap-2">
+              <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
+                <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
+              </Button>
+              <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
+                <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
+                Create Assignment
+              </Button>
+            </div>
+            <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
+            <ul>
+              {allAssignments.map((eachAssignment) => (
+                <li key={eachAssignment._id} className="mb-2 text-sm font-semibold">
+                  <button
+                    className={`p-2 rounded-lg ${selectedAssignment?._id === eachAssignment._id ? 'bg-gray-700 text-amber-600' : 'text-gray-300 hover:bg-gray-700'}`}
+                    onClick={() => handleSelectAssignment(eachAssignment)}
+                  >
+                    {eachAssignment.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        </div>
 
-        <main className="w-4/5 p-10 overflow-auto bg-gray-800 text-gray-100 rounded-3xl rounded-tr-md rounded-br-md m-3">
+        <main className="w-4/5 p-10 overflow-auto bg-zinc-800 text-gray-100 rounded-3xl rounded-tr-md rounded-br-md m-3">
           {selectedAssignment ? (
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -758,27 +760,27 @@ const handleNavtoRubric = (sectionIndex) => {
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
-  <div className="rubric-view-section hover:bg-gray-700 cursor-pointer rounded-md p-2">
-    <ScrollArea className="scrollable-rubric-view">
-      {selectedAssignment.rubric.map((rubric, index) => (
-        <div key={index} onClick={() => handleNavtoRubric(index)}>
-          <RubricTable rubric={rubric} />
-        </div>
-      ))}
-    </ScrollArea>
-  </div>
-) : (
-  <div className="flex justify-center">
-    <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
-      <FontAwesomeIcon icon={faUpload} className="mr-2" />
-      Upload Rubric
-    </Button>
-    <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
-      <FontAwesomeIcon icon={faEdit} className="mr-2" />
-      Create Rubric
-    </Button>
-  </div>
-)}
+                    <div className="rubric-view-section hover:bg-zinc-700 cursor-pointer rounded-md p-2">
+                      <ScrollArea className="scrollable-rubric-view">
+                        {selectedAssignment.rubric.map((rubric, index) => (
+                          <div key={index} onClick={() => handleNavtoRubric(index)}>
+                            <RubricTable rubric={rubric} />
+                          </div>
+                        ))}
+                      </ScrollArea>
+                    </div>
+                  ) : (
+                    <div className="flex justify-center">
+                      <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
+                        <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                        Upload Rubric
+                      </Button>
+                      <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
+                        <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                        Create Rubric
+                      </Button>
+                    </div>
+                  )}
 
                 </div>
 
@@ -887,46 +889,46 @@ const handleNavtoRubric = (sectionIndex) => {
                           )}
                         </div>
                         <div className="flex justify-end items-center space-x-4 mt-4">
-                        {isRubricModalOpen && (
-  <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-    <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
-      <DialogHeader>
-        <DialogTitle>Upload Rubric</DialogTitle>
-      </DialogHeader>
-      <DialogDescription>
-        <div {...getRootProps({ className: 'dropzone bg-gray-700 p-6 rounded-lg border-2 border-dashed border-gray-500 text-center' })}>
-          <input {...getInputProps()} />
-          <p className="text-gray-300">
-            Drag & drop your rubric file here, or click to select a file (PDF only)
-          </p>
-        </div>
-        {fileName && (
-          <p className="text-gray-400 mt-4">Selected File: {fileName}</p>
-        )}
-      </DialogDescription>
-      <DialogFooter>
-        <Button
-          onClick={handleRubricUpload}
-          disabled={!rubricFile || loading}
-          className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
-        >
-          {loading ? (
-            <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-          ) : (
-            <FontAwesomeIcon icon={faUpload} className="mr-2" />
-          )}
-          {loading ? 'Processing...' : 'Upload Rubric'}
-        </Button>
-        <Button
-          onClick={handleCloseRubricModal}
-          className="bg-red-500 ml-2"
-        >
-          Cancel
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-)}
+                          {isRubricModalOpen && (
+                            <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
+                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Upload Rubric</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription>
+                                  <div {...getRootProps({ className: 'dropzone bg-gray-700 p-6 rounded-lg border-2 border-dashed border-gray-500 text-center' })}>
+                                    <input {...getInputProps()} />
+                                    <p className="text-gray-300">
+                                      Drag & drop your rubric file here, or click to select a file (PDF only)
+                                    </p>
+                                  </div>
+                                  {fileName && (
+                                    <p className="text-gray-400 mt-4">Selected File: {fileName}</p>
+                                  )}
+                                </DialogDescription>
+                                <DialogFooter>
+                                  <Button
+                                    onClick={handleRubricUpload}
+                                    disabled={!rubricFile || loading}
+                                    className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
+                                  >
+                                    {loading ? (
+                                      <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+                                    ) : (
+                                      <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                                    )}
+                                    {loading ? 'Processing...' : 'Upload Rubric'}
+                                  </Button>
+                                  <Button
+                                    onClick={handleCloseRubricModal}
+                                    className="bg-red-500 ml-2"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                           {isTeacherUploadModalOpen && (
                             <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
                               <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
@@ -939,18 +941,18 @@ const handleNavtoRubric = (sectionIndex) => {
                                     <p>Click here to upload your students' essay PDFs</p>
                                   </div>
                                   <ul className="file-list">
-  {teacherFiles && teacherFiles.map((file, index) => (
-    <li key={index} className="text-gray-200 flex items-center justify-between">
-      {file.name}
-      <button 
-        className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none" 
-        onClick={() => removeFile(index)}
-        style={{ backgroundColor: 'transparent', border: 'none' }}>
-        &times;
-      </button>
-    </li>
-  ))}
-</ul>
+                                    {teacherFiles && teacherFiles.map((file, index) => (
+                                      <li key={index} className="text-gray-200 flex items-center justify-between">
+                                        {file.name}
+                                        <button
+                                          className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none"
+                                          onClick={() => removeFile(index)}
+                                          style={{ backgroundColor: 'transparent', border: 'none' }}>
+                                          &times;
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
 
 
                                 </DialogDescription>
