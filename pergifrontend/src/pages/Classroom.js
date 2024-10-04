@@ -24,7 +24,6 @@ import { useDropzone } from 'react-dropzone';
 import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle, faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'; // Added icons
 
 import './Classroom.css';
-
 import {
   useReactTable,
   getCoreRowModel,
