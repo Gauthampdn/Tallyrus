@@ -349,7 +349,7 @@ const Classroom = () => {
 
   async function getTextFromFile(file) {
     if (file.type === 'application/pdf') {
-      const pdfjsLib = await import('pdfjs-dist/build/pdf.js');
+      const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
       const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
       pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
