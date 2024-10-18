@@ -148,6 +148,7 @@ const Assignment = () => {
   };
 
   const handleGradeAll = async (assignmentId) => {
+    console.log("grading all")
     toast({
       title: "Grading Now!",
       description: "Our systems are grading all assignments - check back in a bit!",
