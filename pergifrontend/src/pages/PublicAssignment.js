@@ -145,6 +145,7 @@ const PublicAssignment = () => {
       }
     }
   };
+  
 
 
   async function getTextFromPdf(file) {
