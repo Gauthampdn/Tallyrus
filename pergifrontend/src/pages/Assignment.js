@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFlag, faPenToSquare, faArrowLeft, faSave } from '@fortawesome/free-solid-svg-icons';
 import './assignments.css';
 import { marked } from 'marked';
-import { jsPDF } from 'jspdf';
 import { useToast } from "@/components/ui/use-toast";
 
 import html2canvas from 'html2canvas';
