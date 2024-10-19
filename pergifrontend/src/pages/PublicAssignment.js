@@ -149,9 +149,9 @@ const PublicAssignment = () => {
 
   async function getTextFromPdf(file) {
     const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-    const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
+    // const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+    // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
     const fileReader = new FileReader();
     return new Promise((resolve, reject) => {
