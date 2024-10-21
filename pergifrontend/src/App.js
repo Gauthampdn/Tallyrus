@@ -35,9 +35,6 @@ const App = () => {
   const [stepIndex, setStepIndex] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const allowedEmails = process.env.REACT_APP_ALLOWED_EMAILS?.split(',');
-  console.log(allowedEmails);
-
   const handleJoyrideCallback = useCallback((data) => {
     const { status, type, index } = data;
 
