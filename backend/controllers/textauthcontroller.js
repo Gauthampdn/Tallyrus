@@ -105,11 +105,38 @@ const switchAuthority = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  if (req.isAuthenticated()) {
+    try {
+      // Retrieve the allowed emails from the environment variable and split them into an array
+      const allowedEmails = process.env.ALLOWED_EMAILS.split(',');
+
+      // Check if the authenticated user's email is in the allowed list
+      if (!allowedEmails.includes(req.user.email)) {
+        res.status(403).json({ error: "Forbidden: You are not authorized to access this resource" });
+      }
+
+      // Fetch all users and sort them in descending order based on numGraded
+      const users = await User.find().sort({ numGraded: -1 });
+
+      // Return the users as a JSON response
+      res.json(users);
+    } catch (err) {
+      // If an error occurs, respond with a status 500 and an error message
+      res.status(500).json({ error: "An error occurred while fetching users" });
+    }
+  } else {
+    // If the user is not authenticated, respond with a status 401
+    res.status(401).json({ error: "Unauthorized access" });
+  }
+};
+
 
 module.exports = {
   getAuth,
   redirectGoogle,
   logout,
   getGoogleUser,
-  switchAuthority
+  switchAuthority,
+  getAllUsers
 }

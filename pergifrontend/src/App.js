@@ -16,6 +16,7 @@ import PublicAssignment from 'pages/PublicAssignment';
 import Rubric from 'pages/Rubric';
 import Profile from 'pages/Profile';
 import UploadOldEssays from 'pages/Upload'; // Import the new component
+import Dashboard from 'pages/Dashboard';
 
 
 const RedirectToFreeDetector = () => {
@@ -33,6 +34,9 @@ const App = () => {
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const allowedEmails = process.env.REACT_APP_ALLOWED_EMAILS?.split(',');
+  console.log(allowedEmails);
 
   const handleJoyrideCallback = useCallback((data) => {
     const { status, type, index } = data;
@@ -132,8 +136,9 @@ const App = () => {
             <Route path="/rubric/:id" element={<Rubric />} />
             <Route path="/upload-old-essays" element={user && user.authority === 'teacher' ? <UploadOldEssays /> : <Navigate to="/app" />} />
             <Route path="/freedetector420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          </Routes> 
         </div>
       </BrowserRouter>
     </div>

@@ -44,6 +44,6 @@ const userSchema = new Schema({
     type: [fileSchema], // New field to store the uploaded files
     default: []
   }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

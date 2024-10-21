@@ -326,15 +326,6 @@ const Classroom = () => {
 
 
 
-
-
-
-  // Fetch assignments when component mounts or user changes
-  useEffect(() => {
-    console.log('refresh');
-    fetchAssignments();
-  }, [classroomId, assignmentId]);
-
   // Fetch all assignments
   const fetchAssignments = async () => {
     console.log('inside fetch assignments classroom', `${process.env.REACT_APP_API_BACKEND}/assignments/${classroomId}`);
@@ -394,20 +385,19 @@ const Classroom = () => {
 
   useEffect(() => {
     if (selectedAssignment) {
-      // Fetch immediately when assignment is selected
-
-      // Set a longer interval for refreshing the submission status
-      const intervalId = setInterval(() => {
-        console.log('Fetching submissions...');
-        // fetchSubmissions();
-      }, 10000); // Refresh every 60 seconds
-
-      // Cleanup the interval when component unmounts or assignment changes
+      // Set a timeout to fetch submissions 20 seconds after component loads
+      const timeoutId = setTimeout(() => {
+        console.log('Fetching submissions after 20 seconds...');
+        fetchSubmissions();
+      }, 20000); // 20000 milliseconds = 20 seconds
+  
+      // Cleanup function to clear the timeout if component unmounts or selectedAssignment changes
       return () => {
-        clearInterval(intervalId);
+        clearTimeout(timeoutId);
       };
     }
   }, [selectedAssignment]);
+  
 
   // Handle assignment selection (and update URL)
   const handleSelectAssignment = (assignment) => {

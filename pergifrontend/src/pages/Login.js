@@ -63,7 +63,7 @@ const Login = () => {
         <l-helix
           size="45"
           speed="2.5"
-          color="blue"
+          color="lime"
         ></l-helix>
       </div>
 
@@ -76,7 +76,7 @@ const Login = () => {
       <div className="basis-1/2 flex flex-col justify-between p-10">
         <div className="flex justify-between items-center">
           <img src="/tallyrus2white.png" alt="Tallyrus Logo" className="h-10" />
-          <Button onClick={navigateAbout} className="bg-blue-500 hover:bg-blue-600 text-white">About Tallyrus!</Button>
+          <Button onClick={navigateAbout} className="bg-green-600 hover:bg-green-700 text-white">About Tallyrus!</Button>
         </div>
         <div className="mb-10">
           <blockquote className="italic text-gray-300">
