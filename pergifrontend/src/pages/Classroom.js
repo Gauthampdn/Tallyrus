@@ -384,6 +384,7 @@ const Classroom = () => {
 
 
   useEffect(() => {
+    fetchAssignments();
     if (selectedAssignment) {
       // Set a timeout to fetch submissions 20 seconds after component loads
       const timeoutId = setTimeout(() => {
