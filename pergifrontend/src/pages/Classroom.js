@@ -383,8 +383,13 @@ const Classroom = () => {
   };
 
 
+    // Fetch assignments when component mounts or user changes
+    useEffect(() => {
+      console.log('refresh');
+      fetchAssignments();
+    }, [classroomId, assignmentId]);
+
   useEffect(() => {
-    fetchAssignments();
     if (selectedAssignment) {
       // Set a timeout to fetch submissions 20 seconds after component loads
       const timeoutId = setTimeout(() => {
