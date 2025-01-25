@@ -1,5 +1,7 @@
 # Tallyrus Codebase Setup
 
+MAKE SURE U HAVE A GITIGNORE
+
 To set up the Tallyrus codebase, follow these steps:
 
 1. **Clone the GitHub repository:**
