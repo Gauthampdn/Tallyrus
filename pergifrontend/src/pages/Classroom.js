@@ -484,7 +484,7 @@ const Classroom = () => {
 
 
   async function getTextFromPdf(file) {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
+    const pdfjsLib = await import('pdfjs-dist/build/pdf.js');
     // const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
 
     // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
