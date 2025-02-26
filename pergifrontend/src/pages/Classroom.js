@@ -23,6 +23,8 @@ import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
 import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle, faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'; // Added icons
 
+
+
 import './Classroom.css';
 import {
   useReactTable,
@@ -74,6 +76,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 
 const RubricTable = ({ rubric }) => {
   const columns = React.useMemo(
@@ -483,59 +488,74 @@ const Classroom = () => {
 
 
 
-  async function getTextFromPdf(file) {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-    // const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
-
-    // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
-    const fileReader = new FileReader();
-    return new Promise((resolve, reject) => {
-      fileReader.onload = async (event) => {
-        const typedArray = new Uint8Array(event.target.result);
-        try {
-          const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
-          let text = '';
-          for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i);
-            const textContent = await page.getTextContent();
-            text += textContent.items.map(item => item.str).join(' ');
-          }
-          resolve(text);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      fileReader.readAsArrayBuffer(file);
-    });
+  async function loadPdfJsLib() {
+    GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    return pdfjsLib;
   }
+
+  async function getTextFromPdf(file) {
+    try {
+        console.log("Starting PDF text extraction...");
+        const pdfData = await file.arrayBuffer();
+        const pdfjsLib = await loadPdfJsLib();
+        console.log("PDF.js library loaded, worker configured");
+        
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        const pdf = await loadingTask.promise;
+        console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
+        
+        let extractedText = '';
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            console.log(`Processing page ${pageNum}/${pdf.numPages}`);
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            extractedText += textContent.items.map(item => item.str).join(' ') + '\n';
+        }
+
+        console.log("Text extraction completed");
+        return extractedText;
+    } catch (error) {
+        console.error("Error fetching or processing PDF:", error.message);
+        return null;
+    }
+  }
+
 
   const handleGrade = async (assignmentId) => {
     if (!file) {
-      console.log("No file selected");
-      return;
+        console.log("No file selected");
+        return;
     }
+    console.log("Starting potential grade process...");
+    console.log("File selected:", file.name);
 
     try {
-      const text = await getTextFromPdf(file);
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-        credentials: 'include',
-      });
+        console.log("Beginning text extraction from PDF...");
+        const text = await getTextFromPdf(file);
+        console.log("Text extracted successfully, length:", text.length);
+        console.log("First 100 characters of extracted text:", text.substring(0, 100));
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+        console.log("Sending request to backend for grading...");
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/potential/${assignmentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+            credentials: 'include',
+        });
 
-      const data = await response.json();
-      console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
-      setFeedback(data.feedback);
+        if (!response.ok) {
+            console.error("Backend response not OK:", response.status, response.statusText);
+            throw new Error('Network response was not ok');
+        }
+
+        console.log("Response received from backend");
+        const data = await response.json();
+        console.log("Feedback received:", data.feedback);
+        setFeedback(data.feedback);
     } catch (error) {
-      console.error("There was a problem with extracting or sending the text:", error);
+        console.error("Error in grading process:", error);
     }
   };
 
@@ -565,9 +585,6 @@ const Classroom = () => {
         title: "Congratulations!",
         description: "You submitted your PDF successfully.",
       });
-
-      // Automatically trigger grading for all assignments
-      await handleGradeAll(assignmentId);
 
       setFile(null);  // Clear the file input
     } catch (error) {
@@ -658,10 +675,12 @@ const Classroom = () => {
               <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
                 <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
               </Button>
-              <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
-                <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
-                Create Assignment
-              </Button>
+              {user.authority === "teacher" && (
+                <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
+                  <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
+                  Create Assignment
+                </Button>
+              )}
             </div>
             <h2 className="font-extrabold text-2xl text-center mb-4 text-gray-100 underline">All Assignments</h2>
             <ul>
@@ -747,18 +766,17 @@ const Classroom = () => {
               <p className="my-4 font-semibold text-sm">{selectedAssignment.description}</p>
               <hr className="mb-4 border-gray-600" />
 
-              <div className="flex flex-row w-full">
-                <div className="flex-1">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="p-6 rounded-lg">
                   <div>
-                    <h1 className="font-bold underline text-lg">Rubric:</h1>
-                    <br />
+                    <h1 className="font-bold underline text-lg mb-4">Rubric:</h1>
                   </div>
 
                   {selectedAssignment && selectedAssignment.rubric && selectedAssignment.rubric.length > 0 ? (
-                    <div className="rubric-view-section hover:bg-zinc-700 cursor-pointer rounded-md p-2">
-                      <ScrollArea className="scrollable-rubric-view">
+                    <div className="rubric-view-section">
+                      <ScrollArea className="">
                         {selectedAssignment.rubric.map((rubric, index) => (
-                          <div key={index} onClick={() => handleNavtoRubric(index)}>
+                          <div key={index} onClick={() => user.authority === "teacher" ? handleNavtoRubric(index) : null}>
                             <RubricTable rubric={rubric} />
                           </div>
                         ))}
@@ -766,210 +784,121 @@ const Classroom = () => {
                     </div>
                   ) : (
                     <div className="flex justify-center">
-                      <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
-                        <FontAwesomeIcon icon={faUpload} className="mr-2" />
-                        Upload Rubric
-                      </Button>
-                      <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" />
-                        Create Rubric
-                      </Button>
+                      {user.authority === "teacher" && (
+                        <>
+                          <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
+                            <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                            Upload Rubric
+                          </Button>
+                          <Button onClick={() => handleNavtoRubric(0)} className="bg-green-500">
+                            <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                            Create Rubric
+                          </Button>
+                        </>
+                      )}
                     </div>
                   )}
-
                 </div>
 
-                {user && (user.authority === "student" || user.authority === "teacher") && (
-                  <div className="flex-1">
-                    {user.authority === "student" && (
-                      <div className="m-10 grid w-full items-center gap-1.5">
-                        {selectedAssignment.submissions.map((submission) => (
-                          <Card key={submission._id} className="max-w-sm mb-2 bg-gray-800 text-gray-100">
-                            <CardHeader>
-                              <CardTitle><strong>Name:</strong> {submission.studentName}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <p><strong>Email:</strong> {submission.studentEmail}</p>
-                              <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-                              <p><strong>Status:</strong> {submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
-                              <p><strong>Grade:</strong> {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</p>
-                            </CardContent>
-                            <CardFooter>
-                              <a href={submission.pdfURL} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-600">View Submission</a>
-                            </CardFooter>
-                          </Card>
-                        ))}
-                        <div className="max-w-sm">
-                          <Label htmlFor="pdf">Upload your PDF</Label>
-                          <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} className="bg-gray-700 text-gray-100" />
-                          <Button className="mt-8 bg-indigo-600 hover:bg-indigo-700" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
-                          <br />
-                          <br />
-                          <Button className="bg-teal-500 hover:bg-teal-600" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
-                            See Potential Grade
-                          </Button>
-                          <div className="feedback-container">
-                            <h2>Feedback</h2>
-                            <div className="feedback-box bg-gray-800 text-gray-200 p-4 rounded-lg">
-                              {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
+                <div className=" p-6 rounded-lg">
+                  {user && (user.authority === "student" || user.authority === "teacher") && (
+                    <div className="flex-1">
+                      {user.authority === "student" && (
+                        <div className="grid w-full items-center gap-4">
+                          <ScrollArea className="mb-6">
+                            {selectedAssignment.submissions.map((submission) => (
+                              <Card key={submission._id} className="mb-4 bg-zinc-800 text-gray-100">
+                                <CardHeader>
+                                  <CardTitle><strong>Name:</strong> {submission.studentName}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <p><strong>Email:</strong> {submission.studentEmail}</p>
+                                  <p><strong>Date Submitted:</strong> {new Date(submission.dateSubmitted).toLocaleDateString()}</p>
+                                  <p><strong>Status:</strong> {submission.status} {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="ml-2 text-red-500" />}</p>
+                                  <p><strong>Grade:</strong> {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}</p>
+                                </CardContent>
+                                <CardFooter>
+                                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => handleNavtoSubs()}>View Submission</Button>
+                                </CardFooter>
+                              </Card>
+                            ))}
+                          </ScrollArea>
+                          <div className="space-y-4">
+                            <Label htmlFor="pdf">Upload your PDF</Label>
+                            <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} className="bg-zinc-800 text-gray-100" />
+                            <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
+                            <Button className="w-full bg-teal-500 hover:bg-teal-600" onClick={() => handleGrade(selectedAssignment._id)} disabled={!file}>
+                              See Potential Grade
+                            </Button>
+                          </div>
+                          {feedback && (
+                            <div className="feedback-container mt-4">
+                              <h2 className="text-lg font-bold mb-4">Feedback</h2>
+                              <ScrollArea className="">
+                                <div className="feedback-box bg-zinc-800 text-black p-4 rounded-lg">
+                                  <ReactMarkdown>{feedback}</ReactMarkdown>
+                                </div>
+                              </ScrollArea>
                             </div>
-                          </div>
+                          )}
                         </div>
-                      </div>
-                    )}
-                    {user.authority === "teacher" && (
-                      <div className="ml-5 flex flex-col items-start">
-                        {selectedAssignment.submissions.length ? (
-                          <div className="flex w-full gap-4">
-                            <Button className="bg-blue-700 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
+                      )}
+                      {user.authority === "teacher" && (
+                        <div className="flex flex-col h-full">
+                          <div className="flex gap-4 mb-6">
+                            <Button className="flex-1 bg-blue-700" onClick={() => handleOpenTeacherUploadModal()}>
                               <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
                               Upload Assignments
                             </Button>
-                            <Button className="mb-4 flex-auto items-center justify-between view-submissions-btn bg-green-500 text-white" onClick={() => handleNavtoSubs()}>
-                              All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
-                            </Button>
+                            {selectedAssignment.submissions.length > 0 && (
+                              <Button className="flex-1 bg-green-500" onClick={() => handleNavtoSubs()}>
+                                All Submissions <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                              </Button>
+                            )}
                           </div>
-                        ) : (
-                          <div className="flex w-full gap-4">
-                            <Button className="bg-teal-500 flex-auto grade-all-btn" onClick={() => handleOpenTeacherUploadModal()}>
-                              <FontAwesomeIcon icon={faFileUpload} className="mr-2" />
-                              Upload Assignments
-                            </Button>
-                          </div>
-                        )}
-                        <div className="w-full rounded-md">
-                          {selectedAssignment.submissions.length ? (
-                            <div className="border rounded-md bg-gray-800 text-gray-100">
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="font-extrabold text-gray-300">Name</TableHead>
-                                    <TableHead className="font-extrabold text-gray-300">Status</TableHead>
-                                    <TableHead className="font-extrabold text-gray-300">Score</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {selectedAssignment.submissions.map((submission) => (
-                                    <TableRow key={submission._id} onClick={() => handleNavtoSub(selectedAssignment._id, submission._id)} className="cursor-pointer hover:bg-gray-700">
-                                      <TableCell className="font-bold">
-                                        {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
-                                      </TableCell>
-                                      <TableCell className="font-bold">
-                                        {submission.status === 'grading' && (
-                                          <FontAwesomeIcon icon={faSpinner} spin className="mr-2 text-orange-500" />
-                                        )}
-                                        {submission.status === 'graded' && (
-                                          <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-green-500" />
-                                        )}
-                                        {submission.status === 'regrade' && (
-                                          <FontAwesomeIcon icon={faFlag} className="mr-2 text-red-500" />
-                                        )}
-                                        {submission.status === 'error' && (
-                                          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-500" />
-                                        )}
-                                        {submission.status}
-                                      </TableCell>
-                                      <TableCell className="font-bold">
-                                        {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}
-                                      </TableCell>
+                          <ScrollArea className="h-[calc(100vh-300px)]">
+                            {selectedAssignment.submissions.length > 0 ? (
+                              <div className="border rounded-md bg-zinc-800 text-gray-100">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead className="font-extrabold text-gray-300">Name</TableHead>
+                                      <TableHead className="font-extrabold text-gray-300">Status</TableHead>
+                                      <TableHead className="font-extrabold text-gray-300">Score</TableHead>
                                     </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center border-0 mt-4">
-                              <p className="border-0">No Assignments Yet!</p>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex justify-end items-center space-x-4 mt-4">
-                          {isRubricModalOpen && (
-                            <Dialog open={isRubricModalOpen} onOpenChange={setIsRubricModalOpen}>
-                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Upload Rubric</DialogTitle>
-                                </DialogHeader>
-                                <DialogDescription>
-                                  <div {...getRootProps({ className: 'dropzone bg-gray-700 p-6 rounded-lg border-2 border-dashed border-gray-500 text-center' })}>
-                                    <input {...getInputProps()} />
-                                    <p className="text-gray-300">
-                                      Drag & drop your rubric file here, or click to select a file (PDF only)
-                                    </p>
-                                  </div>
-                                  {fileName && (
-                                    <p className="text-gray-400 mt-4">Selected File: {fileName}</p>
-                                  )}
-                                </DialogDescription>
-                                <DialogFooter>
-                                  <Button
-                                    onClick={handleRubricUpload}
-                                    disabled={!rubricFile || loading}
-                                    className={`${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
-                                  >
-                                    {loading ? (
-                                      <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
-                                    ) : (
-                                      <FontAwesomeIcon icon={faUpload} className="mr-2" />
-                                    )}
-                                    {loading ? 'Processing...' : 'Upload Rubric'}
-                                  </Button>
-                                  <Button
-                                    onClick={handleCloseRubricModal}
-                                    className="bg-red-500 ml-2"
-                                  >
-                                    Cancel
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                          {isTeacherUploadModalOpen && (
-                            <Dialog open={isTeacherUploadModalOpen} onOpenChange={setIsTeacherUploadModalOpen}>
-                              <DialogContent className="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-lg max-w-md mx-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Upload PDFs</DialogTitle>
-                                </DialogHeader>
-                                <DialogDescription>
-                                  <div {...getRootProps({ className: 'dropzone' })}>
-                                    <input {...getInputProps()} />
-                                    <p>Click here to upload your students' essay PDFs</p>
-                                  </div>
-                                  <ul className="file-list">
-                                    {teacherFiles && teacherFiles.map((file, index) => (
-                                      <li key={index} className="text-gray-200 flex items-center justify-between">
-                                        {file.name}
-                                        <button
-                                          className="delete-btn bg-transparent text-red-500 hover:text-red-700 font-bold ml-2 p-1 rounded-full focus:outline-none"
-                                          onClick={() => removeFile(index)}
-                                          style={{ backgroundColor: 'transparent', border: 'none' }}>
-                                          &times;
-                                        </button>
-                                      </li>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {selectedAssignment.submissions.map((submission) => (
+                                      <TableRow key={submission._id} onClick={() => handleNavtoSub(selectedAssignment._id, submission._id)} className="cursor-pointer hover:bg-zinc-700">
+                                        <TableCell className="font-bold">
+                                          {submission.studentName.slice(0, 15)}{submission.studentName.length > 15 ? '...' : ''}
+                                        </TableCell>
+                                        <TableCell className="font-bold">
+                                          {submission.status === 'grading' && <FontAwesomeIcon icon={faSpinner} spin className="mr-2 text-orange-500" />}
+                                          {submission.status === 'graded' && <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-green-500" />}
+                                          {submission.status === 'regrade' && <FontAwesomeIcon icon={faFlag} className="mr-2 text-red-500" />}
+                                          {submission.status === 'error' && <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-500" />}
+                                          {submission.status}
+                                        </TableCell>
+                                        <TableCell className="font-bold">
+                                          {submission.feedback ? `${calculateTotalScore(submission)}/${submission.feedback.reduce((total, criteria) => total + criteria.total, 0)}` : 'Not Graded'}
+                                        </TableCell>
+                                      </TableRow>
                                     ))}
-                                  </ul>
-
-
-                                </DialogDescription>
-                                <DialogFooter>
-                                  <Button
-                                    onClick={() => {
-                                      handleTeacherFilesUpload(selectedAssignment._id);
-                                      handleCloseTeacherUploadModal();
-                                    }}
-                                    disabled={!teacherFiles || teacherFiles.length === 0}
-                                  >
-                                    Submit Files
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-400">
+                                <p>No Assignments Yet!</p>
+                              </div>
+                            )}
+                          </ScrollArea>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : (

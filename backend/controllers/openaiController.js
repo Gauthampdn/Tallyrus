@@ -90,20 +90,37 @@ async function loadPdfJsLib() {
     return pdfjsLib;
 }
 
-async function getTextFromPDF(pdfPath) {
-    const pdfjsLib = await loadPdfJsLib();
-    const loadingTask = pdfjsLib.getDocument(pdfPath);
-    const pdf = await loadingTask.promise;
-    let extractedText = '';
 
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        extractedText += textContent.items.map(item => item.str).join(' ');
+async function getTextFromPDF(pdfURL) {
+    try {
+        console.log("Fetching PDF from URL:", pdfURL);
+        const response = await fetch(pdfURL);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+        }
+        
+        const pdfData = await response.arrayBuffer(); // Convert to ArrayBuffer
+        const pdfjsLib = await loadPdfJsLib();
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        const pdf = await loadingTask.promise;
+        
+        let extractedText = '';
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            extractedText += textContent.items.map(item => item.str).join(' ') + '\n';
+        }
+
+        return extractedText;
+    } catch (error) {
+        console.error("Error fetching or processing PDF:", error.message);
+        return null;  // Return null instead of crashing
     }
-
-    return extractedText;
 }
+
+
+
 
 // async function getTextFromDOCX(url) {
 //     try {
@@ -627,11 +644,51 @@ const completion = async (req, res) => {
 
 const test = async (req, res) => { };
 
+const potential = async (req, res) => {
+    const { assignmentId } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+        return res.status(400).json({ error: "No text provided" });
+    }
+
+    try {
+        const assignment = await Assignment.findById(assignmentId);
+
+        if (!assignment) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
+
+        const rubricString = rubricToString(assignment.rubric);
+
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            max_tokens: 3000,
+            messages: [
+                { role: "user", content: gradingInstructions },
+                { role: "user", content: rubricString },
+                { role: "user", content: text }
+            ]
+        });
+
+        if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+            return res.status(500).json({ error: "Failed to grade submission" });
+        }
+
+        const feedback = gradingResponse.choices[0].message.content;
+        res.json({ feedback });
+    } catch (error) {
+        console.error("Error getting potential grade:", error);
+        res.status(500).send('Error getting potential grade');
+    }
+};
+
 module.exports = {
     completion,
     test,
     extractText,
     gradeall,
     gradeSubmission,
-    parseRubricWithGPT4
+    parseRubricWithGPT4,
+    potential
 };

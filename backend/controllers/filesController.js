@@ -6,6 +6,7 @@ const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 const { parseRubricWithGPT4 } = require('./openaiController');
+const { gradeSubmission } = require('./openaiController');
 
 const {
   S3
@@ -73,12 +74,10 @@ const uploadFile = async (req, res, next) => {
 
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded.' });
-
   }
 
   const pdfURL = req.file.location;
   const pdfKey = req.file.key;
-
 
   console.log("the pdfurl is:", pdfURL)
   if (!pdfURL || !pdfURL.endsWith('.pdf')) {
@@ -87,7 +86,6 @@ const uploadFile = async (req, res, next) => {
   }
 
   console.log(req.file);
-
 
   if (req.user.authority !== "student") {
     console.log("not a student");
@@ -106,7 +104,6 @@ const uploadFile = async (req, res, next) => {
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
       console.log("Assignment not found");
-
       return res.status(404).json({ error: "Assignment not found" });
     }
 
@@ -140,8 +137,8 @@ const uploadFile = async (req, res, next) => {
       submission.dateSubmitted = new Date();
       submission.pdfURL = req.file.location;
       submission.pdfKey = req.file.key;
-      submission.status = "submitted";
-      submission.feedback = 'NOT GRADED YET';
+      submission.status = "grading";
+      submission.feedback = [];
     
       assignment.submissions[submissionIndex] = submission;
     
@@ -152,9 +149,10 @@ const uploadFile = async (req, res, next) => {
         studentId: user_id,
         studentEmail: req.user.email,
         dateSubmitted: new Date(),
-        status: 'submitted',
+        status: 'grading',
         pdfURL: req.file.location,
-        pdfKey: req.file.key 
+        pdfKey: req.file.key,
+        feedback: []
       };
       assignment.submissions.push(submission);
     }
@@ -162,11 +160,31 @@ const uploadFile = async (req, res, next) => {
 
     await assignment.save();
 
+    // Trigger grading process asynchronously
+    try {
+      // Create a fake teacher request object for grading
+      const teacherReq = {
+        user: { authority: 'teacher' },
+        params: { id: assignmentId }
+      };
+      const teacherRes = {
+        json: () => {},
+        status: () => ({ json: () => {} })
+      };
+      
+      // Call grading function without waiting for it to complete
+      gradeSubmission(teacherReq, teacherRes).catch(error => {
+        console.error('Error in background grading:', error);
+      });
+    } catch (error) {
+      console.error('Error triggering automatic grading:', error);
+      // Don't return here, we still want to return the submission response
+    }
+
     res.status(201).json(submission);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
 };
 
 const uploadTeacherFile = async (req, res, next) => {

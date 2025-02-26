@@ -1,4 +1,3 @@
-
 import Navbar from "components/Navbar";
 import { useAuthContext } from "../hooks/useAuthContext";
 import React, { useState, useEffect } from "react";
@@ -20,8 +19,8 @@ import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-
-
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 
 import {
   useReactTable,
@@ -147,74 +146,83 @@ const PublicAssignment = () => {
   };
 
 
+  async function loadPdfJsLib() {
+    GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    return pdfjsLib;
+  }
+
   async function getTextFromPdf(file) {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-    // const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry.mjs');
-
-    // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-
-    const fileReader = new FileReader();
-    return new Promise((resolve, reject) => {
-      fileReader.onload = async (event) => {
-        const typedArray = new Uint8Array(event.target.result);
-        try {
-          const pdfDoc = await pdfjsLib.getDocument({ data: typedArray }).promise;
-          let text = '';
-          for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i);
+    try {
+        console.log("Starting PDF text extraction...");
+        const pdfData = await file.arrayBuffer();
+        const pdfjsLib = await loadPdfJsLib();
+        console.log("PDF.js library loaded, worker configured");
+        
+        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+        const pdf = await loadingTask.promise;
+        console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
+        
+        let extractedText = '';
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            console.log(`Processing page ${pageNum}/${pdf.numPages}`);
+            const page = await pdf.getPage(pageNum);
             const textContent = await page.getTextContent();
-            text += textContent.items.map(item => item.str).join(' ');
-          }
-          resolve(text);
-        } catch (error) {
-          reject(error);
+            extractedText += textContent.items.map(item => item.str).join(' ') + '\n';
         }
-      };
-      fileReader.readAsArrayBuffer(file);
-    });
+
+        console.log("Text extraction completed");
+        return extractedText;
+    } catch (error) {
+        console.error("Error fetching or processing PDF:", error.message);
+        return null;
+    }
   }
 
   const handleGrade = async (assignmentId) => {
     if (!file) {
-      console.log("No file selected");
-      return;
+        console.log("No file selected");
+        return;
     }
+    console.log("Starting potential grade process...");
+    console.log("File selected:", file.name);
 
-    
     toast({
-      title: "Grading Now!",
-      description: "Our systems are grading all assignments - check back in a bit!",
+        title: "Getting Potential Grade",
+        description: "Our systems are analyzing your submission...",
     });
 
-
     try {
-      const text = await getTextFromPdf(file);
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradesubmission/${assignmentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Include any other headers your backend requires
-        },
-        body: JSON.stringify({ text }),
-        credentials: 'include',
-      });
+        console.log("Beginning text extraction from PDF...");
+        const text = await getTextFromPdf(file);
+        console.log("Text extracted successfully, length:", text.length);
+        console.log("First 100 characters of extracted text:", text.substring(0, 100));
 
-      if (!response.ok) {
-
-        toast({
-          variant: "destructive",
-          title: "Error In Grading All",
-          description: "Try grading all later.",
+        console.log("Sending request to backend for grading...");
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/potential/${assignmentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+            credentials: 'include',
         });
 
-        throw new Error('Network response was not ok');
-      }
+        if (!response.ok) {
+            console.error("Backend response not OK:", response.status, response.statusText);
+            toast({
+                variant: "destructive",
+                title: "Error In Getting Potential Grade",
+                description: "Please try again later.",
+            });
+            throw new Error('Network response was not ok');
+        }
 
-      const data = await response.json();
-      console.log(data.feedback); // Assuming the backend sends back a JSON with 'feedback'
-      setFeedback(data.feedback);
+        console.log("Response received from backend");
+        const data = await response.json();
+        console.log("Feedback received:", data.feedback);
+        setFeedback(data.feedback);
     } catch (error) {
-      console.error("There was a problem with extracting or sending the text:", error);
+        console.error("Error in grading process:", error);
     }
   };
 
@@ -227,59 +235,64 @@ const PublicAssignment = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white">
       <div className="flex flex-grow overflow-hidden">
-        <main className="w-full p-10 overflow-auto bg-gray-900 rounded-3xl m-3">
-          <div>
-            {selectedAssignment && (
-              <h1 className="text-2xl font-extrabold underline">
+        <main className="w-full p-6 overflow-auto bg-gray-900 rounded-3xl m-3">
+          {selectedAssignment && (
+            <>
+              <h1 className="text-2xl font-extrabold underline mb-4">
                 {selectedAssignment.name}
               </h1>
-            )}
-            {selectedAssignment && (
-              <p className="my-4 font-semibold text-sm text-gray-400">
+              <p className="mb-6 font-semibold text-sm text-gray-400">
                 {selectedAssignment.description}
               </p>
-            )}
-            <div className="flex flex-row w-full">
-              <div className="flex-1">
-                <div>
-                  <h1 className="font-bold underline text-lg">Rubric:</h1>
-                  <br />
+            </>
+          )}
+          
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left side - Rubric */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h1 className="font-bold underline text-lg mb-4">Rubric:</h1>
+              {selectedAssignment && selectedAssignment.rubric && (
+                <div className="rubric-view-section">
+                  <ScrollArea className="h-[calc(100vh-300px)]">
+                    {selectedAssignment.rubric.map((rubric, index) => (
+                      <RubricTable key={index} rubric={rubric} />
+                    ))}
+                  </ScrollArea>
                 </div>
-                {selectedAssignment && selectedAssignment.rubric && (
-                  <div className="rubric-view-section">
-                    <ScrollArea
-                      className="scrollable-rubric-view"
-                      style={{ maxHeight: "500px", overflowY: "auto" }}
-                    >
-                      {selectedAssignment.rubric.map((rubric, index) => (
-                        <RubricTable key={index} rubric={rubric} />
-                      ))}
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 p-10">
-                <Label htmlFor="pdf">Upload your PDF</Label>
+              )}
+            </div>
+
+            {/* Right side - Upload and Feedback */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <div className="mb-6">
+                <Label htmlFor="pdf" className="text-lg font-bold block mb-2">Upload your PDF</Label>
                 <Input
                   id="pdf"
                   type="file"
                   accept=".pdf"
                   onChange={handleFileChange}
-                  className="bg-gray-800 text-white border-gray-700"
+                  className="bg-gray-700 text-white border-gray-600 mb-4"
                 />
-                <Button onClick={() => handleGrade(id)} className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
+                <Button 
+                  onClick={() => handleGrade(id)} 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!file}
+                >
                   See Potential Grade
                 </Button>
-                <div className="feedback-container mt-4">
-                  <h2 className="text-lg font-bold mb-4">Feedback</h2>
-                  <div className="feedback-box bg-gray-800 p-4 rounded-md">
+              </div>
+
+              <div className="feedback-container">
+                <h2 className="text-lg font-bold mb-4">Feedback</h2>
+                <ScrollArea className="h-[calc(100vh-500px)]">
+                  <div className="feedback-box bg-gray-700 p-4 rounded-md">
                     {feedback ? (
                       <ReactMarkdown>{feedback}</ReactMarkdown>
                     ) : (
-                      <p>No feedback available yet.</p>
+                      <p className="text-gray-400">No feedback available yet. Upload a PDF and click "See Potential Grade" to get feedback.</p>
                     )}
                   </div>
-                </div>
+                </ScrollArea>
               </div>
             </div>
           </div>

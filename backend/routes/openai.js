@@ -9,23 +9,21 @@ const {
   gradeall,
   gradeSubmission, 
   parseRubricWithGPT4,
+  potential
 } = require("../controllers/openaiController")
 
 
 const requireAuth = require("../middleware/requireAuth")
 
 router.post("/gradesubmission/:assignmentId", gradeSubmission);
-
+router.post("/potential/:assignmentId", potential);
+router.get("/gradeall/:id", gradeall);
+router.get("/test", test);
+router.get("/extract", extractText);
 
 router.use(requireAuth) // requires authentication and then calls next. if no authentication then it throws an error
 
 router.post("/completion", completion)
-
-router.get("/test", test)
-
-router.post("/extext", extractText)
-
-router.get("/gradeall/:id", gradeall)
 
 // Add this new route in openai.js
 
