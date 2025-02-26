@@ -32,6 +32,9 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  stripeCustomerId: {
+    type: String
+  },
   authority: {
     type: String,
     enum: ['teacher', 'student']
