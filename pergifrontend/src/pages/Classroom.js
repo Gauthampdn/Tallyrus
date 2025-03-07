@@ -833,7 +833,7 @@ const Classroom = () => {
                           </Button>
                           <div className="feedback-container">
                             <h2>Feedback</h2>
-                            <div className="feedback-box bg-gray-800 text-gray-200 p-4 rounded-lg">
+                            <div className="feedback-box bg-gray-800 text-black p-4 rounded-lg">
                               {feedback ? <ReactMarkdown>{feedback}</ReactMarkdown> : <p>No feedback available yet.</p>}
                             </div>
                           </div>
