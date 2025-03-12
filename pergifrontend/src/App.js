@@ -18,6 +18,8 @@ import Rubric from 'pages/Rubric';
 import Profile from 'pages/Profile';
 import UploadOldEssays from 'pages/Upload'; // Import the new component
 import Dashboard from 'pages/Dashboard';
+import Payment from 'pages/Payment';
+import About_us from 'pages/About_us';
 
 
 const RedirectToFreeDetector = () => {
@@ -136,6 +138,8 @@ const App = () => {
             <Route path="/freedetector420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/about_us" element={<About_us />} />
           </Routes> 
         </div>
       </BrowserRouter>

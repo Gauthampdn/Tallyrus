@@ -1,0 +1,9 @@
+
+/* We create a background that is gradient */
+
+html, body {
+    height: 100%;  /* We want the color to be in the whole page */
+    margin: 0;    /* We don't want the background to have margins */
+    padding: 0;   /* This makes the background not have a marging with the different elements in the landing page */
+    overflow-x: hidden;  /* No latteral movement */
+  } 
