@@ -88,10 +88,9 @@ def extract_ela_standards(soup: BeautifulSoup) -> List[Dict]:
 
 # Example usage
 if __name__ == "__main__":
-    target_url = "https://www2.cde.ca.gov/cacs/all?carea=0&order=0&page=0&perpage=100&mingrade=0&maxgrade=12&dl=0&query=english"
+    target_url = "https://www2.cde.ca.gov/cacs/ela?order=0&page=0&perpage=100&mingrade=0&maxgrade=12&dl=0"
     
     soup = scrape_website(target_url)
-    # print(soup)
     if soup:
         ela_standards = extract_ela_standards(soup)
         
