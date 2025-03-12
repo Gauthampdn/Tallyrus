@@ -154,7 +154,22 @@ const updatePaymentMethod = async (req, res) => {
  */
 const cancelSubscription = async (req, res) => {
   try {
-    const { subscriptionId } = req.body;
+    let { subscriptionId } = req.body;
+
+    // If no subscriptionId provided, look up active subscription for the customer.
+    if (!subscriptionId) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: req.user.stripeCustomerId,
+        status: 'active',
+        limit: 1,
+      });
+      if (subscriptions.data.length > 0) {
+        subscriptionId = subscriptions.data[0].id;
+      } else {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+    }
+
     const cancellation = await stripe.subscriptions.cancel(subscriptionId);
     res.status(200).json({
       message: "Subscription cancelled successfully",
@@ -166,9 +181,37 @@ const cancelSubscription = async (req, res) => {
   }
 };
 
+const checkSubscription = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user.stripeCustomerId) {
+      return res.json({ subscriptionExists: false });
+    }
+    // List subscriptions (without filtering by status so we can inspect details)
+    const subscriptions = await stripe.subscriptions.list({
+      customer: user.stripeCustomerId,
+      limit: 1,
+    });
+    if (subscriptions.data.length > 0) {
+      const sub = subscriptions.data[0];
+      // If the subscription is set to cancel at period end or is already canceled, consider it inactive.
+      if (sub.cancel_at_period_end === true || sub.status === 'canceled') {
+        return res.json({ subscriptionExists: false });
+      }
+      return res.json({ subscriptionExists: true });
+    } else {
+      return res.json({ subscriptionExists: false });
+    }
+  } catch (error) {
+    console.error("Error checking subscription:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createPaymentIntent,
   createSubscription,
   updatePaymentMethod,
-  cancelSubscription
+  cancelSubscription,
+  checkSubscription
 };

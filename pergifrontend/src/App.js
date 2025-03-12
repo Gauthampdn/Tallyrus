@@ -2,7 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuthContext } from './hooks/useAuthContext';
 import Joyride, { EVENTS, STATUS } from 'react-joyride';
-
+//import SubscriptionChecker from "./hooks/SubscriptionChecker";
+import ProtectedRoute from './components/ProtectedRoute';
+import PaymentPage from './pages/Payment';
 
 // pages & components
 import Home from './pages/Home';
@@ -134,6 +136,7 @@ const App = () => {
             <Route path="/upload-old-essays" element={user && user.authority === 'teacher' ? <UploadOldEssays /> : <Navigate to="/app" />} />
             <Route path="/freedetector420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/payment" element={<PaymentPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes> 
         </div>

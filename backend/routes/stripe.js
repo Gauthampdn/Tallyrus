@@ -6,7 +6,8 @@ const {
   createPaymentIntent, 
   createSubscription, 
   updatePaymentMethod,
-  cancelSubscription
+  cancelSubscription,
+  checkSubscription
 } = require("../controllers/stripeController");
 
 const requireAuth = require("../middleware/requireAuth");
@@ -25,5 +26,8 @@ router.post("/update-payment-method", updatePaymentMethod);
 
 // Endpoint to cancel a subscription
 router.post("/cancel-subscription", cancelSubscription);
+
+// Endpoint to check whether the user has an active subscription
+router.get("/check-subscription", checkSubscription);
 
 module.exports = router;
