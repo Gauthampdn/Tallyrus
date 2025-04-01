@@ -5,16 +5,18 @@ import MatterWrap from 'matter-wrap';
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 const Profile = () => {
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
+  const [numGraded, setNumGraded] = useState(0);
+  const [board, setBoard] = useState([]);
+  const [gridSize, setGridSize] = useState({ rows: 5, cols: 5 });
+  const navigate = useNavigate();
 
   const scene = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [num, setNum] = useState(0);
-
-  const navigate = useNavigate();
-
 
   useEffect(() => {
     handleResize(); // Initial call to set dimensions
@@ -22,7 +24,7 @@ const Profile = () => {
 
     console.log("getting oranges")
     if (user) {
-      setNum(user.numGraded);
+      setNumGraded(user.numGraded);
     }
   }, [user]);
 
@@ -86,7 +88,7 @@ const Profile = () => {
 
     const fruitTexture = '/orange.png';
 
-    const numberOfCircles = num; // Change this number to get any number of circles
+    const numberOfCircles = numGraded; // Change this number to get any number of circles
     const columns = Math.ceil(Math.sqrt(numberOfCircles));
     const rows = Math.ceil(numberOfCircles / columns);
 
@@ -140,7 +142,21 @@ const Profile = () => {
       render.canvas.remove();
       render.textures = {};
     };
-  }, [dimensions, num, user]);
+  }, [dimensions, numGraded, user]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white">
+        <Navbar />
+        <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="mb-4 text-indigo-500" />
+            <p className="text-lg">Loading profile data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user || user.numGraded == null) {
     return <div>Loading...</div>;
@@ -161,7 +177,7 @@ const Profile = () => {
           <div className="text-center">
             <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>
             <img src="/orange.png" alt="Orange" className="w-16 h-16 mx-auto mt-4 animate-bounce" />
-            {/* {user.authority === "teacher" && (
+            {/* {user && user.authority === "teacher" && (
               <Button onClick={handleUploadNavigation} className="mt-6 bg-indigo-600 hover:bg-indigo-700">
                 Upload Old Graded Essays
               </Button>

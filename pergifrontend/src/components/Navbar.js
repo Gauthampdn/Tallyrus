@@ -18,7 +18,7 @@ import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = ({ resetTemplate }) => {
   const { logout } = useLogout();
-  const { user, dispatch } = useAuthContext();
+  const { user, dispatch, isLoading } = useAuthContext();
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -46,6 +46,20 @@ const Navbar = ({ resetTemplate }) => {
       navigate("/app");
     }
   };
+
+  // If still loading, return a simple placeholder
+  if (isLoading) {
+    return (
+      <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-zinc-900">
+        <div className="flex items-center gap-1">
+          {/* Placeholder for logo */}
+        </div>
+        <div className="user-info flex gap-2 items-center">
+          {/* Placeholder for user controls */}
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-zinc-900">
@@ -76,29 +90,30 @@ const Navbar = ({ resetTemplate }) => {
             Logout
           </Button>
           
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15  cursor-pointer">
-                <span className="text-xl material-symbols-outlined ">metabolism</span>
-                <span>{user.authority}</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-gray-900 text-gray-100">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will change your account authority, you can change back whenever you want.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 text-white">Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={switchAuthority} className="bg-green-600 hover:bg-green-700 text-white">
-                  Yes
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {user.authority && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15  cursor-pointer">
+                  <span className="text-xl material-symbols-outlined ">metabolism</span>
+                  <span>{user.authority}</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-gray-900 text-gray-100">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will change your account authority, you can change back whenever you want.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 text-white">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={switchAuthority} className="bg-green-600 hover:bg-green-700 text-white">
+                    Yes
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       )}
     </header>

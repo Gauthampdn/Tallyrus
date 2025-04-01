@@ -1,4 +1,4 @@
-import { createContext, useReducer, useEffect } from "react";
+import { createContext, useReducer, useEffect, useState } from "react";
 
 export const AuthContext = createContext()
 
@@ -18,22 +18,27 @@ export const AuthContextProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, {
     user: null
   })
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => { 
-
+    setIsLoading(true);
+    
     const fetchUser = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/auth/googleUser`, {
+          credentials: 'include',
+          mode: 'cors'
+        });
+        const json = await response.json();
 
-      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/auth/googleUser`, {
-        credentials: 'include',
-        mode: 'cors'
-      });
-      const json = await response.json();
-
-      if (response.ok) {
-        dispatch({ type: "LOGIN", payload: json });
+        if (response.ok) {
+          dispatch({ type: "LOGIN", payload: json });
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-
     };
 
     fetchUser();
@@ -42,10 +47,8 @@ export const AuthContextProvider = ({ children }) => {
 
   console.log("AuthContext State is: ", state)
 
-
-
   return(
-    <AuthContext.Provider value = {{...state, dispatch}}>
+    <AuthContext.Provider value = {{...state, dispatch, isLoading}}>
       { children }
     </AuthContext.Provider>
   )

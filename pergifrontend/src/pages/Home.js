@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPen, faTrash, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPen, faTrash, faArrowRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Form,
@@ -111,7 +111,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     }
   };
 
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   const [currClassrooms, setCurrClassrooms] = useState([]);
 
   const handleGoToClass = (classroomId, assignmentId = null) => {
@@ -241,6 +241,20 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     window.location.href = "https://buy.stripe.com/dR617Q1sRbK2fVC7st";
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white">
+        <Navbar />
+        <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="mb-4 text-indigo-500" />
+            <p className="text-lg">Loading classroom data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       <Navbar />
@@ -250,47 +264,11 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           {user && user.authority === "teacher" && (
             <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <AlertDialogTrigger asChild>
+                <Button className="create-class-btn text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                  CREATE CLASS +
+                </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gray-800 text-gray-100">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Create Class</AlertDialogTitle>
-                </AlertDialogHeader>
-                <Form {...createForm}>
-                  <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-8 fill-class-info">
-                    <FormField
-                      control={createForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter class title" {...field} className="bg-gray-700 text-gray-100" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter class description" {...field} className="bg-gray-700 text-gray-100" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="text-gray-800">Cancel</AlertDialogCancel>
-                      <Button type="submit" className="flex gap-2 justify-between items-center bg-indigo-600 ">
-                        <FontAwesomeIcon icon={faPlus} className="" />
-                        Create
-                      </Button>
-                    </AlertDialogFooter>
-                  </form>
-                </Form>
-              </AlertDialogContent>
             </AlertDialog>
           )}
           {user && user.authority === "student" && (

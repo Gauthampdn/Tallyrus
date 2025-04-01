@@ -60,8 +60,6 @@ const getAssignment = async (req, res) => {
 
 
 
-
-
 const getAssignments = async (req, res) => {  // returns all the assignments in a class when you /assignments/CLASSID if you are in the class
   const classId = req.params.id;
   const user_id = req.user.id;

@@ -162,7 +162,7 @@ const Classroom = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
 
 
   const [allAssignments, setAllAssignments] = useState([]);
@@ -664,6 +664,19 @@ const Classroom = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white">
+        <Navbar />
+        <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="mb-4 text-indigo-500" />
+            <p className="text-lg">Loading classroom data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-zinc-900 text-white">
@@ -675,7 +688,7 @@ const Classroom = () => {
               <Button className="w-1/4 bg-gray-600 text-white hover:bg-gray-700" onClick={handleGoback}>
                 <FontAwesomeIcon icon={faArrowLeft} className="ml-2 mr-2" />
               </Button>
-              {user.authority === "teacher" && (
+              {user && user.authority === "teacher" && (
                 <Button className="w-3/4 bg-emerald-500 text-white hover:bg-emerald-600" onClick={handleCreateA}>
                   <FontAwesomeIcon icon={faPlusCircle} className="ml-2 mr-2" />
                   Create Assignment
@@ -703,7 +716,7 @@ const Classroom = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-extrabold underline">{selectedAssignment.name}</h1>
-                {user.authority === "teacher" && (
+                {user && user.authority === "teacher" && (
                   <div className="flex gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -777,7 +790,7 @@ const Classroom = () => {
                     <div className="rubric-view-section hover:bg-zinc-700 cursor-pointer rounded-md p-2">
                       <ScrollArea className="scrollable-rubric-view">
                         {selectedAssignment.rubric.map((rubric, index) => (
-                          <div key={index} onClick={() => user.authority === "teacher" ? handleNavtoRubric(index) : null}>
+                          <div key={index} onClick={() => user && user.authority === "teacher" ? handleNavtoRubric(index) : null}>
                             <RubricTable rubric={rubric} />
                           </div>
                         ))}
@@ -785,7 +798,7 @@ const Classroom = () => {
                     </div>
                   ) : (
                     <div className="flex justify-center">
-                      {user.authority === "teacher" && (
+                      {user && user.authority === "teacher" && (
                         <>
                           <Button onClick={() => handleOpenRubricModal()} className="bg-blue-500 mr-2">
                             <FontAwesomeIcon icon={faUpload} className="mr-2" />
@@ -804,7 +817,7 @@ const Classroom = () => {
 
                 {user && (user.authority === "student" || user.authority === "teacher") && (
                   <div className="flex-1">
-                    {user.authority === "student" && (
+                    {user && user.authority === "student" && (
                       <div className="m-10 grid w-full items-center gap-1.5">
                         {selectedAssignment.submissions.map((submission) => (
                           <Card key={submission._id} className="max-w-sm mb-2 bg-gray-800 text-gray-100">
@@ -840,7 +853,7 @@ const Classroom = () => {
                         </div>
                       </div>
                     )}
-                    {user.authority === "teacher" && (
+                    {user && user.authority === "teacher" && (
                       <div className="ml-5 flex flex-col items-start">
                         {selectedAssignment.submissions.length ? (
                           <div className="flex w-full gap-4">

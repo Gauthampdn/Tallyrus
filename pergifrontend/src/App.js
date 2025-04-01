@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuthContext } from './hooks/useAuthContext';
 import Joyride, { EVENTS, STATUS } from 'react-joyride';
-
+import { helix } from 'ldrs';
 
 // pages & components
 import Home from './pages/Home';
@@ -31,10 +31,13 @@ const RedirectToFreeDetector = () => {
 };
 
 const App = () => {
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Register the helix loading animation
+  helix.register();
 
   const handleJoyrideCallback = useCallback((data) => {
     const { status, type, index } = data;
@@ -106,6 +109,19 @@ const App = () => {
       disableBeacon: true,
     },
   ];
+
+  // Show loading animation while auth data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-zinc-950">
+        <l-helix
+          size="45"
+          speed="2.5"
+          color="lime"
+        ></l-helix>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white">
