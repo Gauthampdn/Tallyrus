@@ -22,7 +22,7 @@ import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg
 import { flexRender } from "@tanstack/react-table";
 import { useDropzone } from 'react-dropzone';
 import { faTrash, faArrowRight, faFlag, faArrowLeft, faUpload, faEdit, faLink, faFileUpload, faCheckCircle, faSpinner, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'; // Added icons
-
+import pdfToText from 'react-pdftotext'; // Import the new PDF text extraction library
 
 
 import './Classroom.css';
@@ -76,9 +76,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import * as pdfjsLib from 'pdfjs-dist';
 
 const RubricTable = ({ rubric }) => {
   const columns = React.useMemo(
@@ -488,39 +485,6 @@ const Classroom = () => {
 
 
 
-  async function loadPdfJsLib() {
-    GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-    return pdfjsLib;
-  }
-
-  async function getTextFromPdf(file) {
-    try {
-        console.log("Starting PDF text extraction...");
-        const pdfData = await file.arrayBuffer();
-        const pdfjsLib = await loadPdfJsLib();
-        console.log("PDF.js library loaded, worker configured");
-        
-        const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-        const pdf = await loadingTask.promise;
-        console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
-        
-        let extractedText = '';
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            console.log(`Processing page ${pageNum}/${pdf.numPages}`);
-            const page = await pdf.getPage(pageNum);
-            const textContent = await page.getTextContent();
-            extractedText += textContent.items.map(item => item.str).join(' ') + '\n';
-        }
-
-        console.log("Text extraction completed");
-        return extractedText;
-    } catch (error) {
-        console.error("Error fetching or processing PDF:", error.message);
-        return null;
-    }
-  }
-
-
   const handleGrade = async (assignmentId) => {
     if (!file) {
         console.log("No file selected");
@@ -531,7 +495,9 @@ const Classroom = () => {
 
     try {
         console.log("Beginning text extraction from PDF...");
-        const text = await getTextFromPdf(file);
+        
+        // Use the new pdfToText function instead of getTextFromPdf
+        const text = await pdfToText(file);
         console.log("Text extracted successfully, length:", text.length);
         console.log("First 100 characters of extracted text:", text.substring(0, 100));
 
@@ -556,6 +522,11 @@ const Classroom = () => {
         setFeedback(data.feedback);
     } catch (error) {
         console.error("Error in grading process:", error);
+        toast({
+            variant: "destructive",
+            title: "Error extracting text",
+            description: "Failed to extract text from the PDF. Please try again or use a different file.",
+        });
     }
   };
 
