@@ -277,30 +277,188 @@ const Assignment = () => {
       <html>
         <head>
           <title>All Submissions - Writing Feedback</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
           <style>
+            :root {
+              --primary-color: #6366f1;
+              --border-color: #e5e7eb;
+              --text-primary: #111827;
+              --text-secondary: #4b5563;
+              --background-light: #f9fafb;
+              --highlight: #eef2ff;
+            }
+            
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            
             body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              line-height: 1.6;
+              color: var(--text-primary);
+              background-color: white;
+              margin: 0;
+              padding: 20px;
               position: relative;
             }
+            
+            .logo {
+              max-width: 120px;
+              margin-bottom: 10px;
+            }
+            
             .header {
               text-align: center;
-              padding: 10px 0;
-              margin-bottom: 20px;
+              padding: 20px 0;
+              margin-bottom: 30px;
+              border-bottom: 2px solid var(--primary-color);
             }
+            
+            .header h1 {
+              font-size: 28px;
+              font-weight: 700;
+              color: var(--primary-color);
+              margin-bottom: 5px;
+            }
+            
             .submission {
-              margin-bottom: 40px;
+              margin-bottom: 50px;
               page-break-after: always;
+              background-color: white;
+              border-radius: 10px;
+              border: 1px solid var(--border-color);
+              overflow: hidden;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             }
+            
+            .submission-header {
+              background-color: var(--highlight);
+              padding: 16px 20px;
+              border-bottom: 1px solid var(--border-color);
+            }
+            
+            .submission-header h2 {
+              font-size: 22px;
+              font-weight: 600;
+              margin-bottom: 5px;
+              color: var(--primary-color);
+            }
+            
+            .submission-details {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 10px;
+              font-size: 14px;
+            }
+            
+            .detail-item {
+              margin-bottom: 5px;
+            }
+            
+            .label {
+              font-weight: 600;
+              color: var(--text-secondary);
+              display: inline-block;
+              margin-right: 5px;
+            }
+            
+            .submission-content {
+              padding: 20px;
+            }
+            
+            .criteria-section {
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 1px solid var(--border-color);
+            }
+            
+            .criteria-section:last-child {
+              border-bottom: none;
+            }
+            
+            .criteria-header {
+              font-size: 18px;
+              font-weight: 600;
+              margin-bottom: 8px;
+              color: var(--primary-color);
+            }
+            
+            .criteria-score {
+              font-weight: 500;
+              color: var(--text-secondary);
+              margin-bottom: 10px;
+            }
+            
+            .criteria-comments {
+              line-height: 1.6;
+              white-space: pre-wrap;
+            }
+            
+            .total-score {
+              font-size: 18px;
+              font-weight: 700;
+              margin-top: 25px;
+              padding-top: 15px;
+              border-top: 2px solid var(--primary-color);
+              text-align: right;
+            }
+            
+            p {
+              margin-bottom: 10px;
+            }
+            
+            strong {
+              font-weight: 600;
+            }
+            
+            hr {
+              border: 0;
+              height: 1px;
+              background-color: var(--border-color);
+              margin: 20px 0;
+            }
+            
             @media print {
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               }
+              
+              .submission {
+                break-inside: avoid;
+                page-break-after: always;
+                border: none;
+                box-shadow: none;
+              }
+              
+              .header {
+                position: running(header);
+              }
+              
+              @page {
+                margin: 0.5in;
+                @top-center {
+                  content: element(header);
+                }
+                @bottom-center {
+                  content: "Page " counter(page) " of " counter(pages);
+                  font-size: 12px;
+                  color: var(--text-secondary);
+                }
+              }
             }
           </style>
         </head>
         <body>
+          <div class="header">
+            <img src="/tallyrus2white.png" alt="Tallyrus Logo" class="logo" />
+            <h1>Writing Feedback</h1>
+            <p>Assignment: ${assignment.name}</p>
+          </div>
           <div id="content"></div>
         </body>
       </html>
@@ -310,14 +468,50 @@ const Assignment = () => {
 
     assignment.submissions.forEach(submission => {
       const formattedFeedback = formatFeedback(submission);
+      
+      // Process the feedback to create structured content instead of just using marked
+      let structuredFeedback = '';
+      if (submission.feedback) {
+        submission.feedback.forEach(criteria => {
+          structuredFeedback += `
+            <div class="criteria-section">
+              <div class="criteria-header">${criteria.name.replace(/\*/g, '')}</div>
+              <div class="criteria-score">${criteria.score}/${criteria.total} points</div>
+              <div class="criteria-comments">${criteria.comments}</div>
+            </div>
+          `;
+        });
+      }
+      
+      // Calculate overall score
+      const totalScore = calculateTotalScore(submission);
+      const maxScore = submission.feedback ? submission.feedback.reduce((sum, criteria) => sum + criteria.total, 0) : 0;
+      
       const submissionContent = `
         <div class="submission">
-          <p><strong>Name:</strong> ${submission.studentName}</p>
-          <p><strong>Email:</strong> ${submission.studentEmail}</p>
-          <p><strong>Date Submitted:</strong> ${new Date(submission.dateSubmitted).toLocaleDateString()}</p>
-          <p><strong>Status:</strong> ${submission.status}</p>
-          <hr />
-          <div>${marked(formattedFeedback)}</div>
+          <div class="submission-header">
+            <h2>${submission.studentName}</h2>
+            <div class="submission-details">
+              <div class="detail-item">
+                <span class="label">Email:</span>
+                ${submission.studentEmail}
+              </div>
+              <div class="detail-item">
+                <span class="label">Submitted:</span>
+                ${new Date(submission.dateSubmitted).toLocaleDateString()}
+              </div>
+              <div class="detail-item">
+                <span class="label">Status:</span>
+                ${submission.status}
+              </div>
+            </div>
+          </div>
+          <div class="submission-content">
+            ${structuredFeedback}
+            <div class="total-score">
+              Overall Total: ${totalScore}/${maxScore} points
+            </div>
+          </div>
         </div>
       `;
       contentElement.innerHTML += submissionContent;
@@ -330,37 +524,218 @@ const Assignment = () => {
   };
 
   const handlePrint = async () => {
-    const content = contentRef.current.innerHTML;
     const printWindow = window.open('', '_blank', 'width=800,height=600');
 
     printWindow.document.write(`
       <html>
         <head>
           <title>${selectedSubmission.studentName} - Writing Feedback</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              position: relative;
+            :root {
+              --primary-color: #6366f1;
+              --border-color: #e5e7eb;
+              --text-primary: #111827;
+              --text-secondary: #4b5563;
+              --background-light: #f9fafb;
+              --highlight: #eef2ff;
             }
+            
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              line-height: 1.6;
+              color: var(--text-primary);
+              background-color: white;
+              margin: 0;
+              padding: 20px;
+            }
+            
+            .logo {
+              max-width: 120px;
+              margin-bottom: 10px;
+            }
+            
             .header {
               text-align: center;
-              padding: 10px 0;
-              margin-bottom: 20px;
+              padding: 20px 0;
+              margin-bottom: 30px;
+              border-bottom: 2px solid var(--primary-color);
             }
+            
+            .header h1 {
+              font-size: 28px;
+              font-weight: 700;
+              color: var(--primary-color);
+              margin-bottom: 5px;
+            }
+            
+            .header h2 {
+              font-size: 20px;
+              font-weight: 500;
+              color: var(--text-secondary);
+            }
+            
+            .student-info {
+              background-color: var(--highlight);
+              border-radius: 8px;
+              padding: 16px 20px;
+              margin-bottom: 25px;
+              border: 1px solid var(--border-color);
+            }
+            
+            .student-info h3 {
+              font-size: 18px;
+              font-weight: 600;
+              margin-bottom: 10px;
+              color: var(--primary-color);
+            }
+            
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 10px;
+            }
+            
+            .info-item {
+              margin-bottom: 5px;
+            }
+            
+            .label {
+              font-weight: 600;
+              color: var(--text-secondary);
+              display: inline-block;
+              margin-right: 5px;
+            }
+            
+            .feedback-section {
+              margin-bottom: 25px;
+            }
+            
+            .criteria {
+              background-color: white;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              overflow: hidden;
+              margin-bottom: 20px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+            
+            .criteria-header {
+              background-color: var(--highlight);
+              padding: 12px 16px;
+              border-bottom: 1px solid var(--border-color);
+            }
+            
+            .criteria-title {
+              font-size: 16px;
+              font-weight: 600;
+              margin-bottom: 4px;
+              color: var(--primary-color);
+            }
+            
+            .criteria-score {
+              font-size: 14px;
+              color: var(--text-secondary);
+            }
+            
+            .criteria-body {
+              padding: 16px;
+              line-height: 1.6;
+            }
+            
+            .total-score {
+              font-size: 18px;
+              font-weight: 700;
+              margin-top: 30px;
+              padding: 15px;
+              background-color: var(--highlight);
+              border-radius: 8px;
+              text-align: center;
+              border: 1px solid var(--border-color);
+            }
+            
+            .footer {
+              margin-top: 40px;
+              font-size: 12px;
+              text-align: center;
+              color: var(--text-secondary);
+            }
+            
             @media print {
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+              }
+              
+              @page {
+                margin: 0.5in;
+                @bottom-center {
+                  content: "Page " counter(page) " of " counter(pages);
+                  font-size: 12px;
+                  color: var(--text-secondary);
+                }
               }
             }
           </style>
         </head>
         <body>
           <div class="header">
+            <img src="/tallyrus2white.png" alt="Tallyrus Logo" class="logo" />
             <h1>Writing Feedback</h1>
+            <h2>${assignment.name}</h2>
           </div>
-          <div>${content}</div>
+          
+          <div class="student-info">
+            <h3>${selectedSubmission.studentName}</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Email:</span>
+                ${selectedSubmission.studentEmail}
+              </div>
+              <div class="info-item">
+                <span class="label">Submitted:</span>
+                ${new Date(selectedSubmission.dateSubmitted).toLocaleDateString()}
+              </div>
+              <div class="info-item">
+                <span class="label">Status:</span>
+                ${selectedSubmission.status}
+              </div>
+              <div class="info-item">
+                <span class="label">AI Score:</span>
+                ${selectedSubmission.aiScore || 'N/A'}%
+              </div>
+            </div>
+          </div>
+          
+          <div class="feedback-section">
+            ${selectedSubmission.feedback.map(criteria => `
+              <div class="criteria">
+                <div class="criteria-header">
+                  <div class="criteria-title">${criteria.name.replace(/\*/g, '')}</div>
+                  <div class="criteria-score">${criteria.score}/${criteria.total} points</div>
+                </div>
+                <div class="criteria-body">
+                  ${criteria.comments}
+                </div>
+              </div>
+            `).join('')}
+            
+            <div class="total-score">
+              Overall Total: ${calculateTotalScore(selectedSubmission)}/${selectedSubmission.feedback.reduce((sum, criteria) => sum + criteria.total, 0)} points
+            </div>
+          </div>
+          
+          <div class="footer">
+            Generated by Tallyrus | ${new Date().toLocaleDateString()}
+          </div>
         </body>
       </html>
     `);
