@@ -48,12 +48,12 @@ const Navbar = ({ resetTemplate }) => {
   };
 
   return (
-    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-zinc-900">
+    <header className="rounded-xl p-2.5 pt-5 flex justify-between items-center text-white h-12 bg-slate-950">
       {user && (
         <div className="flex items-center gap-1">
           {/* <img src="/tallyrus2white.png" alt="Tally Illustration" className="m-0.5 mr-2 w-5 h-5" /> */}
-          <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 cursor-pointer mb-1.5" onClick={goToHome}>
-            <FontAwesomeIcon icon={faHome} className="mr-2" />
+          <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 cursor-pointer mb-1.5 mt-3" onClick={goToHome}>
+            <FontAwesomeIcon icon={faHome} className="mr-1 mb-1.5 mt-1" />
             <span className="">Home</span>
           </Button>
         </div>
@@ -67,11 +67,16 @@ const Navbar = ({ resetTemplate }) => {
             Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
             </span>
           </div> */}
-          <img onClick={goToProfile} src={user.picture} alt={user.name} className="user-image rounded-full h-10 object-cover mr-1" />
+          <img onClick={goToProfile} src={'/profile.svg'} alt={user.name} className="user-image invert rounded-full h-8 object-cover mr-1 mt-3 mb-1.5" />
 
+          <Button 
+          className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 mt-3 mb-1.5 mr-1"
+          >
+            Cancel Payment
+          </Button>
           <Button
             onClick={handleClick}
-            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15"
+            className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 mt-3 mb-1.5 mr-1"
           >
             Logout
           </Button>
@@ -79,12 +84,12 @@ const Navbar = ({ resetTemplate }) => {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15  cursor-pointer">
+              <Button className="flex items-center bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15  cursor-pointer mr-1 mt-3 mb-1.5">
                 <span className="text-xl material-symbols-outlined ">metabolism</span>
                 <span>{user.authority}</span>
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-gray-900 text-gray-100">
+            <AlertDialogContent className="bg-gray-900 text-gray-100 ">
               <AlertDialogHeader>
                 <AlertDialogTitle>Switch to "{user.authority === "teacher" ? "student" : "teacher"}" mode?</AlertDialogTitle>
                 <AlertDialogDescription>
