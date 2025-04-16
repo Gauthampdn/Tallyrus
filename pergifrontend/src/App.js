@@ -19,6 +19,10 @@ import UploadOldEssays from 'pages/Upload'; // Import the new component
 import Dashboard from 'pages/Dashboard';
 import Payment from 'pages/Payment';
 import About_us from 'pages/About_us';
+import Oranges from 'pages/Oranges';
+import Billing from 'pages/Billing';
+import Support from 'pages/Support';
+//import generateFakeComment from 'pages/Feedback';
 
 
 const RedirectToFreeDetector = () => {
@@ -139,6 +143,9 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/about_us" element={<About_us />} />
+            <Route path="/oranges" element={<Oranges />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/support" element={<Support />} />
           </Routes> 
         </div>
       </BrowserRouter>
