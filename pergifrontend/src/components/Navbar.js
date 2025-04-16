@@ -67,13 +67,8 @@ const Navbar = ({ resetTemplate }) => {
             Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
             </span>
           </div> */}
-          <img onClick={goToProfile} src={'/profile.svg'} alt={user.name} className="user-image invert rounded-full h-8 object-cover mr-1 mt-3 mb-1.5" />
-
-          <Button 
-          className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 mt-3 mb-1.5 mr-1"
-          >
-            Cancel Payment
-          </Button>
+          <img onClick={goToProfile} src={'/profile.svg'} alt={user.name} className="cursor-pointer user-image invert rounded-full h-8 object-cover mr-1 mt-3 mb-1.5" />
+          
           <Button
             onClick={handleClick}
             className="bg-white hover:bg-stone-100 text-black font-bold rounded h-8 w-15 mt-3 mb-1.5 mr-1"
