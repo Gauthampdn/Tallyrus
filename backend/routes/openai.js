@@ -11,7 +11,7 @@ const {
   parseRubricWithGPT4,
 } = require("../controllers/openaiController")
 
-
+// router.get("/test-langsmith", testLangSmith);
 const requireAuth = require("../middleware/requireAuth")
 
 router.post("/gradesubmission/:assignmentId", gradeSubmission);
@@ -22,6 +22,8 @@ router.use(requireAuth) // requires authentication and then calls next. if no au
 router.post("/completion", completion)
 
 router.get("/test", test)
+
+
 
 router.post("/extext", extractText)
 

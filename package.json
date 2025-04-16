@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@langchain/openai": "^0.5.5",
+    "langchain": "^0.3.21"
+  }
+}

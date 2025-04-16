@@ -11,7 +11,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from '@/components/ui/use-toast';
-
+const testLangSmith = async (req, res) => {
+    try {
+        console.log("Testing LangSmith integration with direct LLM call");
+        const messages = [{ role: "user", content: "Hello, provide a short response to test LangSmith tracing" }];
+        
+        console.log("About to invoke LLM");
+        const response = await llm.invoke(messages);
+        console.log("LLM invocation complete, response received");
+        
+        res.json({ success: true, response });
+    } catch (error) {
+        console.error("Error testing LangSmith:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
 const AssignmentSubmission = ({ assignmentId }) => {
   const [files, setFiles] = useState([]);
   const [uploadingFiles, setUploadingFiles] = useState([]); // Track files being uploaded

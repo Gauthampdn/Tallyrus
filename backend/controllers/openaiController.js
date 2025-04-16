@@ -1,13 +1,27 @@
-const OpenAI = require('openai');
 const mongoose = require("mongoose");
 const Classroom = require("../models/classroomModel");
 const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 // const mammoth = require("mammoth");
 require("dotenv").config();
-
+const { ChatOpenAI } = require("@langchain/openai");
+const { llm } = require('../utils/langsmith');
 const { incrementGraded } = require('./authController');
-
+const testLangSmith = async (req, res) => {
+    try {
+        console.log("Testing LangSmith integration with direct LLM call");
+        const messages = [{ role: "user", content: "Hello, provide a short response to test LangSmith tracing" }];
+        
+        console.log("About to invoke LLM");
+        const response = await llm.invoke(messages);
+        console.log("LLM invocation complete, response received");
+        
+        res.json({ success: true, response });
+    } catch (error) {
+        console.error("Error testing LangSmith:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
 const fetchAIScore = async (text) => {
     const url = "http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/ai-detection";  // Flask server URL
 
@@ -81,9 +95,7 @@ const gradingInstructions =
         You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
         `;
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 async function loadPdfJsLib() {
     const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
@@ -202,10 +214,7 @@ const parseRubricWithGPT4 = async (rubricURL) => {
     try {
         const extractedText = await getTextFromPDF(rubricURL);
         console.log(extractedText);
-        const gradingResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
-            max_tokens: 3000,
-            messages: [
+        const messages = [
                 {
                     role: "system", content: `
 
@@ -290,9 +299,8 @@ const parseRubricWithGPT4 = async (rubricURL) => {
                     rubric:
                         ${extractedText}`
                 }
-            ]
-        });
-
+        ];
+        const gradingResponse = await llm.invoke(messages);
         if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
             console.log(gradingResponse.choices[0].message.content)
             return convertToRubricSchema(gradingResponse.choices[0].message.content);
@@ -323,6 +331,7 @@ function convertToRubricSchema(gptOutput) {
 
 const grade = async (rubric, essay, gradingPrompt, teacherId) => {
     // Convert rubric to a string format suitable for grading
+    console.log("Starting grading with LLM...");
     const rubricString = rubricToString(rubric);
 
     // Fetch old graded essays for the specific teacher
@@ -419,74 +428,76 @@ const gradeall = async (req, res) => {
 
         const gradingPromises = assignment.submissions.map(async (submission) => {
             if (submission.status === 'grading') {
-                let extractedText = '';
-                if (submission.pdfURL.endsWith('.pdf')) {
-                    extractedText = await getTextFromPDF(submission.pdfURL);
-                } else {
-                    submission.status = 'error';
-                    submission.feedback = 'Unsupported file format';
-                    return submission;
-                }
-
-                if (!extractedText) {
-                    submission.status = 'error';
-                    submission.feedback = 'Failed to extract text from file';
-                    return submission;
-                }
-                /*
-                const aiScore = await fetchAIScore(extractedText);
-                if (!aiScore) {
-                    submission.status = 'error';
-                    submission.feedback = 'Failed to fetch AI detection score';
-                    return submission;
-                }
-                    
-                //submission.aiScore = formatAIScore(aiScore.Fake);  // Save formatted AI score
-                
-                submission.aiScore = 0;
-                const gradingResult = await grade(assignment.rubric, extractedText, gradingInstructions, req.user.id);
-                console.log("Grading Result:", gradingResult);
-                */
-
-                const gradingResult = null;
-                if (gradingResult && gradingResult.feedback) {
-                    // Use the grading result from the Python server
-                    submission.feedback = parseFeedback(gradingResult.feedback);
-                    submission.status = 'graded';
-                } else {
-                    // If gradingResult is not available, fallback to the OpenAI-based grading
-                    const rubricString = rubricToString(assignment.rubric);
-                    const gradingResponse = await openai.chat.completions.create({
-                        model: "gpt-4o",
-                        max_tokens: 3000,
-                        messages: [
-                            { role: "user", content: gradingInstructions },
-                            { role: "user", content: rubricString },
-                            { role: "user", content: extractedText }
-                        ]
-                    });
-
-                    if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
-                        submission.status = 'error';
-                        submission.feedback = 'Failed to grade the submission';
+                try {
+                    let extractedText = '';
+                    if (submission.pdfURL.endsWith('.pdf')) {
+                        extractedText = await getTextFromPDF(submission.pdfURL);
                     } else {
-                        const feedback = gradingResponse.choices[0].message.content;
+                        submission.status = 'error';
+                        submission.feedback = [{
+                            name: 'Error',
+                            score: 0,
+                            total: 0,
+                            comments: 'Unsupported file format'
+                        }];
+                        return submission;
+                    }
+
+                    if (!extractedText) {
+                        submission.status = 'error';
+                        submission.feedback = [{
+                            name: 'Error',
+                            score: 0,
+                            total: 0,
+                            comments: 'Failed to extract text from file'
+                        }];
+                        return submission;
+                    }
+
+                    const rubricString = rubricToString(assignment.rubric);
+                    const messages = [
+                        { role: "user", content: gradingInstructions },
+                        { role: "user", content: rubricString },
+                        { role: "user", content: extractedText }
+                    ];
+
+                    const gradingResponse = await llm.invoke(messages);
+                    
+                    if (!gradingResponse) {
+                        submission.status = 'error';
+                        submission.feedback = [{
+                            name: 'Error',
+                            score: 0,
+                            total: 0,
+                            comments: 'Failed to grade the submission'
+                        }];
+                    } else {
+                        const feedback = gradingResponse.content;
                         submission.feedback = parseFeedback(feedback);
                         submission.status = 'graded';
                     }
+
+                    const user = await User.findById(req.user._id);
+                    if (user.numGraded === undefined) {
+                        user.numGraded = 0;
+                    }
+                    user.numGraded++;
+                    await user.save();
+
+                    return submission;
+                } catch (error) {
+                    console.error("Error grading submission:", error);
+                    submission.status = 'error';
+                    submission.feedback = [{
+                        name: 'Error',
+                        score: 0,
+                        total: 0,
+                        comments: 'An error occurred while grading'
+                    }];
+                    return submission;
                 }
-
-
-                const user = await User.findById(req.user._id);
-
-                if (user.numGraded === undefined) {
-                    user.numGraded = 0;
-                }
-                user.numGraded++;
-                await user.save();
-
-                return submission;
             }
+            return submission;
         });
 
         const gradedSubmissions = await Promise.all(gradingPromises);
@@ -535,16 +546,12 @@ const gradeSubmission = async (req, res) => {
 
         const rubricString = rubricToString(assignment.rubric);
 
-        const gradingResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
-            max_tokens: 3000,
-            messages: [
+        const messages = [
                 { role: "user", content: gradingInstructions },
                 { role: "user", content: rubricString },
                 { role: "user", content: text }
-            ]
-        });
-
+            ];
+        const gradingResponse = await llm.invoke(messages);
         if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
             return res.status(500).json({ error: "Failed to grade submission" });
         }
@@ -567,10 +574,7 @@ const gradeSubmission = async (req, res) => {
 const extractText = async (req, res) => {
     try {
         const result = await getTextFromPDF("https://example.com/sample.pdf");
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            max_tokens: 1000,
-            messages: [
+        const messages = [
                 {
                     "role": "assistant", "content": `You are a Grader for essays.You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria.You will then give the total score. 
 
@@ -600,9 +604,8 @@ const extractText = async (req, res) => {
                 Clarity and Language Use(15 points), \n
                 Originality and Insight(10 points) \n` },
                 { "role": "user", "content": result }
-            ]
-        });
-
+            ];
+        const response = await llm.invoke(messages);
         res.json(response);
     } catch (error) {
         console.error("Error with OpenAI request:", error);
@@ -614,10 +617,7 @@ const completion = async (req, res) => {
     try {
         const prompt = req.body.prompt;
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: prompt
-        });
+        const response = await llm.invoke(prompt);
 
         res.json(response);
     } catch (error) {
@@ -633,5 +633,6 @@ module.exports = {
     extractText,
     gradeall,
     gradeSubmission,
-    parseRubricWithGPT4
+    parseRubricWithGPT4,
+    testLangSmith
 };
