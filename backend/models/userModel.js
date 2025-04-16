@@ -43,6 +43,10 @@ const userSchema = new Schema({
   uploadedFiles: {
     type: [fileSchema], // New field to store the uploaded files
     default: []
+  },
+  isPremium: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

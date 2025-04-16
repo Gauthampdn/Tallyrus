@@ -21,6 +21,9 @@ const cors = require('cors');
 // express app
 const app = express()
 
+const webhookRoutes = require('./routes/webhook');
+app.use('/webhook', webhookRoutes);
+
 // middleware
 app.use(express.json()) // to get req body
 
@@ -55,6 +58,13 @@ app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)
 app.use("/files", filesRoutes)
+
+const paymentRoutes = require('./routes/payment');
+
+app.use('/api/payment', paymentRoutes);
+
+
+
 
 
 // connect to db

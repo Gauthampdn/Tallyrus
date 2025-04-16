@@ -41,8 +41,14 @@ const Login = () => {
   };
 
   const handleButtonClick = () => {
-    window.location.href = `${process.env.REACT_APP_API_BACKEND}/auth`;
+    const redirectURL = `${process.env.REACT_APP_API_BACKEND}/auth`;
+    console.log("Redirecting to:", redirectURL);
+  
+    setTimeout(() => {
+      window.location.href = redirectURL;
+    }, 5000); // 5000 milliseconds = 5 seconds
   };
+  
 
   useEffect(() => {
     // Loading effect for 1 second

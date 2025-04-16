@@ -28,6 +28,25 @@ const Profile = () => {
     }
   }, [user]);
 
+  const handleUpgrade = async () => {
+    const res = await fetch('http://localhost:4000/api/payment/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId: user.id, email: user.email }) // ✅ send both
+    });
+  
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Payment failed to initialize.");
+    }
+  };
+  
+  
+
   const handleResize = () => {
     if (scene.current) {
       setDimensions({
@@ -46,6 +65,16 @@ const Profile = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    handleResize(); // Initial call
+  
+    if (user) {
+      console.log("User premium status:", user.isPremium); // Add this log
+      setNumGraded(user.numGraded);
+    }
+  }, [user]);
+  
 
   useEffect(() => {
     if (dimensions.width === 0 || dimensions.height === 0) return;
@@ -182,6 +211,17 @@ const Profile = () => {
                 Upload Old Graded Essays
               </Button>
             )} */}
+            {user.isPremium ? (
+            <p className="mt-6 text-green-400 text-lg font-semibold">
+              🌟 You’re a Premium Member!
+            </p>
+          ) : (
+            <Button onClick={handleUpgrade} className="mt-6 bg-yellow-500 hover:bg-yellow-600">
+              Upgrade to Premium
+            </Button>
+          )}
+
+
           </div>
         </div>
       </div>
