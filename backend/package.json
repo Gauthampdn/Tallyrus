@@ -34,6 +34,7 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.0.379",
     "pdfreader": "^3.0.2",
+    "stripe": "^18.0.0",
     "validator": "^13.9.0"
   }
 }

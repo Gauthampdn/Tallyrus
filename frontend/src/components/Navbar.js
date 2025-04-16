@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "../hooks/useLogout";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { usePremium } from "../hooks/usePremium";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +16,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faCrown } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar = ({ resetTemplate }) => {
   const { logout } = useLogout();
   const { user, dispatch, isLoading } = useAuthContext();
+  const { startSubscription, isLoading: isPremiumLoading, error: premiumError } = usePremium();
+  const [showPremiumError, setShowPremiumError] = useState(false);
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -31,6 +35,16 @@ const Navbar = ({ resetTemplate }) => {
 
   const goToHome = () => {
     navigate("/app");
+  };
+
+  const handleSubscribe = async () => {
+    const checkoutUrl = await startSubscription();
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    } else {
+      setShowPremiumError(true);
+      setTimeout(() => setShowPremiumError(false), 3000);
+    }
   };
 
   const switchAuthority = async () => {
@@ -76,11 +90,33 @@ const Navbar = ({ resetTemplate }) => {
 
       {user && (
         <div className="user-info flex gap-2 items-center">
-          {/* <div className="mr-4 cursor-pointer hover:underline" onClick={goToProfile}>
-            <span className="block font-bold">
-            Hi, {user.name.length > 15 ? `${user.name.substring(0, 15)}...` : user.name}!
-            </span>
-          </div> */}
+          {/* Premium badge if user is premium */}
+          {user.isPremium && (
+            <div className="flex items-center bg-amber-700 px-3 py-1 rounded-full text-sm mr-2">
+              <FontAwesomeIcon icon={faCrown} className="text-yellow-400 mr-1" />
+              <span>Premium</span>
+            </div>
+          )}
+          
+          {/* Premium subscription button */}
+          {!user.isPremium && (
+            <Button
+              onClick={handleSubscribe}
+              disabled={isPremiumLoading}
+              className="flex items-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-bold rounded h-8 cursor-pointer mr-2"
+            >
+              <FontAwesomeIcon icon={faCrown} className="text-yellow-400 mr-2" />
+              <span>{isPremiumLoading ? 'Loading...' : 'Go Premium'}</span>
+            </Button>
+          )}
+          
+          {/* Premium error message */}
+          {showPremiumError && (
+            <div className="absolute top-16 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+              {premiumError || 'Error processing subscription. Please try again.'}
+            </div>
+          )}
+          
           <img onClick={goToProfile} src={user.picture} alt={user.name} className="user-image rounded-full h-10 object-cover mr-1" />
 
           <Button
