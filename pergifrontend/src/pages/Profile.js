@@ -1,176 +1,146 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Navbar from 'components/Navbar'; // Adjust the import path as necessary
-import Matter from 'matter-js';
-import MatterWrap from 'matter-wrap';
-import { useAuthContext } from "../hooks/useAuthContext";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React, { useRef, useState, useEffect } from 'react';
+import { useAuthContext } from '../hooks/useAuthContext'; // Asegúrate de tener este hook
+import Navbar from '../components/Navbar'; // Ajusta el path según tu estructura
+import { useNavigate } from 'react-router-dom';
 
-const Profile = () => {
-  const { user } = useAuthContext();
-
-  const scene = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [num, setNum] = useState(0);
-
+const ProfilePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const [loginHistory, setLoginHistory] = useState([]);
 
+  const fileInputRef = useRef(null);
+  const [preview, setPreview] = useState(user?.image || '/profile.svg');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    handleResize(); // Initial call to set dimensions
-    
-
-    console.log("getting oranges")
+    const fetchLoginHistory = async () => {
+      try {
+        const res = await fetch('/api/login-history', {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
+        const data = await res.json();
+        setLoginHistory(data);
+      } catch (err) {
+        console.error('Error fetching login history:', err);
+      }
+    };
+  
     if (user) {
-      setNum(user.numGraded);
+      fetchLoginHistory();
     }
   }, [user]);
 
-  const handleResize = () => {
-    if (scene.current) {
-      setDimensions({
-        width: scene.current.clientWidth,
-        height: scene.current.clientHeight - 20,
-      });
-    }
-  };
 
-  useEffect(() => {
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl); // Mostrar preview inmediata
+      setUploading(true);
 
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial call to set dimensions
+      const formData = new FormData();
+      formData.append('profileImage', file);
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+      try {
+        const response = await fetch('/api/upload-profile-image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${user.token}` // Si usas auth por token
+          },
+          body: formData,
+        });
 
-  useEffect(() => {
-    if (dimensions.width === 0 || dimensions.height === 0) return;
-
-    const { Engine, Render, Runner, Composite, Composites, Common, MouseConstraint, Mouse, Bodies } = Matter;
-
-    try {
-      Matter.use(MatterWrap);
-    } catch (e) {
-      console.error(e);
-    }
-
-    const engine = Engine.create();
-    const world = engine.world;
-
-    const render = Render.create({
-      element: scene.current,
-      engine: engine,
-      options: {
-        width: dimensions.width,
-        height: dimensions.height,
-        showAngleIndicator: false,
-        wireframes: false,
-        background: 'transparent' // Ensure background is set to transparent
-      }
-    });
-
-    Render.run(render);
-
-    const runner = Runner.create();
-    Runner.run(runner, engine);
-
-    let thickness = 40;
-
-    Composite.add(world, [
-      Bodies.rectangle(dimensions.width / 2, dimensions.height, dimensions.width, thickness, { isStatic: true, render: { fillStyle: '#6c757d' } }), // Bottom wall
-      Bodies.rectangle(dimensions.width, dimensions.height / 2, thickness, dimensions.height, { isStatic: true, render: { fillStyle: '#6c757d' } }), // Right wall
-      Bodies.rectangle(0, dimensions.height / 2, thickness, dimensions.height, { isStatic: true, render: { fillStyle: '#6c757d' } }) // Left wall
-    ]);
-
-    const fruitTexture = '/orange.png';
-
-    const numberOfCircles = num; // Change this number to get any number of circles
-    const columns = Math.ceil(Math.sqrt(numberOfCircles));
-    const rows = Math.ceil(numberOfCircles / columns);
-
-    const stack = Composites.stack(20, -200, columns, rows, 1, 1, function (x, y, column, row) {
-      if (column * rows + row < numberOfCircles) {
-        const radius = Common.random(10, 15);
-        const scale = radius / 45 * 0.1; // Calculate the scale based on radius
-        const fruitOptions = {
-          render: {
-            sprite: {
-              texture: fruitTexture,
-              xScale: scale,
-              yScale: scale
-            }
-          }
-        };
-        return Bodies.circle(x, y, radius, { ...fruitOptions, restitution: 0, friction: 0.1, mass:0.1 });
-      } else {
-        return null;
-      }
-    });
-
-    Composite.add(world, stack);
-
-    const mouse = Mouse.create(render.canvas);
-
-    const mouseConstraint = MouseConstraint.create(engine, {
-      mouse: mouse,
-      constraint: {
-        stiffness: 0.2,
-        render: {
-          visible: false
+        if (!response.ok) {
+          throw new Error('Error al subir imagen');
         }
+
+        const data = await response.json();
+
+        // Si el backend devuelve la URL nueva:
+        if (data.imageUrl) {
+          setPreview(data.imageUrl);
+        }
+
+      } catch (error) {
+        console.error('Error trying to upload the picture:', error);
+      } finally {
+        setUploading(false);
       }
-    });
-
-    Composite.add(world, mouseConstraint);
-
-    render.mouse = mouse;
-
-    Render.lookAt(render, {
-      min: { x: 0, y: 0 },
-      max: { x: dimensions.width, y: dimensions.height }
-    });
-
-    return () => {
-      Render.stop(render);
-      Runner.stop(runner);
-      Composite.clear(world);
-      Engine.clear(engine);
-      render.canvas.remove();
-      render.textures = {};
-    };
-  }, [dimensions, num, user]);
-
-  if (!user || user.numGraded == null) {
-    return <div>Loading...</div>;
-  }
-  const handleUploadNavigation = () => {
-    navigate('/upload-old-essays'); // Adjust the route as necessary
+    }
   };
+
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  if (!user) {
+    return <div className="text-white p-4">Loading profile...</div>;
+  }
+
+  const birthDate = new Date(user.dateOfBirth);
+  const formattedDate = birthDate.toLocaleDateString('en-US'); // Formato de fecha en inglés (MM/DD/YYYY)
+
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
-      <div className='flex flex-grow'>
-        <div className="w-1/2 bg-gray-800 rounded-3xl m-4 mr-0 flex flex-grow overflow-auto">
-          <div ref={scene} className="w-full m-10 overflow-auto" />
-        </div>
-        <div className="w-1/2 m-4 text-white bg-gray-800 rounded-3xl p-5 flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold mb-4">Your Tallyrus Tracker!</h1>
-          <div className="text-center">
-            <p className="text-lg">Each <span className="text-orange-500">orange</span> you see represents an essay that Tallyrus has graded!</p>
-            <img src="/orange.png" alt="Orange" className="w-16 h-16 mx-auto mt-4 animate-bounce" />
-            {/* {user.authority === "teacher" && (
-              <Button onClick={handleUploadNavigation} className="mt-6 bg-indigo-600 hover:bg-indigo-700">
-                Upload Old Graded Essays
-              </Button>
-            )} */}
-          </div>
+      <div className="flex flex-col items-center mt-10">
+        <img
+          src={preview}
+          alt={user.name}
+          className={`h-40 w-40 rounded-full object-cover border-4 border-white mb-4 ${!user.image ? 'invert' : ''}`}
+        />
+        <h1 className="text-2xl font-bold mt-3">{user.name + ' ' + user.lastName}</h1>
+
+        <div className='flex flex-col items-start'>
+          <h1 className="text-gray-200 mt-12">{user.email}</h1>
+          <h1 className="text-gray-200 mt-3">
+            Date of birth <span className="text-gray-400">(MM/DD/YYYY)</span>: {formattedDate}
+          </h1>
+          
+
+          <button
+            onClick={() => navigate('/oranges')}
+            className="mt-2 p-0 border-none text-gray-200 hover:underline"
+          >
+            See your number of essays
+          </button>
+
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            onClick={handleUploadClick}
+            className="p-0 border-none text-gray-200 bg-0 mt-2 hover:underline"
+          >
+            Change profile picture
+          </button>
+
+          <h2 className="p-0 border-none text-gray-200 bg-0 mt-2 hover:underline">Login history</h2>
+          <ul className="text-sm text-gray-200">
+            {loginHistory.map((entry, idx) => (
+              <li key={idx}>
+                {new Date(entry.timestamp).toLocaleString()}
+              </li>
+            ))}
+          </ul>
+
+          <button
+            className="block text-left text-gray-200 hover:underline w-full mt-2"
+            onClick={() => navigate('/billing')}
+          >
+            Billing
+          </button>
         </div>
       </div>
     </div>
   );
-}
+};
 
-export default Profile;
+export default ProfilePage;
