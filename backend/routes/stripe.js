@@ -4,7 +4,8 @@ const {
   createCheckoutSession,
   handleWebhook,
   getPremiumStatus,
-  cancelSubscription
+  cancelSubscription,
+  manuallyUpdatePremiumStatus
 } = require('../controllers/stripeController');
 
 // Create a checkout session for premium subscription
@@ -18,5 +19,8 @@ router.get('/premium-status', getPremiumStatus);
 
 // Cancel subscription
 router.post('/cancel-subscription', cancelSubscription);
+
+// Manually update premium status after successful payment
+router.post('/update-premium-status', manuallyUpdatePremiumStatus);
 
 module.exports = router; 

@@ -38,9 +38,16 @@ const Navbar = ({ resetTemplate }) => {
   };
 
   const handleSubscribe = async () => {
-    const checkoutUrl = await startSubscription();
-    if (checkoutUrl) {
-      window.location.href = checkoutUrl;
+    const result = await startSubscription();
+    if (result && result.url) {
+      // Store the sessionId in localStorage before redirecting
+      if (result.sessionId) {
+        console.log('Storing sessionId in localStorage:', result.sessionId);
+        localStorage.setItem('stripe_session_id', result.sessionId);
+      } else {
+        console.warn('No sessionId received from subscription process');
+      }
+      window.location.href = result.url;
     } else {
       setShowPremiumError(true);
       setTimeout(() => setShowPremiumError(false), 3000);

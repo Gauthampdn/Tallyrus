@@ -47,6 +47,7 @@ export const usePremium = () => {
     setError(null);
 
     try {
+      console.log('Starting subscription process for user:', user.email);
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/stripe/create-checkout-session`, {
         method: 'POST',
         credentials: 'include',
@@ -56,14 +57,65 @@ export const usePremium = () => {
       const json = await response.json();
 
       if (!response.ok) {
+        console.error('Failed to create checkout session:', json.error || 'Unknown error');
         setError(json.error || 'Failed to create checkout session');
         return null;
       }
 
-      return json.url; // Return the checkout URL
+      console.log('Subscription checkout created successfully with session ID:', json.sessionId);
+      return { url: json.url, sessionId: json.sessionId }; // Return both URL and session ID
     } catch (err) {
+      console.error('Network error when creating checkout session:', err);
       setError('Network error when creating checkout session');
       return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Manually update premium status
+  const updatePremiumStatus = async (sessionId) => {
+    if (!user) {
+      console.error('Cannot update premium status: User not logged in');
+      return false;
+    }
+    
+    if (!sessionId) {
+      console.error('Cannot update premium status: No session ID provided');
+      return false;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('Sending update premium status request with session ID:', sessionId);
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/stripe/update-premium-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+        credentials: 'include',
+        mode: 'cors'
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        console.error('Failed to update premium status:', json.error || 'Unknown error');
+        setError(json.error || 'Failed to update premium status');
+        return false;
+      }
+
+      console.log('Premium status updated successfully:', json);
+      // Refresh user data with updated premium status
+      await refreshUserData();
+      return true;
+    } catch (err) {
+      console.error('Error updating premium status:', err);
+      setError('Network error when updating premium status');
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +177,7 @@ export const usePremium = () => {
     startSubscription, 
     cancelSubscription, 
     checkPremiumStatus, 
+    updatePremiumStatus,
     refreshUserData,
     isLoading, 
     error 
