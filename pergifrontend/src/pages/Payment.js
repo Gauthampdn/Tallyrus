@@ -1,377 +1,171 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
-import enLocale from "i18n-iso-countries/langs/en.json";
-import countries from "world-countries";
-import Select from 'react-select';
-import {
-    validateEmail,
-    validateZipCode,
-    isFutureDate,
-    verifyEmailWithAPI,
-    generatePaymentPDF,
-} from "./Validation";
+import { useNavigate } from "react-router-dom";
 
+/* global process */
 
+// Initialize Stripe.js
+const stripePromise = loadStripe(
+  process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
+);
 
-
+// Core payment form
 const PaymentPage = () => {
-    const currentYear = new Date().getFullYear();
-    const countryNames = countries.map((c) => ({
-        label: c.name.common,
-        value: c.cca2, // El valor puede ser el código del país, como 'US' para Estados Unidos
-    }));
+  const navigate = useNavigate();
+  const stripe = useStripe();
+  const elements = useElements();
 
-    const navigate = useNavigate();
-    
+  // UI state
+  const [message, setMessage] = useState("");
+  const [messageColor, setMessageColor] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [zip, setZip] = useState("");
 
+  // Back button
+  const goingBack = () => (
+    <div className="absolute top-10 left-20">
+      <Button
+        className="bg-black hover:bg-blue-400 text-white px-4 py-2 rounded-md text-xl"
+        onClick={() => navigate('/AboutTallyrus')}
+      >
+        Back
+      </Button>
+    </div>
+  );
 
-    const [cardNumber, setCardNumber] = useState("");
-    const [cvv, setCvv] = useState("");
-    const [FirstName, setFirstName] = useState("");
-    const [MiddleName, setMiddleName] = useState("");
-    const [SN, setSN] = useState("");
-    const [Country, setcountry] = useState("");
-    const [State, setState] = useState("");
-    const [City, setCity] = useState("");
-    const [ZipCode, setZipCode] = useState("");
-    const [Direcc, setDirecc] = useState("");
-    const [Email, setEmail] = useState("");
-    const [message, setMessage] = useState("");
-    const [messageColor, setMessageColor] = useState("");
-    const [expiryMonth, setExpiryMonth] = useState("");
-    const [expiryYear, setExpiryYear] = useState("");
+  const redirectHome = () => {
+    setTimeout(() => { navigate("/app"); }, 2000);
+  };
 
+  //const response = await fetch("http://localhost:4000/api/stripe/create-subscription", …);
 
-    
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("Processing payment...");
+    setMessageColor("text-blue-500");
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+    if (!stripe || !elements) {
+      setMessage("Stripe has not loaded yet");
+      setMessageColor("text-red-500");
+      return;
+    }
 
-        const cardRegex = /^\d{16}$/;
-        const cvvRegex = /^\d{3}$/;
-        const zipCodeRegex = /^\d{4,10}$/;
+    const cardElement = elements.getElement(CardElement);
+    const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+      type: "card",
+      card: cardElement,
+      billing_details: { name: `${firstName} ${lastName}`, address: { postal_code: zip } },
+    });
 
-        if (!FirstName.trim()) {
-            setMessage("First name is required");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!SN.trim()) {
-            setMessage("Surname is required");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!Direcc.trim()) {
-            setMessage("Address is required");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!City.trim()) {
-            setMessage("City is required");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!Country.trim()) {
-            setMessage("Country is required");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!State.trim()) {
-            setMessage("Region is required");
-            setMessageColor("text-red-500");
-            return;
-        }
+    if (pmError) {
+      console.error("Error creating PaymentMethod:", pmError);
+      setMessage(`Error: ${pmError.message}`);
+      setMessageColor("text-red-500");
+      return;
+    }
 
-        if (!ZipCode.trim() || !zipCodeRegex.test(ZipCode)) {
-            setMessage("Invalid zip/postal code");
-            setMessageColor("text-red-500");
-            return;
-        }
-        
-        if (!Email.trim() || !validateEmail(Email)) {
-            setMessage("Invalid email address");
-            setMessageColor("text-red-500");
-            return;
-        }
-        /*const isEmailValid = await verifyEmailWithAPI(Email);
-        if (!isEmailValid) {
-        setMessage("Email does not exist");
-        setMessageColor("text-red-500");
-        return;
-        }*/
+    try {
+      // Create subscription on backend
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/stripe/create-subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          priceId: process.env.REACT_APP_TEST_PRICE_ID,
+        }),
+      });
 
-        if (!cardRegex.test(cardNumber.replace(/\s+/g, ""))) {
-            setMessage("Card number invalid");
-            setMessageColor("text-red-500");
-            return;
-        }
+      const data = await response.json();
+      console.log("Backend response:", data);
 
-        if (!cvvRegex.test(cvv)) {
-            setMessage("CVV invalid");
-            setMessageColor("text-red-500");
-            return;
-        }
+      // Handle PaymentIntent
+      const pi = data.latest_invoice?.payment_intent;
+      if (!pi?.client_secret) throw new Error("No client secret from backend");
 
-        if (!zipCodeRegex.test(ZipCode)) {
-            setMessage("Invalid zip code");
-            setMessageColor("text-red-500");
-            return;
-        }
+      if (pi.status === "succeeded") {
+        setMessage("Payment made successfully");
+        setMessageColor("text-green-500");
+        redirectHome();
+      } else {
+        const { error: confirmError } = await stripe.confirmCardPayment(pi.client_secret, {
+          payment_method: { card: cardElement, billing_details: { name: `${firstName} ${lastName}` } },
+        });
+        if (confirmError) throw confirmError;
+        setMessage("Payment made successfully");
+        setMessageColor("text-green-500");
+        redirectHome();
+      }
+    } catch (err) {
+      console.error("Error processing payment:", err);
+      setMessage("Payment failed. Please try again.");
+      setMessageColor("text-red-500");
+    }
+  };
 
-        // Verificar si la fecha es válida al enviar
-        if (!expiryMonth || !expiryYear || !isFutureDate(Number(expiryMonth), Number(expiryYear))) {
-            setMessage("Expiration date must be future");
-            setMessageColor("text-red-500");
-            return;
-        }
-
-        // Simulación de pago exitoso
-        setMessage("Processing payment...");
-        setMessageColor("text-blue-500");
-
-        setTimeout(() => {
-            setMessage("Payment made successfully");
-            setMessageColor("text-green-500");
-        
-            // Redirigir a otra página después de 1 segundo
-            setTimeout(() => {
-                navigate('/app'); // Cambia esta ruta por la que necesites
-            }, 1000);
-        }, 2000);
-        
-
-    
-        
-        generatePaymentPDF({
-            name: FirstName + ' ' + MiddleName + ' ' + SN,
-            email: Email,
-            amount: "$5.00",
-            date: new Date().toLocaleString(),
-          });
-          
-    };
-
-    
-
-
-    return (
-        <div className="flex flex-col justify-between min-h-screen bg-gray-100">
-            {/* LOGO */}
-            <div className="relative top-6 mx-6 p-6">
-                <div className="flex justify-start">
-                    <img src="/tallyrus2green.png" className="w-8 h-8 mr-1" alt="Tallyrus Logo" />
-                    <div className="text-2xl font-extrabold text-black">
-                        <a href="/AboutTallyrus">
-                            Tallyrus
-                        </a> 
-                    </div>
-                </div>
-
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black">
+      {goingBack()}
+      <div className="bg-black p-10 rounded-lg shadow-lg w-full max-w-md text-white">
+        <h2 className="text-center text-3xl font-bold mb-4">Secure Payment</h2>
+        <form onSubmit={handleSubmit}>
+          <h3 className="text-lg mb-6">Total: $5/month</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block font-medium mb-1">First Name</label>
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full p-2 border rounded bg-gray-800 text-white"
+                required
+              />
             </div>
-            
-            
-            
-            <div className="mx-auto py-20">
-                {/* Payment and Billing Sections */}
-                <div className="grid grid-cols-2 gap-28">
-                    {/* Payment Info */}
-                    <div className="mt-20">
-                        <h2 className="text-lg font-semibold mb-6">Payment Info</h2>
-                        
-                        <div className="flex items-center gap-4 mb-3">
-                            <label className="block font-medium whitespace-nowrap">Card Number <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border py-2 " 
-                                type="text"
-                                placeholder="  XXXX XXXX XXXX XXXX"
-                                value={cardNumber}
-                                onChange={(e) => setCardNumber(e.target.value)}
-                                required
-                            />
-                        </div>
-            
-                        <div className="flex items-center gap-4  mb-3">
-                            <label className="block font-medium whitespace-nowrap">Expiration Date <span className="text-red-500">*</span></label>
-                            <div className="flex gap-4">
-                                {/* Mes */}
-                                <select className="border p-2" value={expiryMonth} onChange={(e) => setExpiryMonth(e.target.value)}>
-                                <option>MM</option>
-                                {[...Array(12)].map((_, i) => (
-                                    <option key={i} value={String(i + 1).padStart(2, '0')}>
-                                    {String(i + 1).padStart(2, '0')}
-                                    </option>
-                                ))}
-                                </select>
-                                
-                                {/* Año */}
-                                <select className="border p-2" value={expiryYear} onChange={(e) => setExpiryYear(e.target.value)}>
-                                <option>YYYY</option>
-                                {[...Array(21)].map((_, i) => (
-                                    <option key={i} value={currentYear + i}>
-                                    {currentYear + i}
-                                    </option>
-                                ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3">
-                            <label className="block font-medium whitespace-nowrap">Security Code (CVV) <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-20 border p-2" 
-                                type="text"
-                                placeholder=" 123"
-                                value={cvv}
-                                onChange={(e) => setCvv(e.target.value)}
-                                required
-                            />
-                        </div>
-            
-                        <div className="flex space-x-2 my-4">
-                            <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" className="h-8" />
-                            <img src="https://img.icons8.com/color/48/mastercard.png" alt="MasterCard" className="h-8" />
-                            <img src="https://img.icons8.com/color/48/discover.png" alt="Discover" className="h-8" />
-                            <img src="https://img.icons8.com/color/48/amex.png" alt="Amex" className="h-8" />
-                        </div>
-                    </div>
-            
-                    {/* Billing Info */}
-                    <div>
-                        <h2 className="text-lg font-semibold mb-6">Billing Info</h2>
-                        
-                        <div className="flex items-center gap-4 mb-3">
-                            <label className="block font-medium whitespace-nowrap">First Name <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="First Name"
-                                value={FirstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Middle Name</label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Middle Name"
-                                value={MiddleName}
-                                onChange={(e) => setMiddleName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Surname <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Surname"
-                                value={SN}
-                                onChange={(e) => setSN(e.target.value)}
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Address <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Address"
-                                value={Direcc}
-                                onChange={(e) => setDirecc(e.target.value)}
-                                required
-                            />
-                        </div>
-                        
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">City <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="City"
-                                value={City}
-                                onChange={(e) => setCity(e.target.value)}
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Country <span className="text-red-500">*</span></label>
-                            <select value={Country} onChange={(e) => setcountry(e.target.value)} className="...">
-                                <option value="">Please Select</option>
-                                {countryNames.map((country, idx) => (
-                                    <option key={idx} value={country.value}>{country.label}</option>
-                                ))}
-                            </select>
-                            
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-3">
-                            <label className="block font-medium whitespace-nowrap">Region <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Region"
-                                value={State}
-                                onChange={(e) => setState(e.target.value)}
-                                required
-                            />
-                        </div>
-
-
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Zip/Postal Code <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Zip Code"
-                                value={ZipCode}
-                                onChange={(e) => setZipCode(e.target.value)}
-                                required
-                            />
-                        </div>
-                        
-                        <div className="flex items-center gap-4 mb-3 mt-4">
-                            <label className="block font-medium whitespace-nowrap">Email Address <span className="text-red-500">*</span></label>
-                            <input 
-                                className="w-full border p-2" 
-                                type="text" 
-                                placeholder="Email"
-                                value={Email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-                </div>
+            <div>
+              <label className="block font-medium mb-1">Last Name</label>
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full p-2 border rounded bg-gray-800 text-white"
+                required
+              />
             </div>
-            
-
-            <p className={`text-center mt-3 font-bold ${messageColor}`}>{message}</p>
-
-            <div className="flex justify-center mt-8 mb-28">
-                <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className="bg-green-600 text-white px-8 py-3 rounded hover:bg-green-500 transition"
-                >
-                    Make Payment
-                </button>
+            <div>
+              <label className="block font-medium mb-1">Zip</label>
+              <input
+                type="text"
+                placeholder="Zip"
+                value={zip}
+                onChange={(e) => setZip(e.target.value)}
+                className="w-full p-2 border rounded bg-gray-800 text-white"
+                required
+              />
             </div>
+          </div>
+          <div className="p-4 border rounded mt-6 bg-gray-800">
+            <CardElement options={{ hidePostalCode: true, style: { base: { color: "#fff", "::placeholder": { color: "#ccc" } } } }} />
+          </div>
+          <Button type="submit" className="w-full bg-green-600 text-white py-3 mt-6 rounded hover:bg-green-500 transition">
+            Make Payment
+          </Button>
+        </form>
+        <p className={`text-center mt-4 font-bold ${messageColor}`}>{message}</p>
+      </div>
+    </div>
+  );
+};
 
-
-
-        </div>
-    );
-  }
-
-  export default PaymentPage;
+// Wrap in Elements provider
+export default function WrappedPaymentPage() {
+  return (
+    <Elements stripe={stripePromise}>
+      <PaymentPage />
+    </Elements>
+  );
+}

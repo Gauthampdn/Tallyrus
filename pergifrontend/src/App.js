@@ -5,6 +5,7 @@ import Joyride, { EVENTS, STATUS } from 'react-joyride';
 //import SubscriptionChecker from "./hooks/SubscriptionChecker";
 import ProtectedRoute from './components/ProtectedRoute';
 import PaymentPage from './pages/Payment';
+import { loadStripe } from "@stripe/stripe-js";
 
 // pages & components
 import Home from './pages/Home';
@@ -38,6 +39,7 @@ const RedirectToFreeDetector = () => {
 };
 
 const App = () => {
+  const stripePromise = loadStripe("pk_test_tu_clave_publica");
   const { user } = useAuthContext();
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);

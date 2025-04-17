@@ -1,9 +1,20 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const MongoStore = require("connect-mongo");
-const cors = require("cors");
-const session = require("express-session");
+// server.js
+// environment vars
+require("dotenv").config()
+
+
+const express = require("express")
+const mongoose = require("mongoose")
+const MongoStore = require('connect-mongo');
+const openaiRoutes = require("./routes/openai")
+const authRoutes = require("./routes/auth")
+const classroomRoutes = require("./routes/classroom")
+const assignmentRoutes = require("./routes/assignment")
+const filesRoutes = require("./routes/files")
+const stripeRoutes = require("./routes/stripe")
+
+
+const session = require('express-session');
 const passport = require("passport");
 
 const cors = require('cors');
@@ -15,22 +26,18 @@ const app = express()
 app.use(express.json()) // to get req body
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://tallyrus.com'],
+  origin: ['http://localhost:3000', 'https://localhost:4000'],
   credentials: true
 }));
 
-// Session middleware: must be set up before passport.initialize() and your routes.
 app.use(session({
-  secret: "keyboard cat",  // use a proper secret in production
-  resave: false,
-  saveUninitialized: false, // only create session if something is stored
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+  secret: 'keyboard cat',
   cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: "lax",                // allows cross-site cookie sending in development
-    secure: false                   // false for HTTP (set to true if using HTTPS)
-    // domain: 'localhost' // optionally add for local development if needed
-  }
+    maxAge: 7 * 24 * 60 * 60 * 1000, // days hours minutes seconds milli
+  },
+  resave: false,
+  saveUninitialized: true,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
 }));
 
 
@@ -51,13 +58,6 @@ app.use("/assignments", assignmentRoutes)
 app.use("/files", filesRoutes)
 app.use("/stripe", stripeRoutes);
 
-// Use routes
-app.use("/auth", authRoutes);
-app.use("/stripe", stripeRoutes);
-app.use("/openai", openaiRoutes);
-app.use("/classroom", classroomRoutes);
-app.use("/assignments", assignmentRoutes);
-app.use("/files", filesRoutes);
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)
@@ -72,4 +72,3 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 // listening on port 
-
