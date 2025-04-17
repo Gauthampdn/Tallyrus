@@ -15,11 +15,6 @@ import {
 
 
 
-const CLIENT_ID = '522876621893-5vdohk39jj37m886b4uhpivonp7baqn3.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyBiC4I-gO_G_XsfnAQm_r76q1pRVQ3ZAvc';
-const SCOPES = 'https://www.googleapis.com/auth/gmail.send';
-
-
 const PaymentPage = () => {
     const currentYear = new Date().getFullYear();
     const countryNames = countries.map((c) => ({
@@ -143,7 +138,13 @@ const PaymentPage = () => {
         setTimeout(() => {
             setMessage("Payment made successfully");
             setMessageColor("text-green-500");
+        
+            // Redirigir a otra página después de 1 segundo
+            setTimeout(() => {
+                navigate('/app'); // Cambia esta ruta por la que necesites
+            }, 1000);
         }, 2000);
+        
 
     
         
@@ -163,15 +164,7 @@ const PaymentPage = () => {
         <div className="flex flex-col justify-between min-h-screen bg-gray-100">
             {/* LOGO */}
             <div className="relative top-6 mx-6 p-6">
-                <div className="flex items-start">
-                    <button
-                        onClick={navigate('/')}
-                        className="absolute top-4 left-4 text-black hover:underline block"
-                    >
-                        ← Go Back
-                    </button>
-                </div>
-                <div className="flex justify-end">
+                <div className="flex justify-start">
                     <img src="/tallyrus2green.png" className="w-8 h-8 mr-1" alt="Tallyrus Logo" />
                     <div className="text-2xl font-extrabold text-black">
                         <a href="/AboutTallyrus">
