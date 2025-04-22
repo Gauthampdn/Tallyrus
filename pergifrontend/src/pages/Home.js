@@ -241,8 +241,11 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     window.location.href = "https://buy.stripe.com/dR617Q1sRbK2fVC7st";
   };
 
+
   return (
-    <div className="min-h-screen bg-zinc-900 text-white">
+    <div id="page-background" className="min-h-screen w-full relative bg-slate-950">
+
+    <div className="min-h-screen bg-zinc-transparent text-white">
       <Navbar />
       <div className="flex justify-between items-center m-8 ">
         <h1 className='text-4xl font-bold'>Your Classrooms</h1>
@@ -338,7 +341,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
       <div className='flex flex-wrap m-4'>
       {user && user.authority === "teacher" && (
           <Card
-            className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
+            className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-transparent cursor-pointer hover:bg-zinc-700 transition-all"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <CardContent className="flex items-center justify-center h-full">
@@ -455,6 +458,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
 
       <Toaster />
     </div>
+  </div>
   );
 }
 

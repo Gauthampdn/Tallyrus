@@ -60,7 +60,7 @@ const Billing = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
       <div className="p-6 mt-20 mx-8">
         <h1 className="text-4xl font-bold mb-4">Billing Information</h1>
@@ -68,12 +68,6 @@ const Billing = () => {
           <p><strong>Subscription Plan:</strong> {billingData.plan}</p>
           <p><strong>Next Payment Date:</strong> {billingData.nextPaymentDate}</p>
           <p><strong>Last Payment Amount:</strong> {billingData.lastPaymentAmount}</p>
-
-          <div className="mt-6">
-            <button className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-              View Past Invoices
-            </button>
-          </div>
 
           <div className="mt-6">
             <Button onClick={() => navigate('/Payment')} className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-500 transition">

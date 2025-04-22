@@ -1,32 +1,32 @@
 
-import Navbar from "components/Navbar";
-import { useAuthContext } from "../hooks/useAuthContext";
+//import Navbar from "components/Navbar";
+//import { useAuthContext } from "../hooks/useAuthContext";
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, /*Link,*/ useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Toaster } from "@/components/ui/toaster"
-import { toast } from "sonner"
+//import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
+//import { Separator } from "@/components/ui/separator"
 import ReactMarkdown from 'react-markdown';
 import { useToast } from "@/components/ui/use-toast";
-import { useForm, useFieldArray } from "react-hook-form";
+/*import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import { faPlusCircle, faMinusCircle, faSave } from '@fortawesome/free-solid-svg-icons';*/ // Import specific icons
 import { flexRender } from "@tanstack/react-table";
-import { useDropzone } from 'react-dropzone';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+//import { useDropzone } from 'react-dropzone';
+//import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 
 
 import {
   useReactTable,
   getCoreRowModel,
-  ColumnDef,
+  //ColumnDef,
 } from "@tanstack/react-table";
 
 import {

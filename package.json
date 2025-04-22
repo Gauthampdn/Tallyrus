@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "axios": "^1.8.4",
+    "country-region-data": "^3.1.0",
+    "emailjs-com": "^3.2.0",
+    "framer-motion": "^12.7.3",
+    "gapi-script": "^1.2.0",
+    "i18n-iso-countries": "^7.14.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "react-select": "^5.10.1",
+    "react-select-country-list": "^2.2.3",
+    "react-tsparticles": "^2.12.2",
+    "uuid": "^11.1.0",
+    "world-countries": "^5.1.0"
+  }
+}

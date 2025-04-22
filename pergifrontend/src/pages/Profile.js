@@ -84,7 +84,7 @@ const ProfilePage = () => {
 
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
       <div className="flex flex-col items-center mt-10">
         <img
@@ -121,15 +121,6 @@ const ProfilePage = () => {
           >
             Change profile picture
           </button>
-
-          <h2 className="p-0 border-none text-gray-200 bg-0 mt-2 hover:underline">Login history</h2>
-          <ul className="text-sm text-gray-200">
-            {loginHistory.map((entry, idx) => (
-              <li key={idx}>
-                {new Date(entry.timestamp).toLocaleString()}
-              </li>
-            ))}
-          </ul>
 
           <button
             className="block text-left text-gray-200 hover:underline w-full mt-2"
