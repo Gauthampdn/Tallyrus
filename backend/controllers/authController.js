@@ -32,7 +32,7 @@ passport.use(new GoogleStrategy({
           id: profile.id,
           picture: profile.picture,
           name: profile.given_name,
-          surname: profile.lastname,
+          surname: profile.family_name,
           authority: "student",
           numGraded: 0
         });

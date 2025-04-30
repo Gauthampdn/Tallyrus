@@ -2,35 +2,19 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext'; // Asegúrate de tener este hook
 import Navbar from '../components/Navbar'; // Ajusta el path según tu estructura
 import { useNavigate } from 'react-router-dom';
+import 'react-datepicker/dist/react-datepicker.css';
+
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const [loginHistory, setLoginHistory] = useState([]);
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth || '');
+  
+
 
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(user?.image || '/profile.svg');
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    const fetchLoginHistory = async () => {
-      try {
-        const res = await fetch('/api/login-history', {
-          headers: {
-            Authorization: `Bearer ${user.token}`
-          }
-        });
-        const data = await res.json();
-        setLoginHistory(data);
-      } catch (err) {
-        console.error('Error fetching login history:', err);
-      }
-    };
-  
-    if (user) {
-      fetchLoginHistory();
-    }
-  }, [user]);
 
 
   const handleFileChange = async (e) => {
@@ -53,7 +37,7 @@ const ProfilePage = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Error al subir imagen');
+          throw new Error('We couldn\'t process your image');
         }
 
         const data = await response.json();
@@ -82,6 +66,30 @@ const ProfilePage = () => {
   const birthDate = new Date(user.dateOfBirth);
   const formattedDate = birthDate.toLocaleDateString('en-US'); // Formato de fecha en inglés (MM/DD/YYYY)
 
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch('/profile/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ dateOfBirth }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to save profile changes');
+      }
+  
+      alert('Profile updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Error updating profile');
+    }
+  };
+  
+  const today = new Date();
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -92,14 +100,22 @@ const ProfilePage = () => {
           alt={user.name}
           className={`h-40 w-40 rounded-full object-cover border-4 border-white mb-4 ${!user.image ? 'invert' : ''}`}
         />
-        <h1 className="text-2xl font-bold mt-3">{user.name + ' ' + user.lastName}</h1>
+        <h1 className="text-2xl font-bold mt-3">{user.name +' ' + user.surname}</h1>
 
         <div className='flex flex-col items-start'>
           <h1 className="text-gray-200 mt-12">{user.email}</h1>
-          <h1 className="text-gray-200 mt-3">
-            Date of birth <span className="text-gray-400">(MM/DD/YYYY)</span>: {formattedDate}
-          </h1>
-          
+          <label className="text-gray-200 mt-3">
+            Date of birth:
+            <input
+              type='date'
+              selected={dateOfBirth}
+              onChange={(date) => setDateOfBirth(date)}
+              placeholder=' MM/dd/YYYY'
+              max={localDate}
+              className='bg-transparent'
+            />
+
+          </label>
 
           <button
             onClick={() => navigate('/oranges')}
@@ -128,6 +144,14 @@ const ProfilePage = () => {
           >
             Billing
           </button>
+
+          <button
+            onClick={handleSaveProfile}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Save Changes
+          </button>
+
         </div>
       </div>
     </div>

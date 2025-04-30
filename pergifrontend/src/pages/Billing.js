@@ -12,7 +12,6 @@ const Billing = () => {
   const [billingData, setBillingData] = useState({
     plan: 'Standard',
     nextPaymentDate: 'NaN',
-    lastPaymentAmount: 'NaN',
   });
 
   const [loading, setLoading] = useState(true);
@@ -24,7 +23,6 @@ const Billing = () => {
     try {
       const lastPayment = new Date(lastPaymentDate);
       lastPayment.setMonth(lastPayment.getMonth() + 1);
-      nextPayment = lastPayment.toLocaleDateString('en-US');
     } catch {
       nextPayment = 'NaN';
     }
@@ -40,7 +38,6 @@ const Billing = () => {
           setBillingData({
             plan,
             nextPaymentDate: nextPayment,
-            lastPaymentAmount: '$5.00', // Puedes cambiarlo si tienes el dato real
           });
         } catch (error) {
           console.error('Error trying to obtain billing data:', error);
@@ -67,7 +64,6 @@ const Billing = () => {
         <div className="space-y-4 mt-20">
           <p><strong>Subscription Plan:</strong> {billingData.plan}</p>
           <p><strong>Next Payment Date:</strong> {billingData.nextPaymentDate}</p>
-          <p><strong>Last Payment Amount:</strong> {billingData.lastPaymentAmount}</p>
 
           <div className="mt-6">
             <Button onClick={() => navigate('/Payment')} className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-500 transition">

@@ -2,7 +2,7 @@ import { useState } from "react";
 import emailjs from "@emailjs/browser";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { validateEmail, verifyEmailWithAPI } from "./Validation";
+import { validateEmail} from "./Validation";
 
 
 const Section = ({ title, text, image }) => {
@@ -246,13 +246,6 @@ const Contact = () => {
         if (!validateEmail(from_email)) {
             setEmailError(true);  // Marcar el campo en rojo si el email es inválido
             alert("Please enter a valid email address.");
-            return;
-        }
-
-        const isValidEmail = await verifyEmailWithAPI(from_email);
-        if (!isValidEmail) {
-            setEmailError(true);  // Marcar el campo en rojo si el email no existe
-            alert("The email address does not exist. Please enter a valid one.");
             return;
         }
 

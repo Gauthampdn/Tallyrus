@@ -6,7 +6,7 @@ import './backgroundColor.css';
 import { SizeIcon } from '@radix-ui/react-icons';
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
-import { validateEmail, verifyEmailWithAPI } from './Validation';
+import { validateEmail} from './Validation';
 
 const AboutTallyrus = () => {
   const navigate = useNavigate(); // Initialize the navigate function
@@ -303,12 +303,6 @@ const AboutTallyrus = () => {
         return;
       }
 
-      const isValidEmail = await verifyEmailWithAPI(from_email);
-        if (!isValidEmail) {
-          setEmailError(true);  // Marcar el campo en rojo si el email no existe
-          alert("The email address does not exist. Please enter a valid one.");
-          return;
-        }
 
       const templateParams = {
         from_name,
@@ -318,10 +312,10 @@ const AboutTallyrus = () => {
   
       emailjs
         .send(
-          "service_wu86g4o", // Service ID
-          "template_e47c32m", // Template ID
+          process.env.REACT_APP_SECRET_KEY_EMAIL, // Service ID
+          process.env.REACT_APP_MESSAGE, // Template ID
           templateParams,
-          "YKTVhqZYkNfiWIzmz" // Public Key
+          process.env.REACT_APP_PUBLICK_KEY_EMAIL // Public Key
         )
         .then((response) => {
           console.log("Email sent successfully", response);
@@ -342,10 +336,10 @@ const AboutTallyrus = () => {
     // Enviar la respuesta automática
     emailjs
       .send(
-        'service_wu86g4o',   // ID del servicio
-        'template_vjliyje',  // ID de la plantilla de respuesta automática
+        process.env.REACT_APP_SECRET_KEY_EMAIL,   // ID del servicio
+        process.env.REACT_APP_RECEIVED_MESSAGE,  // ID de la plantilla de respuesta automática
         autoResponseParams,   // Parámetros para la respuesta automática
-        'YKTVhqZYkNfiWIzmz'   // Clave pública
+        process.env.REACT_APP_PUBLICK_KEY_EMAIL   // Clave pública
       )
       .then((response) => {
         console.log('Automatic response sent', response);
@@ -354,6 +348,10 @@ const AboutTallyrus = () => {
         console.error('Error: we couldn\'t send the automatic response', error);
       });
 
+      console.log("Service ID:", process.env.REACT_APP_SERVICE_ID);
+      console.log("Template ID:", process.env.REACT_APP_TEMPLATE_ID);
+      console.log("Public Key:", process.env.REACT_APP_PUBLIC_KEY);
+      console.log("Params:", templateParams);
 
       // reset after sending
       setEmail("");

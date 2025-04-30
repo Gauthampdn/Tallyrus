@@ -32,9 +32,17 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
-  lastname: {
+  fullName: {
     type: String,
     required: true
+  },
+  surname: {  // Agregado
+    type: String, 
+    required: false
+  },
+  dateOfBirth: { // Agregado
+    type: Date,
+    required: false
   },
   authority: {
     type: String,

@@ -27,24 +27,6 @@ export const validateEmail = (email) => {
     return emailRegex.test(email);
 };
 
-export const verifyEmailWithAPI = async (email) => {
-  const apiKey = 'HLz4KUyoMdSG8kaVBhzEG';  // Debes obtener tu clave de API de EmailListVerify o el servicio que elijas
-  const apiUrl = `https://api.email-list-verify.com/v2?email=${email}&apikey=${apiKey}`;
-
-  try {
-    const response = await axios.get(apiUrl);
-    const { is_valid } = response.data;
-    if (is_valid) {
-      console.log('El correo electrónico es válido y existe.');
-    } else {
-      console.log('El correo electrónico no es válido o no existe.');
-    }
-  } catch (error) {
-    console.error('Error al verificar el correo electrónico:', error);
-  }
-};
-
-
 export const generateOrderId = () => {
     return `TL-${uuidv4()}`;
   };
