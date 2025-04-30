@@ -1,29 +1,36 @@
-const mongoose = require("mongoose");
-const Classroom = require("../models/classroomModel");
-const User = require("../models/userModel");
-const Assignment = require("../models/assignmentModel");
+const mongoose = require('mongoose')
+const Classroom = require('../models/classroomModel')
+const User = require('../models/userModel')
+const Assignment = require('../models/assignmentModel')
 // const mammoth = require("mammoth");
-require("dotenv").config();
-const { ChatOpenAI } = require("@langchain/openai");
-const { llm, functions } = require('../utils/langsmith');
-const { incrementGraded } = require('./authController');
+require('dotenv').config()
+const { ChatOpenAI } = require('@langchain/openai')
+const { llm, functions } = require('../utils/langsmith')
+const { incrementGraded } = require('./authController')
 const testLangSmith = async (req, res) => {
     try {
-        console.log("Testing LangSmith integration with direct LLM call");
-        const messages = [{ role: "user", content: "Hello, provide a short response to test LangSmith tracing" }];
-        
-        console.log("About to invoke LLM");
-        const response = await llm.invoke(messages);
-        console.log("LLM invocation complete, response received");
-        
-        res.json({ success: true, response });
+        console.log('Testing LangSmith integration with direct LLM call')
+        const messages = [
+            {
+                role: 'user',
+                content:
+                    'Hello, provide a short response to test LangSmith tracing',
+            },
+        ]
+
+        console.log('About to invoke LLM')
+        const response = await llm.invoke(messages)
+        console.log('LLM invocation complete, response received')
+
+        res.json({ success: true, response })
     } catch (error) {
-        console.error("Error testing LangSmith:", error);
-        res.status(500).json({ error: error.message });
+        console.error('Error testing LangSmith:', error)
+        res.status(500).json({ error: error.message })
     }
-};
+}
 const fetchAIScore = async (text) => {
-    const url = "http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/ai-detection";  // Flask server URL
+    const url =
+        'http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/ai-detection' // Flask server URL
 
     try {
         const response = await fetch(url, {
@@ -32,34 +39,25 @@ const fetchAIScore = async (text) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ text }),
-        });
+        })
 
         if (!response.ok) {
-            throw new Error('Failed to fetch AI score');
+            throw new Error('Failed to fetch AI score')
         }
 
-        const result = await response.json();
-        return result;
+        const result = await response.json()
+        return result
     } catch (error) {
-        console.error("Error fetching AI score:", error);
-        return null; // Handle the error appropriately in your application
+        console.error('Error fetching AI score:', error)
+        return null // Handle the error appropriately in your application
     }
-};
+}
 
 const formatAIScore = (aiScore, decimalPoints = 2) => {
-    return (aiScore * 100).toFixed(decimalPoints);
-};
+    return (aiScore * 100).toFixed(decimalPoints)
+}
 
-
-
-
-
-
-
-
-
-const gradingInstructions =
-    `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
+const gradingInstructions = `You are a Grader for essays. You will read the given essay and then based on the rubric below you will give in-depth feedback based on each criteria and then a score for each criteria.
         Give extremely in-depth paragraphs of feedback, comments, and suggestions on each criteria on what was done well, what could be improved, and suggestions. Use examples on how it can be better and/or how it can be rewritten/rephrased.
         Grade leniently at an elementary school writing level, aiming to give scores mostly in the top two ranges (e.g., 4/5 or 5/5). You can also give partial scores (e.g., 4.5) if you feel the writing quality is between 2 levels of achievement.
 
@@ -93,28 +91,26 @@ const gradingInstructions =
         
 
         You must do every single criteria in the rubric provided no matter how many there are, giving every single rubric criteria specifically and the score and comments/suggestions respectively.
-        `;
-
-
+        `
 
 async function loadPdfJsLib() {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-    return pdfjsLib;
+    const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
+    return pdfjsLib
 }
 
 async function getTextFromPDF(pdfPath) {
-    const pdfjsLib = await loadPdfJsLib();
-    const loadingTask = pdfjsLib.getDocument(pdfPath);
-    const pdf = await loadingTask.promise;
-    let extractedText = '';
+    const pdfjsLib = await loadPdfJsLib()
+    const loadingTask = pdfjsLib.getDocument(pdfPath)
+    const pdf = await loadingTask.promise
+    let extractedText = ''
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        extractedText += textContent.items.map(item => item.str).join(' ');
+        const page = await pdf.getPage(pageNum)
+        const textContent = await page.getTextContent()
+        extractedText += textContent.items.map((item) => item.str).join(' ')
     }
 
-    return extractedText;
+    return extractedText
 }
 
 // async function getTextFromDOCX(url) {
@@ -148,33 +144,33 @@ async function getTextFromPDF(pdfPath) {
 // }
 
 function rubricToString(rubrics) {
-    let rubricString = '';
+    let rubricString = ''
 
-    rubrics.forEach(rubric => {
-        rubricString += `Criteria Name : ${rubric.name}\n`;
+    rubrics.forEach((rubric) => {
+        rubricString += `Criteria Name : ${rubric.name}\n`
 
-        rubric.values.forEach(value => {
-            rubricString += `  - ${value.point} points = ${value.description}\n`;
-        });
+        rubric.values.forEach((value) => {
+            rubricString += `  - ${value.point} points = ${value.description}\n`
+        })
 
-        rubricString += '\n';
-    });
+        rubricString += '\n'
+    })
 
-    return rubricString;
+    return rubricString
 }
 
 function parseFeedback(gradingResponse) {
-    const feedback = gradingResponse;
-    const feedbackLines = feedback.split('\n');
-    const parsedFeedback = [];
+    const feedback = gradingResponse
+    const feedbackLines = feedback.split('\n')
+    const parsedFeedback = []
 
-    let currentCriteria = null;
-    let currentComments = null;
-    let currentScore = null;
-    let currentTotal = null;
+    let currentCriteria = null
+    let currentComments = null
+    let currentScore = null
+    let currentTotal = null
 
     for (let line of feedbackLines) {
-        const trimmedLine = line.trim();
+        const trimmedLine = line.trim()
         if (trimmedLine.startsWith('**Criteria Name**:')) {
             if (currentCriteria) {
                 parsedFeedback.push({
@@ -182,19 +178,24 @@ function parseFeedback(gradingResponse) {
                     score: currentScore,
                     total: currentTotal,
                     comments: currentComments,
-                });
+                })
             }
-            currentCriteria = trimmedLine.split('**Criteria Name**:')[1].trim();
-            currentComments = null;
-            currentScore = null;
-            currentTotal = null;
+            currentCriteria = trimmedLine.split('**Criteria Name**:')[1].trim()
+            currentComments = null
+            currentScore = null
+            currentTotal = null
         } else if (trimmedLine.startsWith('**Score**:')) {
-            const scoreText = trimmedLine.split('**Score**:')[1].trim().replace(/\*/g, '');
-            const scoreParts = scoreText.split('/');
-            currentScore = parseFloat(scoreParts[0]);
-            currentTotal = parseInt(scoreParts[1], 10);
+            const scoreText = trimmedLine
+                .split('**Score**:')[1]
+                .trim()
+                .replace(/\*/g, '')
+            const scoreParts = scoreText.split('/')
+            currentScore = parseFloat(scoreParts[0])
+            currentTotal = parseInt(scoreParts[1], 10)
         } else if (trimmedLine.startsWith('**Comments/suggestions**:')) {
-            currentComments = trimmedLine.split('**Comments/suggestions**:')[1].trim();
+            currentComments = trimmedLine
+                .split('**Comments/suggestions**:')[1]
+                .trim()
         }
     }
 
@@ -203,20 +204,21 @@ function parseFeedback(gradingResponse) {
             name: currentCriteria,
             score: currentScore,
             total: currentTotal,
-            comments: currentComments
-        });
+            comments: currentComments,
+        })
     }
 
-    return parsedFeedback;
+    return parsedFeedback
 }
 
 const parseRubricWithGPT4 = async (rubricURL) => {
     try {
-        const extractedText = await getTextFromPDF(rubricURL);
-        console.log(extractedText);
+        const extractedText = await getTextFromPDF(rubricURL)
+        console.log(extractedText)
         const messages = [
-                {
-                    role: "system", content: `
+            {
+                role: 'system',
+                content: `
 
                     You are a JSON rubric formatting expert. I need you to convert any rubric provided to you into a specific JSON array format
                     
@@ -292,291 +294,316 @@ const parseRubricWithGPT4 = async (rubricURL) => {
                         }
                     ]
 
-                ` },
-                {
-                    role: "user", content: `Parse the following rubric text into a structured format.
+                `,
+            },
+            {
+                role: 'user',
+                content: `Parse the following rubric text into a structured format.
 
                     rubric:
-                        ${extractedText}`
-                }
-        ];
-        const gradingResponse = await llm.invoke(messages);
-        if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
+                        ${extractedText}`,
+            },
+        ]
+        const gradingResponse = await llm.invoke(messages)
+        if (
+            gradingResponse &&
+            gradingResponse.choices &&
+            gradingResponse.choices.length > 0
+        ) {
             console.log(gradingResponse.choices[0].message.content)
-            return convertToRubricSchema(gradingResponse.choices[0].message.content);
+            return convertToRubricSchema(
+                gradingResponse.choices[0].message.content
+            )
         } else {
-            throw new Error("Failed to get a valid response from GPT-4");
+            throw new Error('Failed to get a valid response from GPT-4')
         }
     } catch (error) {
-        console.error("Error parsing rubric:", error);
-        throw new Error("Failed to parse rubric");
+        console.error('Error parsing rubric:', error)
+        throw new Error('Failed to parse rubric')
     }
-};
-
-function convertToRubricSchema(gptOutput) {
-    if (!gptOutput) return [];
-
-    // Extract the JSON part from the output using regex
-    const jsonMatch = gptOutput.match(/```(?:json)?([\s\S]*?)```/);
-    if (!jsonMatch || jsonMatch.length < 2) return [];
-
-    const jsonContent = jsonMatch[1].trim();
-
-    // Parse the JSON content
-    const rubrics = JSON.parse(jsonContent);
-
-    return rubrics;
 }
 
+function convertToRubricSchema(gptOutput) {
+    if (!gptOutput) return []
+
+    // Extract the JSON part from the output using regex
+    const jsonMatch = gptOutput.match(/```(?:json)?([\s\S]*?)```/)
+    if (!jsonMatch || jsonMatch.length < 2) return []
+
+    const jsonContent = jsonMatch[1].trim()
+
+    // Parse the JSON content
+    const rubrics = JSON.parse(jsonContent)
+
+    return rubrics
+}
 
 const grade = async (rubric, essay, gradingPrompt, teacherId) => {
     // Convert rubric to a string format suitable for grading
-    console.log("Starting grading with LLM...");
-    const rubricString = rubricToString(rubric);
+    console.log('Starting grading with LLM...')
+    const rubricString = rubricToString(rubric)
 
     // Fetch old graded essays for the specific teacher
-    const oldEssays = await fetchOldGradedEssays(teacherId);
-    console.log("oldessays", oldEssays);
-    let oldEssaysText = '';
+    const oldEssays = await fetchOldGradedEssays(teacherId)
+    console.log('oldessays', oldEssays)
+    let oldEssaysText = ''
 
     // Extract text from each old graded essay
     for (let oldEssay of oldEssays) {
-        let extractedText = '';
+        let extractedText = ''
         if (oldEssay.pdfURL.endsWith('.pdf')) {
-            extractedText = await getTextFromPDF(oldEssay.pdfURL);
+            extractedText = await getTextFromPDF(oldEssay.pdfURL)
         }
 
         if (extractedText) {
-            oldEssaysText += extractedText + '\n\n'; // Concatenate texts
+            oldEssaysText += extractedText + '\n\n' // Concatenate texts
         }
     }
 
-    console.log(oldEssaysText);
-
+    console.log(oldEssaysText)
 
     // Prepare the payload for the Python server
     const payload = {
         rubric: rubricString,
         essay: essay,
         prompt: gradingInstructions,
-        old_essays: oldEssaysText
-    };
+        old_essays: oldEssaysText,
+    }
 
     // Send the grading request to the Python server
     try {
-        const response = await fetch("http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/grade-essay", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+            'http://ec2-3-20-99-69.us-east-2.compute.amazonaws.com:5001/grade-essay',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            }
+        )
 
         if (!response.ok) {
-            throw new Error('Failed to grade the essay');
+            throw new Error('Failed to grade the essay')
         }
 
-        const result = await response.json();
-        return result;  // This result contains the grading feedback and scores
+        const result = await response.json()
+        return result // This result contains the grading feedback and scores
     } catch (error) {
-        console.error("Error grading essay:", error);
-        return null;
+        console.error('Error grading essay:', error)
+        return null
     }
-};
+}
 
 // Helper function to fetch old graded essays for a specific teacher
 const fetchOldGradedEssays = async (teacherId) => {
-
     try {
         // Find the teacher by their ID
-        const teacher = await User.findOne({ id: teacherId });
+        const teacher = await User.findOne({ id: teacherId })
 
         console.log(teacherId)
 
         if (!teacher) {
-            throw new Error("Teacher not found");
+            throw new Error('Teacher not found')
         }
 
         // Filter and return only the old graded essays
-        return teacher.uploadedFiles.filter(file => file.isOldGradedEssay);
+        return teacher.uploadedFiles.filter((file) => file.isOldGradedEssay)
     } catch (error) {
-        console.error("Error fetching old graded essays:", error);
-        return [];
+        console.error('Error fetching old graded essays:', error)
+        return []
     }
-};
+}
 
 const gradeall = async (req, res) => {
-    const assignmentId = req.params.id;
+    const assignmentId = req.params.id
 
-    if (req.user.authority !== "teacher") {
-        return res.status(403).json({ error: "Only teachers can grade assignments" });
+    if (req.user.authority !== 'teacher') {
+        return res
+            .status(403)
+            .json({ error: 'Only teachers can grade assignments' })
     }
 
     try {
-        const assignment = await Assignment.findById(assignmentId);
+        const assignment = await Assignment.findById(assignmentId)
 
         if (!assignment) {
-            return res.status(404).json({ error: "Assignment not found" });
+            return res.status(404).json({ error: 'Assignment not found' })
         }
 
         for (let submission of assignment.submissions) {
             if (submission.status !== 'graded') {
-                submission.status = 'grading';
+                submission.status = 'grading'
             }
         }
-        await assignment.save(); 
+        await assignment.save()
 
-        const gradingPromises = assignment.submissions.map(async (submission) => {
-            if (submission.status === 'grading') {
-                try {
-                    let extractedText = '';
-                    if (submission.pdfURL.endsWith('.pdf')) {
-                        extractedText = await getTextFromPDF(submission.pdfURL);
-                    } else {
-                        submission.status = 'error';
-                        submission.feedback = [{
-                            name: 'Error',
-                            score: 0,
-                            total: 0,
-                            comments: 'Unsupported file format'
-                        }];
-                        return submission;
+        const gradingPromises = assignment.submissions.map(
+            async (submission) => {
+                if (submission.status === 'grading') {
+                    try {
+                        let extractedText = ''
+                        if (submission.pdfURL.endsWith('.pdf')) {
+                            extractedText = await getTextFromPDF(
+                                submission.pdfURL
+                            )
+                        } else {
+                            submission.status = 'error'
+                            submission.feedback = [
+                                {
+                                    name: 'Error',
+                                    score: 0,
+                                    total: 0,
+                                    comments: 'Unsupported file format',
+                                },
+                            ]
+                            return submission
+                        }
+
+                        if (!extractedText) {
+                            submission.status = 'error'
+                            submission.feedback = [
+                                {
+                                    name: 'Error',
+                                    score: 0,
+                                    total: 0,
+                                    comments:
+                                        'Failed to extract text from file',
+                                },
+                            ]
+                            return submission
+                        }
+
+                        const rubricString = rubricToString(assignment.rubric)
+                        const messages = [
+                            { role: 'user', content: gradingInstructions },
+                            { role: 'user', content: rubricString },
+                            { role: 'user', content: extractedText },
+                        ]
+
+                        const gradingResponse = await llm.invoke(messages)
+
+                        if (!gradingResponse) {
+                            submission.status = 'error'
+                            submission.feedback = [
+                                {
+                                    name: 'Error',
+                                    score: 0,
+                                    total: 0,
+                                    comments: 'Failed to grade the submission',
+                                },
+                            ]
+                        } else {
+                            const feedback = gradingResponse.content
+                            submission.feedback = parseFeedback(feedback)
+                            submission.status = 'graded'
+                        }
+
+                        const user = await User.findById(req.user.id)
+                        if (user.numGraded === undefined) {
+                            user.numGraded = 0
+                        }
+                        user.numGraded++
+                        await user.save()
+
+                        return submission
+                    } catch (error) {
+                        console.error('Error grading submission:', error)
+                        submission.status = 'error'
+                        submission.feedback = [
+                            {
+                                name: 'Error',
+                                score: 0,
+                                total: 0,
+                                comments: 'An error occurred while grading',
+                            },
+                        ]
+                        return submission
                     }
-
-                    if (!extractedText) {
-                        submission.status = 'error';
-                        submission.feedback = [{
-                            name: 'Error',
-                            score: 0,
-                            total: 0,
-                            comments: 'Failed to extract text from file'
-                        }];
-                        return submission;
-                    }
-
-                    const rubricString = rubricToString(assignment.rubric);
-                    const messages = [
-                        { role: "user", content: gradingInstructions },
-                        { role: "user", content: rubricString },
-                        { role: "user", content: extractedText }
-                    ];
-
-                    const gradingResponse = await llm.invoke(messages);
-                    
-                    if (!gradingResponse) {
-                        submission.status = 'error';
-                        submission.feedback = [{
-                            name: 'Error',
-                            score: 0,
-                            total: 0,
-                            comments: 'Failed to grade the submission'
-                        }];
-                    } else {
-                        const feedback = gradingResponse.content;
-                        submission.feedback = parseFeedback(feedback);
-                        submission.status = 'graded';
-                    }
-
-                    const user = await User.findById(req.user.id);
-                    if (user.numGraded === undefined) {
-                        user.numGraded = 0;
-                    }
-                    user.numGraded++;
-                    await user.save();
-
-                    return submission;
-                } catch (error) {
-                    console.error("Error grading submission:", error);
-                    submission.status = 'error';
-                    submission.feedback = [{
-                        name: 'Error',
-                        score: 0,
-                        total: 0,
-                        comments: 'An error occurred while grading'
-                    }];
-                    return submission;
                 }
+                return submission
             }
-            return submission;
-        });
+        )
 
-        const gradedSubmissions = await Promise.all(gradingPromises);
+        const gradedSubmissions = await Promise.all(gradingPromises)
 
         for (let submission of gradedSubmissions) {
-            await assignment.save(); 
+            await assignment.save()
         }
 
-        res.json({ message: "All submissions graded successfully" });
+        res.json({ message: 'All submissions graded successfully' })
     } catch (error) {
-        console.error("Error grading assignments:", error);
-        res.status(500).send('Error grading assignments');
+        console.error('Error grading assignments:', error)
+        res.status(500).send('Error grading assignments')
     }
-};
-
-
-
-
+}
 
 const gradeSubmission = async (req, res) => {
-    const { assignmentId } = req.params;
-    const { text } = req.body;
-    const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
+    const { assignmentId } = req.params
+    const { text } = req.body
+    const aiDetectionToken = process.env.AIDETECT // Replace with your actual token
 
     if (!text) {
-        return res.status(400).json({ error: "No text provided" });
+        return res.status(400).json({ error: 'No text provided' })
     }
 
     try {
-        const assignment = await Assignment.findById(assignmentId);
+        const assignment = await Assignment.findById(assignmentId)
 
         if (!assignment) {
-            return res.status(404).json({ error: "Assignment not found" });
+            return res.status(404).json({ error: 'Assignment not found' })
         }
 
         // Find the specific submission
-        const submission = assignment.submissions.find(sub => sub.studentId === req.user._id);
+        const submission = assignment.submissions.find(
+            (sub) => sub.studentId === req.user._id
+        )
 
         if (!submission) {
-            return res.status(404).json({ error: "Submission not found" });
+            return res.status(404).json({ error: 'Submission not found' })
         }
 
         // Set the submission status to 'grading'
-        submission.status = 'grading';
-        await assignment.save();
+        submission.status = 'grading'
+        await assignment.save()
 
-        const rubricString = rubricToString(assignment.rubric);
+        const rubricString = rubricToString(assignment.rubric)
 
         const messages = [
-                { role: "user", content: gradingInstructions },
-                { role: "user", content: rubricString },
-                { role: "user", content: text }
-            ];
-        const gradingResponse = await llm.invoke(messages);
-        if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
-            return res.status(500).json({ error: "Failed to grade submission" });
+            { role: 'user', content: gradingInstructions },
+            { role: 'user', content: rubricString },
+            { role: 'user', content: text },
+        ]
+        const gradingResponse = await llm.invoke(messages)
+        if (
+            !gradingResponse ||
+            !gradingResponse.choices ||
+            gradingResponse.choices.length === 0
+        ) {
+            return res.status(500).json({ error: 'Failed to grade submission' })
         }
 
-        const feedback = gradingResponse.choices[0].message.content;
+        const feedback = gradingResponse.choices[0].message.content
 
         // Set the submission status to 'graded' and save the feedback
-        submission.status = 'graded';
-        submission.feedback = parseFeedback(feedback);
-        await assignment.save();
+        submission.status = 'graded'
+        submission.feedback = parseFeedback(feedback)
+        await assignment.save()
 
-        res.json({ feedback });
+        res.json({ feedback })
     } catch (error) {
-        console.error("Error grading submission:", error);
-        res.status(500).send('Error grading submission');
+        console.error('Error grading submission:', error)
+        res.status(500).send('Error grading submission')
     }
-};
-
+}
 
 const extractText = async (req, res) => {
     try {
-        const result = await getTextFromPDF("https://example.com/sample.pdf");
+        const result = await getTextFromPDF('https://example.com/sample.pdf')
         const messages = [
-                {
-                    "role": "assistant", "content": `You are a Grader for essays.You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria.You will then give the total score. 
+            {
+                role: 'assistant',
+                content: `You are a Grader for essays.You will read given essay and then based on the rubric below you will give in depth feedback based on each criteria and then a score for each criteria.You will then give the total score. 
 
                     This is how each grading rubric should be formatted:
 
@@ -592,175 +619,228 @@ const extractText = async (req, res) => {
 
             Grade for a middle school level, and do not grade too harshly.Try to make scores fall between 100 to 70, closer to 100.
 
-                `
-
-                },
-                {
-                    "role": "assistant", "content": `
+                `,
+            },
+            {
+                role: 'assistant',
+                content: `
         Rubric: \n
                 Content and Depth of Analysis(25 points), \n
                 Structure and Organization(25 points), \n
                 Argument Strength and Persuasiveness(25 points), \n
                 Clarity and Language Use(15 points), \n
-                Originality and Insight(10 points) \n` },
-                { "role": "user", "content": result }
-            ];
-        const response = await llm.invoke(messages);
-        res.json(response);
+                Originality and Insight(10 points) \n`,
+            },
+            { role: 'user', content: result },
+        ]
+        const response = await llm.invoke(messages)
+        res.json(response)
     } catch (error) {
-        console.error("Error with OpenAI request:", error);
-        res.status(500).send('Error with OpenAI request');
+        console.error('Error with OpenAI request:', error)
+        res.status(500).send('Error with OpenAI request')
     }
-};
+}
 
 const completion = async (req, res) => {
     try {
-        const prompt = req.body.prompt;
+        const prompt = req.body.prompt
 
-        const response = await llm.invoke(prompt);
+        const response = await llm.invoke(prompt)
 
-        res.json(response);
+        res.json(response)
     } catch (error) {
-        res.status(500).send('Error with OpenAI request');
+        res.status(500).send('Error with OpenAI request')
     }
-};
+}
 
-const test = async (req, res) => { };
+const test = async (req, res) => {}
 
 function generateJoinCode(length = 6) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let result = ''
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(
+            Math.floor(Math.random() * characters.length)
+        )
+    }
+    return result
 }
 
 const handleFunctionCall = async (req, res) => {
-  const { userInput } = req.body;
-  const user_id = req.user.id;
+    const { userInput } = req.body
+    const user_id = req.user.id
 
-  console.log("Received function call request:", { userInput, user_id });
+    console.log('Received function call request:', { userInput, user_id })
 
-  if (!userInput) {
-    return res.status(400).json({ error: "No user input provided" });
-  }
-
-  try {
-    // Determine the intended action from the input
-    const isCreatingClassroom = userInput.toLowerCase().includes('create') && 
-                               userInput.toLowerCase().includes('classroom') &&
-                               (userInput.toLowerCase().includes('called') || 
-                                userInput.toLowerCase().includes('named'));
-
-    // Create the messages array for the LLM
-    const messages = [
-      {
-        role: "system",
-        content: `You are a helpful assistant that helps teachers create classrooms and assignments. You MUST use the provided functions to handle the user's request.
-        - For creating a classroom: use createClassroom and extract a title from the user's input
-        - For creating an assignment: use createAssignment and find the classroom by its name
-        Always try to generate descriptive and helpful descriptions.
-        When creating an assignment, make sure to extract both the assignment name and the classroom name from the input.
-        If no specific assignment name is provided, generate a descriptive one based on the context.
-        DO NOT respond conversationally - you must ALWAYS use one of the provided functions.
-        Current action: ${isCreatingClassroom ? 'Creating a new classroom' : 'Creating an assignment'}`
-      },
-      {
-        role: "user",
-        content: userInput
-      }
-    ];
-
-    console.log("Sending request to LLM with messages:", messages);
-    console.log("Determined action:", isCreatingClassroom ? "createClassroom" : "createAssignment");
-
-    // Call the LLM with function calling and force it to use the correct function
-    const response = await llm.invoke(messages, {
-      functions,
-      function_call: {
-        name: isCreatingClassroom ? "createClassroom" : "createAssignment"
-      }
-    });
-    
-    console.log("Raw LLM response:", response);
-
-    // Extract function call from the response
-    const functionCall = response.additional_kwargs?.function_call;
-    console.log("Function call details:", functionCall);
-
-    if (!functionCall || !functionCall.arguments) {
-      console.error("Invalid function call response:", response);
-      return res.status(400).json({ error: "Could not determine the action from the input" });
+    if (!userInput) {
+        return res.status(400).json({ error: 'No user input provided' })
     }
 
-    let result;
-    const args = JSON.parse(functionCall.arguments);
-    console.log("Parsed function arguments:", args);
+    try {
+        const tools = [
+            {
+                name: 'createClassroom',
+                description:
+                    'Create a new classroom with a title and description',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        title: {
+                            type: 'string',
+                            description: 'The title of the classroom',
+                        },
+                        description: {
+                            type: 'string',
+                            description: 'A description of the classroom',
+                        },
+                    },
+                    required: ['title'],
+                },
+            },
+            {
+                name: 'createAssignment',
+                description: 'Create a new assignment in an existing classroom',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        name: {
+                            type: 'string',
+                            description: 'The name of the assignment',
+                        },
+                        description: {
+                            type: 'string',
+                            description: 'A description of the assignment',
+                        },
+                        classroomName: {
+                            type: 'string',
+                            description:
+                                'The name of the classroom to add the assignment to',
+                        },
+                        dueDate: {
+                            type: 'string',
+                            description:
+                                'The due date for the assignment (optional)',
+                        },
+                    },
+                    required: ['name', 'classroomName'],
+                },
+            },
+        ]
 
-    // Handle the function call based on the function name
-    if (functionCall.name === "createClassroom") {
-      const { title, description } = args;
-      const joincode = generateJoinCode();
-      console.log("Creating classroom with:", { title, description, user_id, joincode });
-      result = await Classroom.create({
-        title,
-        description,
-        teachers: [user_id],
-        students: [],
-        assignments: [],
-        joincode
-      });
-      console.log("Classroom created successfully:", result);
-    } else if (functionCall.name === "createAssignment") {
-      const { name, description, classroomName, dueDate } = args;
-      
-      console.log("Looking for classroom:", classroomName);
-      
-      // Find the classroom by name
-      const classroom = await Classroom.findOne({ 
-        title: { $regex: new RegExp('^' + classroomName + '$', 'i') },
-        teachers: user_id 
-      });
+        const messages = [
+            {
+                role: 'system',
+                content: `You are a helpful assistant that helps teachers create classrooms and assignments. You MUST use the provided functions to handle the user's request.
+                - For creating a classroom: use createClassroom and extract a title from the user's input
+                - For creating an assignment: use createAssignment and find the classroom by its name
+                Always try to generate descriptive and helpful descriptions.
+                When creating an assignment, make sure to extract both the assignment name and the classroom name from the input.
+                If no specific assignment name is provided, generate a descriptive one based on the context.
+                DO NOT respond conversationally - you must ALWAYS use one of the provided functions.`,
+            },
+            {
+                role: 'user',
+                content: userInput,
+            },
+        ]
 
-      if (!classroom) {
-        console.log("Available classrooms for user:", await Classroom.find({ teachers: user_id }).select('title'));
-        return res.status(404).json({ 
-          error: `No classroom found with name "${classroomName}" where you are a teacher` 
-        });
-      }
+        console.log('Sending request to LLM with messages:', messages)
 
-      console.log("Creating assignment with:", { name, description, classroomName, dueDate });
-      
-      result = await Assignment.create({
-        name,
-        description,
-        classId: classroom._id,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        rubric: [],
-        submissions: []
-      });
+        const response = await llm.invoke(messages, {
+            functions: tools,
+        })
 
-      // Add the assignment to the classroom's assignments array
-      classroom.assignments.push(result._id);
-      await classroom.save();
-      
-      console.log("Assignment created successfully:", result);
-    } else {
-      console.error("Unsupported function call:", functionCall.name);
-      return res.status(400).json({ error: "Unsupported function call" });
+        console.log('Raw LLM response:', response)
+
+        const functionCall = response.additional_kwargs?.function_call
+        console.log('Function call details:', functionCall)
+
+        if (!functionCall || !functionCall.arguments) {
+            console.error('Invalid function call response:', response)
+            return res.status(400).json({
+                error: 'Could not determine the action from the input',
+            })
+        }
+
+        let result
+        const args = JSON.parse(functionCall.arguments)
+        console.log('Parsed function arguments:', args)
+
+        if (functionCall.name === 'createClassroom') {
+            const { title, description } = args
+            const joincode = generateJoinCode()
+            console.log('Creating classroom with:', {
+                title,
+                description,
+                user_id,
+                joincode,
+            })
+            result = await Classroom.create({
+                title,
+                description,
+                teachers: [user_id],
+                students: [],
+                assignments: [],
+                joincode,
+            })
+            console.log('Classroom created successfully:', result)
+        } else if (functionCall.name === 'createAssignment') {
+            const { name, description, classroomName, dueDate } = args
+
+            console.log('Looking for classroom:', classroomName)
+
+            const classroom = await Classroom.findOne({
+                title: { $regex: new RegExp('^' + classroomName + '$', 'i') },
+                teachers: user_id,
+            })
+
+            if (!classroom) {
+                console.log(
+                    'Available classrooms for user:',
+                    await Classroom.find({ teachers: user_id }).select('title')
+                )
+                return res.status(404).json({
+                    error: `No classroom found with name "${classroomName}" where you are a teacher`,
+                })
+            }
+
+            console.log('Creating assignment with:', {
+                name,
+                description,
+                classroomName,
+                dueDate,
+            })
+
+            result = await Assignment.create({
+                name,
+                description,
+                classId: classroom._id,
+                dueDate: dueDate ? new Date(dueDate) : null,
+                rubric: [],
+                submissions: [],
+            })
+
+            classroom.assignments.push(result._id)
+            await classroom.save()
+
+            console.log('Assignment created successfully:', result)
+        } else {
+            console.error('Unsupported function call:', functionCall.name)
+            return res.status(400).json({ error: 'Unsupported function call' })
+        }
+
+        res.status(201).json({ message: 'Operation successful', result })
+    } catch (error) {
+        console.error('Error in handleFunctionCall:', error)
+        if (error.message.includes('JSON')) {
+            console.error('Invalid JSON in function arguments:', error)
+            return res
+                .status(400)
+                .json({ error: 'Invalid function arguments received from AI' })
+        }
+        res.status(500).json({ error: error.message })
     }
-
-    res.status(201).json({ message: "Operation successful", result });
-  } catch (error) {
-    console.error("Error in handleFunctionCall:", error);
-    if (error.message.includes('JSON')) {
-      console.error("Invalid JSON in function arguments:", error);
-      return res.status(400).json({ error: "Invalid function arguments received from AI" });
-    }
-    res.status(500).json({ error: error.message });
-  }
-};
+}
 
 module.exports = {
     completion,
@@ -770,5 +850,5 @@ module.exports = {
     gradeSubmission,
     parseRubricWithGPT4,
     testLangSmith,
-    handleFunctionCall
-};
+    handleFunctionCall,
+}
