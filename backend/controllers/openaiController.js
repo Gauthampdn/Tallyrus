@@ -638,7 +638,7 @@ function generateJoinCode(length = 6) {
 
 const handleFunctionCall = async (req, res) => {
   const { userInput } = req.body;
-  const user_id = req.user._id;
+  const user_id = req.user.id;
 
   console.log("Received function call request:", { userInput, user_id });
 

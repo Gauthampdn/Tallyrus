@@ -41,8 +41,9 @@ const s3 = new S3({
 // Get all classrooms for a user
 const getClassroomsForUser = async (req, res) => {
   try {
-    const user_id = req.user._id;
-    console.log("Fetching classrooms for user:", user_id);
+    const user_id = req.user.id;
+
+    // First, determine the user's authority (teacher or student)
 
     let classrooms;
 
@@ -183,7 +184,7 @@ const updateClassroom = async (req, res) => {
 
 const deleteClassroom = async (req, res) => {
   const classroomId = req.params.id; // ID of the classroom to be deleted
-  const user_id = req.user._id; // Changed from req.user.id to req.user._id
+  const user_id = req.user.id; // ID of the user making the request
 
   console.log("Trying to delete classroom", classroomId);
   console.log("User ID:", user_id);
@@ -222,6 +223,7 @@ const deleteClassroom = async (req, res) => {
             // Continue with deletion even if file deletion fails
           }
           console.log("Deleted file:", filename);
+
         }
       }
       // Delete the assignment
