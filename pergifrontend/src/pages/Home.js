@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPen, faTrash, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPen, faTrash, faArrowRight, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Form,
@@ -81,6 +81,7 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   const createForm = useForm({
     resolver: zodResolver(createClassSchema),
   });
+  const [apiInput, setApiInput] = useState('');
 
   const onSubmit = async (data) => {
     try {
@@ -124,14 +125,17 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
 
   useEffect(() => {
     const fetchClassrooms = async () => {
+      console.log("Fetching classrooms in useEffect...");
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom`, {
         credentials: 'include'
       });
 
       if (response.ok) {
         const json = await response.json();
+        console.log("Fetched classrooms in useEffect:", json);
         setCurrClassrooms(json);
-        console.log("all classrooms:", json);
+      } else {
+        console.error("Failed to fetch classrooms in useEffect:", await response.text());
       }
     };
 
@@ -139,6 +143,11 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
       fetchClassrooms();
     }
   }, [user]);
+
+  // Add logging when currClassrooms changes
+  useEffect(() => {
+    console.log("currClassrooms updated:", currClassrooms);
+  }, [currClassrooms]);
 
   const handleEditClassroom = (classroom) => {
     setSelectedClassroom(classroom);
@@ -241,6 +250,57 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
     window.location.href = "https://buy.stripe.com/dR617Q1sRbK2fVC7st";
   };
 
+  const handleApiSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      console.log("Submitting API request with input:", apiInput);
+      const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/function-call`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        mode: 'cors',
+        body: JSON.stringify({ userInput: apiInput })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send input');
+      }
+
+      const data = await response.json();
+      console.log("Function call response:", data);
+      
+      // Refresh the classroom list after successful creation
+      console.log("Fetching updated classroom list...");
+      const classroomsResponse = await fetch(`${process.env.REACT_APP_API_BACKEND}/classroom`, {
+        credentials: 'include'
+      });
+
+      if (classroomsResponse.ok) {
+        const classrooms = await classroomsResponse.json();
+        console.log("Received updated classrooms:", classrooms);
+        setCurrClassrooms(classrooms);
+      } else {
+        console.error("Failed to fetch classrooms:", await classroomsResponse.text());
+      }
+
+      toast({
+        title: "Success",
+        description: data.message || "Your input was processed successfully",
+      });
+      setApiInput('');
+    } catch (error) {
+      console.error("Error in handleApiSubmit:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       <Navbar />
@@ -336,7 +396,8 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
       </div>
 
       <div className='flex flex-wrap m-4'>
-      {user && user.authority === "teacher" && (
+        {console.log("Rendering classrooms:", currClassrooms)}
+        {user && user.authority === "teacher" && (
           <Card
             className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
             onClick={() => setIsCreateModalOpen(true)}
@@ -353,7 +414,6 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           <Card
             key={classroom._id}
             className={`min-w-1/4 w-1/4 min-h-[200px] m-4 text-black cursor-pointer`}
-
           >
             <CardHeader>
               <div className='flex justify-between'>
@@ -393,9 +453,6 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
             </CardFooter>
           </Card>
         ))}
-
-
-
       </div>
 
       {/* Edit Class Modal */}
@@ -452,6 +509,22 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
           </Form>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Floating API Input */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <form onSubmit={handleApiSubmit} className="flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg">
+          <Input
+            type="text"
+            value={apiInput}
+            onChange={(e) => setApiInput(e.target.value)}
+            placeholder="Enter your command..."
+            className="w-64"
+          />
+          <Button type="submit" size="icon">
+            <FontAwesomeIcon icon={faPaperPlane} />
+          </Button>
+        </form>
+      </div>
 
       <Toaster />
     </div>

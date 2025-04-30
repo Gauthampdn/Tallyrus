@@ -5,7 +5,7 @@ const Assignment = require("../models/assignmentModel");
 // const mammoth = require("mammoth");
 require("dotenv").config();
 const { ChatOpenAI } = require("@langchain/openai");
-const { llm } = require('../utils/langsmith');
+const { llm, functions } = require('../utils/langsmith');
 const { incrementGraded } = require('./authController');
 const testLangSmith = async (req, res) => {
     try {
@@ -627,6 +627,105 @@ const completion = async (req, res) => {
 
 const test = async (req, res) => { };
 
+function generateJoinCode(length = 6) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
+const handleFunctionCall = async (req, res) => {
+  const { userInput } = req.body;
+  const user_id = req.user._id;
+
+  console.log("Received function call request:", { userInput, user_id });
+
+  if (!userInput) {
+    return res.status(400).json({ error: "No user input provided" });
+  }
+
+  try {
+    // Create the messages array for the LLM
+    const messages = [
+      {
+        role: "system",
+        content: "You are a helpful assistant that helps teachers create classrooms and assignments. You MUST use the provided functions to handle the user's request. For creating a classroom, extract a title and provide a suitable description. For creating an assignment, make sure to get the classId from the user."
+      },
+      {
+        role: "user",
+        content: userInput
+      }
+    ];
+
+    console.log("Sending request to LLM with messages:", messages);
+
+    // Call the LLM with function calling
+    const response = await llm.predictMessages(messages, {
+      functions,
+      function_call: { name: "createClassroom" }
+    });
+    
+    console.log("Received LLM response:", response);
+
+    // Extract function call from the response
+    const functionCall = response.additional_kwargs?.function_call;
+    console.log("Function call from LLM:", functionCall);
+
+    if (!functionCall) {
+      console.error("No function call in LLM response");
+      return res.status(400).json({ error: "Could not determine the action from the input" });
+    }
+
+    let result;
+
+    // Handle the function call based on the function name
+    if (functionCall.name === "createClassroom") {
+      const { title, description } = JSON.parse(functionCall.arguments);
+      const joincode = generateJoinCode();
+      console.log("Creating classroom with:", { title, description, user_id, joincode });
+      result = await Classroom.create({
+        title,
+        description,
+        teachers: [user_id],
+        students: [],
+        assignments: [],
+        joincode
+      });
+      console.log("Classroom created successfully:", result);
+    } else if (functionCall.name === "createAssignment") {
+      const { name, description, classId, dueDate } = JSON.parse(functionCall.arguments);
+      console.log("Creating assignment with:", { name, description, classId, dueDate });
+      
+      // Verify the user is a teacher in the classroom
+      const classroom = await Classroom.findOne({ _id: classId, teachers: user_id });
+      if (!classroom) {
+        console.error("User not authorized to create assignment in class:", classId);
+        return res.status(403).json({ error: "Not authorized to create assignments in this class" });
+      }
+
+      result = await Assignment.create({
+        name,
+        description,
+        classId,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        rubric: [],
+        submissions: []
+      });
+      console.log("Assignment created successfully:", result);
+    } else {
+      console.error("Unsupported function call:", functionCall.name);
+      return res.status(400).json({ error: "Unsupported function call" });
+    }
+
+    res.status(201).json({ message: "Operation successful", result });
+  } catch (error) {
+    console.error("Error in handleFunctionCall:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
     completion,
     test,
@@ -634,5 +733,6 @@ module.exports = {
     gradeall,
     gradeSubmission,
     parseRubricWithGPT4,
-    testLangSmith
+    testLangSmith,
+    handleFunctionCall
 };

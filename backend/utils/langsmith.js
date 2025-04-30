@@ -15,11 +15,61 @@ const tracer = new LangChainTracer({
 
 console.log("Tracer initialized, creating LLM with callbacks");
 
-// Create LLM instance with the tracer callback
+// Create LLM instance with the tracer callback and function calling support
 const llm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
-  callbacks: [tracer]
+  modelName: "gpt-3.5-turbo-0125",
+  temperature: 0,
+  callbacks: [tracer],
+  maxTokens: 300,
 });
 
+// Function definitions that will be used across the application
+const functions = [
+  {
+    name: "createClassroom",
+    description: "Create a new classroom with a title and description",
+    parameters: {
+      type: "object",
+      properties: {
+        title: {
+          type: "string",
+          description: "The title of the classroom"
+        },
+        description: {
+          type: "string",
+          description: "A description of the classroom"
+        }
+      },
+      required: ["title", "description"]
+    }
+  },
+  {
+    name: "createAssignment",
+    description: "Create a new assignment for a classroom",
+    parameters: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "The name of the assignment"
+        },
+        description: {
+          type: "string",
+          description: "A description of the assignment"
+        },
+        classId: {
+          type: "string",
+          description: "The ID of the classroom this assignment belongs to"
+        },
+        dueDate: {
+          type: "string",
+          description: "The due date of the assignment in ISO format"
+        }
+      },
+      required: ["name", "description", "classId"]
+    }
+  }
+];
 
-module.exports = { llm };
+module.exports = { llm, functions };
