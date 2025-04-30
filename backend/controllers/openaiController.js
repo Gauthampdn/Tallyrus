@@ -477,7 +477,7 @@ const gradeall = async (req, res) => {
                         submission.status = 'graded';
                     }
 
-                    const user = await User.findById(req.user._id);
+                    const user = await User.findById(req.user.id);
                     if (user.numGraded === undefined) {
                         user.numGraded = 0;
                     }
@@ -647,11 +647,24 @@ const handleFunctionCall = async (req, res) => {
   }
 
   try {
+    // Determine the intended action from the input
+    const isCreatingClassroom = userInput.toLowerCase().includes('create') && 
+                               userInput.toLowerCase().includes('classroom') &&
+                               (userInput.toLowerCase().includes('called') || 
+                                userInput.toLowerCase().includes('named'));
+
     // Create the messages array for the LLM
     const messages = [
       {
         role: "system",
-        content: "You are a helpful assistant that helps teachers create classrooms and assignments. You MUST use the provided functions to handle the user's request. For creating a classroom, extract a title and provide a suitable description. For creating an assignment, make sure to get the classId from the user."
+        content: `You are a helpful assistant that helps teachers create classrooms and assignments. You MUST use the provided functions to handle the user's request.
+        - For creating a classroom: use createClassroom and extract a title from the user's input
+        - For creating an assignment: use createAssignment and find the classroom by its name
+        Always try to generate descriptive and helpful descriptions.
+        When creating an assignment, make sure to extract both the assignment name and the classroom name from the input.
+        If no specific assignment name is provided, generate a descriptive one based on the context.
+        DO NOT respond conversationally - you must ALWAYS use one of the provided functions.
+        Current action: ${isCreatingClassroom ? 'Creating a new classroom' : 'Creating an assignment'}`
       },
       {
         role: "user",
@@ -660,29 +673,34 @@ const handleFunctionCall = async (req, res) => {
     ];
 
     console.log("Sending request to LLM with messages:", messages);
+    console.log("Determined action:", isCreatingClassroom ? "createClassroom" : "createAssignment");
 
-    // Call the LLM with function calling
-    const response = await llm.predictMessages(messages, {
+    // Call the LLM with function calling and force it to use the correct function
+    const response = await llm.invoke(messages, {
       functions,
-      function_call: { name: "createClassroom" }
+      function_call: {
+        name: isCreatingClassroom ? "createClassroom" : "createAssignment"
+      }
     });
     
-    console.log("Received LLM response:", response);
+    console.log("Raw LLM response:", response);
 
     // Extract function call from the response
     const functionCall = response.additional_kwargs?.function_call;
-    console.log("Function call from LLM:", functionCall);
+    console.log("Function call details:", functionCall);
 
-    if (!functionCall) {
-      console.error("No function call in LLM response");
+    if (!functionCall || !functionCall.arguments) {
+      console.error("Invalid function call response:", response);
       return res.status(400).json({ error: "Could not determine the action from the input" });
     }
 
     let result;
+    const args = JSON.parse(functionCall.arguments);
+    console.log("Parsed function arguments:", args);
 
     // Handle the function call based on the function name
     if (functionCall.name === "createClassroom") {
-      const { title, description } = JSON.parse(functionCall.arguments);
+      const { title, description } = args;
       const joincode = generateJoinCode();
       console.log("Creating classroom with:", { title, description, user_id, joincode });
       result = await Classroom.create({
@@ -695,24 +713,38 @@ const handleFunctionCall = async (req, res) => {
       });
       console.log("Classroom created successfully:", result);
     } else if (functionCall.name === "createAssignment") {
-      const { name, description, classId, dueDate } = JSON.parse(functionCall.arguments);
-      console.log("Creating assignment with:", { name, description, classId, dueDate });
+      const { name, description, classroomName, dueDate } = args;
       
-      // Verify the user is a teacher in the classroom
-      const classroom = await Classroom.findOne({ _id: classId, teachers: user_id });
+      console.log("Looking for classroom:", classroomName);
+      
+      // Find the classroom by name
+      const classroom = await Classroom.findOne({ 
+        title: { $regex: new RegExp('^' + classroomName + '$', 'i') },
+        teachers: user_id 
+      });
+
       if (!classroom) {
-        console.error("User not authorized to create assignment in class:", classId);
-        return res.status(403).json({ error: "Not authorized to create assignments in this class" });
+        console.log("Available classrooms for user:", await Classroom.find({ teachers: user_id }).select('title'));
+        return res.status(404).json({ 
+          error: `No classroom found with name "${classroomName}" where you are a teacher` 
+        });
       }
 
+      console.log("Creating assignment with:", { name, description, classroomName, dueDate });
+      
       result = await Assignment.create({
         name,
         description,
-        classId,
+        classId: classroom._id,
         dueDate: dueDate ? new Date(dueDate) : null,
         rubric: [],
         submissions: []
       });
+
+      // Add the assignment to the classroom's assignments array
+      classroom.assignments.push(result._id);
+      await classroom.save();
+      
       console.log("Assignment created successfully:", result);
     } else {
       console.error("Unsupported function call:", functionCall.name);
@@ -722,6 +754,10 @@ const handleFunctionCall = async (req, res) => {
     res.status(201).json({ message: "Operation successful", result });
   } catch (error) {
     console.error("Error in handleFunctionCall:", error);
+    if (error.message.includes('JSON')) {
+      console.error("Invalid JSON in function arguments:", error);
+      return res.status(400).json({ error: "Invalid function arguments received from AI" });
+    }
     res.status(500).json({ error: error.message });
   }
 };

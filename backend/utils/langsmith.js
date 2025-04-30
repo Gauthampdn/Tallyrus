@@ -46,7 +46,7 @@ const functions = [
   },
   {
     name: "createAssignment",
-    description: "Create a new assignment for a classroom",
+    description: "Create a new assignment in an existing classroom",
     parameters: {
       type: "object",
       properties: {
@@ -58,16 +58,16 @@ const functions = [
           type: "string",
           description: "A description of the assignment"
         },
-        classId: {
+        classroomName: {
           type: "string",
-          description: "The ID of the classroom this assignment belongs to"
+          description: "The exact name of the existing classroom where this assignment should be created"
         },
         dueDate: {
           type: "string",
-          description: "The due date of the assignment in ISO format"
+          description: "The due date of the assignment in ISO format (optional)"
         }
       },
-      required: ["name", "description", "classId"]
+      required: ["name", "description", "classroomName"]
     }
   }
 ];
