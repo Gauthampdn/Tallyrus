@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth")
 const classroomRoutes = require("./routes/classroom")
 const assignmentRoutes = require("./routes/assignment")
 const filesRoutes = require("./routes/files")
+const profileRoutes = require('./routes/ProfileRoute');
 
 
 const session = require('express-session');
@@ -31,15 +32,21 @@ app.use(cors({
 
 app.use(session({
   secret: 'keyboard cat',
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // days hours minutes seconds milli
-  },
   resave: false,
-  saveUninitialized: true,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
+  saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: false,       // true en producción con HTTPS
+    httpOnly: true,
+    sameSite: 'lax'      // muy importante si usas localhost frontend + backend
+  }
 }));
 
-
+app.use((req, res, next) => {
+  console.log('User on session:', req.user);
+  next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -55,6 +62,7 @@ app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)
 app.use("/files", filesRoutes)
+app.use('/profile', profileRoutes);
 
 
 // connect to db

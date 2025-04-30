@@ -42,7 +42,7 @@ const userSchema = new Schema({
   },
   dateOfBirth: { // Agregado
     type: Date,
-    required: false
+    required: true
   },
   authority: {
     type: String,

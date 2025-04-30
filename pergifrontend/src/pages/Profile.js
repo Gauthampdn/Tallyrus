@@ -16,7 +16,28 @@ const ProfilePage = () => {
   const [preview, setPreview] = useState(user?.image || '/profile.svg');
   const [uploading, setUploading] = useState(false);
 
-
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/profile', {
+          credentials: 'include'
+        });
+  
+        if (res.ok) {
+          const data = await res.json();
+          setDateOfBirth(data.dateOfBirth?.split('T')[0]); // yyyy-mm-dd
+        } else {
+          console.error('Error al obtener perfil:', res.status);
+        }
+      } catch (error) {
+        console.error('Error al cargar perfil:', error);
+      }
+    };
+  
+    fetchProfile();
+  }, []);
+  
+  
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -68,23 +89,19 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch('/profile/update', {
+      const res = await fetch('http://localhost:5000/profile/update', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ dateOfBirth }),
+        credentials: 'include' // si usas sesiones/cookies
       });
-  
-      if (!response.ok) {
-        throw new Error('Failed to save profile changes');
-      }
-  
-      alert('Profile updated successfully!');
-    } catch (err) {
-      console.error(err);
-      alert('Error updating profile');
+
+      const data = await res.json();
+      console.log('Respuesta del servidor:', data);
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error);
     }
   };
   
@@ -108,9 +125,8 @@ const ProfilePage = () => {
             Date of birth:
             <input
               type='date'
-              selected={dateOfBirth}
-              onChange={(date) => setDateOfBirth(date)}
-              placeholder=' MM/dd/YYYY'
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
               max={localDate}
               className='bg-transparent'
             />
