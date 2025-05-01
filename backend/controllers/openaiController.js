@@ -879,10 +879,13 @@ const handleFunctionCall = async (req, res) => {
             })
 
             // Create the new assignment in the database
+            if (!description) {
+                description = 'No description provided'
+            }
             result = await Assignment.create({
                 name,
                 description,
-                classId: classroom._id,
+                classId: classroom.id,
                 dueDate: parsedDueDate ? new Date(parsedDueDate) : null,
                 rubric: [],
                 submissions: [],
