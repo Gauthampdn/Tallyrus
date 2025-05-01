@@ -25,6 +25,10 @@ The chatbot supports the following main functions:
     - Create assignments within existing classrooms
     - Set due dates and descriptions
     - Example: "Add a new essay assignment to English 101 due next week"
+    - **Important**: When specifying dates, use one of these formats:
+        - "YYYY-MM-DD" (e.g., "2024-03-20")
+        - "next week", "tomorrow", "in 2 days" (relative dates)
+        - "March 20, 2024" (full date format)
 
 ### User Interface
 
@@ -135,3 +139,12 @@ For additional support:
 -   Enhanced natural language understanding
 -   Custom command templates
 -   Multi-language support
+
+### Date Handling
+
+The chatbot uses natural language processing to understand date references, but for best results:
+
+-   Use specific dates when possible
+-   For relative dates (e.g., "next week"), the system will calculate the exact date
+-   All dates are converted to ISO format (YYYY-MM-DD) internally
+-   Timezone is set to the user's local timezone

@@ -666,17 +666,29 @@ function generateJoinCode(length = 6) {
     return result
 }
 
+/**
+ * Handles function calls from the chatbot interface.
+ * This function processes user input, determines the appropriate action (create classroom or assignment),
+ * and executes the corresponding operation.
+ *
+ * @param {Object} req - Express request object containing user input and authentication
+ * @param {Object} res - Express response object for sending back results
+ * @returns {Promise<void>} - Handles the response asynchronously
+ */
 const handleFunctionCall = async (req, res) => {
+    // Extract user input and ID from the request
     const { userInput } = req.body
     const user_id = req.user.id
 
     console.log('Received function call request:', { userInput, user_id })
 
+    // Validate that user input was provided
     if (!userInput) {
         return res.status(400).json({ error: 'No user input provided' })
     }
 
     try {
+        // Define the available functions that the AI can call
         const tools = [
             {
                 name: 'createClassroom',
@@ -719,7 +731,7 @@ const handleFunctionCall = async (req, res) => {
                         dueDate: {
                             type: 'string',
                             description:
-                                'The due date for the assignment (optional)',
+                                'The due date for the assignment. Can be a specific date (YYYY-MM-DD), relative date (e.g., "next week"), or natural language date (e.g., "March 20, 2024")',
                         },
                     },
                     required: ['name', 'classroomName'],
@@ -727,6 +739,7 @@ const handleFunctionCall = async (req, res) => {
             },
         ]
 
+        // Prepare the messages for the AI model
         const messages = [
             {
                 role: 'system',
@@ -735,7 +748,7 @@ const handleFunctionCall = async (req, res) => {
                 - For creating an assignment: use createAssignment and find the classroom by its name
                 Always try to generate descriptive and helpful descriptions.
                 When creating an assignment, make sure to extract both the assignment name and the classroom name from the input.
-                If no specific assignment name is provided, generate a descriptive one based on the context.
+                For dates, convert relative dates (e.g., "next week", "tomorrow") to specific dates in YYYY-MM-DD format.
                 DO NOT respond conversationally - you must ALWAYS use one of the provided functions.`,
             },
             {
@@ -746,15 +759,18 @@ const handleFunctionCall = async (req, res) => {
 
         console.log('Sending request to LLM with messages:', messages)
 
+        // Call the language model with the prepared messages and tools
         const response = await llm.invoke(messages, {
             functions: tools,
         })
 
         console.log('Raw LLM response:', response)
 
+        // Extract the function call details from the response
         const functionCall = response.additional_kwargs?.function_call
         console.log('Function call details:', functionCall)
 
+        // Validate that we received a valid function call
         if (!functionCall || !functionCall.arguments) {
             console.error('Invalid function call response:', response)
             return res.status(400).json({
@@ -763,18 +779,24 @@ const handleFunctionCall = async (req, res) => {
         }
 
         let result
+        // Parse the function arguments from the response
         const args = JSON.parse(functionCall.arguments)
         console.log('Parsed function arguments:', args)
 
+        // Handle different types of function calls
         if (functionCall.name === 'createClassroom') {
+            // Extract parameters for classroom creation
             const { title, description } = args
             const joincode = generateJoinCode()
+
             console.log('Creating classroom with:', {
                 title,
                 description,
                 user_id,
                 joincode,
             })
+
+            // Create the new classroom in the database
             result = await Classroom.create({
                 title,
                 description,
@@ -783,17 +805,21 @@ const handleFunctionCall = async (req, res) => {
                 assignments: [],
                 joincode,
             })
+
             console.log('Classroom created successfully:', result)
         } else if (functionCall.name === 'createAssignment') {
+            // Extract parameters for assignment creation
             const { name, description, classroomName, dueDate } = args
 
             console.log('Looking for classroom:', classroomName)
 
+            // Find the classroom where the user is a teacher
             const classroom = await Classroom.findOne({
                 title: { $regex: new RegExp('^' + classroomName + '$', 'i') },
                 teachers: user_id,
             })
 
+            // Validate that the classroom exists and user has permission
             if (!classroom) {
                 console.log(
                     'Available classrooms for user:',
@@ -804,33 +830,79 @@ const handleFunctionCall = async (req, res) => {
                 })
             }
 
+            // Parse and validate the due date
+            let parsedDueDate = null
+            if (dueDate) {
+                try {
+                    const date = new Date(dueDate)
+
+                    if (isNaN(date.getTime())) {
+                        const now = new Date()
+                        const lowerCaseDate = dueDate.toLowerCase()
+
+                        if (lowerCaseDate.includes('next week')) {
+                            date.setDate(now.getDate() + 7)
+                        } else if (lowerCaseDate.includes('tomorrow')) {
+                            date.setDate(now.getDate() + 1)
+                        } else if (lowerCaseDate.includes('in ')) {
+                            const daysMatch =
+                                lowerCaseDate.match(/in (\d+) days?/)
+                            if (daysMatch) {
+                                date.setDate(
+                                    now.getDate() + parseInt(daysMatch[1])
+                                )
+                            }
+                        } else if (lowerCaseDate.includes('next month')) {
+                            date.setMonth(now.getMonth() + 1)
+                        }
+
+                        if (isNaN(date.getTime())) {
+                            throw new Error('Could not parse the date')
+                        }
+                    }
+
+                    parsedDueDate = date.toISOString().split('T')[0]
+                    console.log('Parsed due date:', parsedDueDate)
+                } catch (error) {
+                    console.error('Error parsing date:', error)
+                    return res.status(400).json({
+                        error: 'Could not understand the date format. Please try using a specific date (e.g., "2024-03-20") or a relative date (e.g., "next week", "tomorrow", "in 3 days")',
+                    })
+                }
+            }
+
             console.log('Creating assignment with:', {
                 name,
                 description,
                 classroomName,
-                dueDate,
+                dueDate: parsedDueDate,
             })
 
+            // Create the new assignment in the database
             result = await Assignment.create({
                 name,
                 description,
                 classId: classroom._id,
-                dueDate: dueDate ? new Date(dueDate) : null,
+                dueDate: parsedDueDate ? new Date(parsedDueDate) : null,
                 rubric: [],
                 submissions: [],
             })
 
+            // Update the classroom with the new assignment
             classroom.assignments.push(result._id)
             await classroom.save()
 
             console.log('Assignment created successfully:', result)
         } else {
+            // Handle unsupported function calls
             console.error('Unsupported function call:', functionCall.name)
             return res.status(400).json({ error: 'Unsupported function call' })
         }
 
+        // Return success response with the created resource
         res.status(201).json({ message: 'Operation successful', result })
     } catch (error) {
+        // Handle errors during function execution
         console.error('Error in handleFunctionCall:', error)
         if (error.message.includes('JSON')) {
             console.error('Invalid JSON in function arguments:', error)
