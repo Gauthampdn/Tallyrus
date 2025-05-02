@@ -1,8 +1,15 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './chatbot.css'
 
-const Chatbot = () => {
+const Chatbot = ({ onApiSubmit }) => {
     const chatFormRef = useRef(null)
+    const [messages, setMessages] = useState([
+        {
+            type: 'bot',
+            content: 'Hello there!\nHow can I help you today?',
+        },
+    ])
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         // Select elements
@@ -15,11 +22,8 @@ const Chatbot = () => {
         const chatbotToggler = document.querySelector('#chatbot-toggler')
         const closeChatbotBtn = document.querySelector('#close-chatbot')
 
-        const API_URL = `${process.env.REACT_APP_API_BACKEND}/openai/function-call`
-
-        // User data and history
+        // User data
         let userData = { message: null, file: { data: null, mime_type: null } }
-        const chatHistory = []
         const initialInputHeight = messageInput.scrollHeight
 
         const createMessageElement = (content, ...classes) => {
@@ -29,88 +33,58 @@ const Chatbot = () => {
             return div
         }
 
-        const generateBotResponse = async (incomingDiv) => {
-            const messageElem = incomingDiv.querySelector('.message-text')
-            chatHistory.push({
-                role: 'user',
-                parts: [
-                    { text: userData.message },
-                    ...(userData.file.data
-                        ? [{ inline_data: userData.file }]
-                        : []),
-                ],
-            })
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    mode: 'cors',
-                    body: JSON.stringify({ userInput: userData.message }),
-                })
-                const data = await res.json()
-
-                if (!res.ok) {
-                    throw new Error(data.error || 'Server error')
-                }
-
-                // **NEW**: turn your JSON into a user-friendly string
-                let replyText = data.message || ''
-
-                if (data.result && data.result.title && data.result.joincode) {
-                    replyText = `✅ Class "${data.result.title}" created!\nJoin Code: ${data.result.joincode}`
-                }
-
-                messageElem.innerText = replyText
-                //chatHistory.push({ role: 'model', parts: [{ text }] });
-            } catch (err) {
-                messageElem.innerText = err.message
-                messageElem.style.color = '#ff0000'
-            } finally {
-                userData.file = {}
-                incomingDiv.classList.remove('thinking')
-                chatBody.scrollTo({
-                    top: chatBody.scrollHeight,
-                    behavior: 'smooth',
-                })
-            }
-        }
-
-        const handleOutgoing = (e) => {
+        const handleOutgoing = async (e) => {
             e.preventDefault()
-            userData.message = messageInput.value.trim()
+            const message = messageInput.value.trim()
+            if (!message) return
+
+            // Clear input and reset file upload
             messageInput.value = ''
             messageInput.dispatchEvent(new Event('input'))
             fileUploadWrapper.classList.remove('file-uploaded')
 
-            const msgContent = `<div class=\"message-text\"></div>${
-                userData.file.data
-                    ? `<img src=\"data:${userData.file.mime_type};base64,${userData.file.data}\" class=\"attachment\" />`
-                    : ''
-            }`
-            const outDiv = createMessageElement(msgContent, 'user-message')
-            outDiv.querySelector('.message-text').innerText = userData.message
-            chatBody.appendChild(outDiv)
-            chatBody.scrollTo({
-                top: chatBody.scrollHeight,
-                behavior: 'smooth',
-            })
+            // Add user message to state
+            setMessages((prev) => [...prev, { type: 'user', content: message }])
 
-            setTimeout(() => {
-                const botContent = `<img src=\"/tallyrus2white.png\" alt=\"Tallybot Logo\" class=\"bot-avatar\" width=\"50\" height=\"50\"></img>
-          <div class=\"message-text\"> <div class=\"thinking-indicator\"><div class=\"dot\"></div><div class=\"dot\"></div><div class=\"dot\"></div></div></div>`
-                const inDiv = createMessageElement(
-                    botContent,
-                    'bot-message',
-                    'thinking'
-                )
-                chatBody.appendChild(inDiv)
-                chatBody.scrollTo({
-                    top: chatBody.scrollHeight,
-                    behavior: 'smooth',
+            // Add bot thinking message
+            setMessages((prev) => [
+                ...prev,
+                { type: 'bot', content: '...', isLoading: true },
+            ])
+            setIsLoading(true)
+
+            try {
+                // Call the onApiSubmit function from Home.js
+                const response = await onApiSubmit({
+                    preventDefault: () => {},
+                    target: { value: message },
                 })
-                generateBotResponse(inDiv)
-            }, 600)
+
+                // Update the last bot message with the response
+                setMessages((prev) => {
+                    const newMessages = [...prev]
+                    newMessages[newMessages.length - 1] = {
+                        type: 'bot',
+                        content:
+                            response.message ||
+                            'Successfully processed your request!',
+                    }
+                    return newMessages
+                })
+            } catch (error) {
+                // Update the last bot message with error
+                setMessages((prev) => {
+                    const newMessages = [...prev]
+                    newMessages[newMessages.length - 1] = {
+                        type: 'bot',
+                        content: error.message || 'An error occurred',
+                    }
+                    return newMessages
+                })
+            } finally {
+                setIsLoading(false)
+                userData.file = {}
+            }
         }
 
         // Dynamic height
@@ -147,6 +121,7 @@ const Chatbot = () => {
             }
             reader.readAsDataURL(file)
         })
+
         fileCancelButton.addEventListener('click', () => {
             userData.file = {}
             fileUploadWrapper.classList.remove('file-uploaded')
@@ -168,7 +143,7 @@ const Chatbot = () => {
         return () => {
             // remove listeners if needed
         }
-    }, [])
+    }, [onApiSubmit]) // Add onApiSubmit to dependency array
 
     return (
         <>
@@ -186,9 +161,7 @@ const Chatbot = () => {
                             className="chatbot-logo"
                             width="50"
                             height="50"
-                        >
-                            {/* SVG PATH HERE */}
-                        </img>
+                        />
                         <h2 className="logo-text">Tallybot</h2>
                     </div>
                     <button
@@ -200,21 +173,35 @@ const Chatbot = () => {
                 </div>
 
                 <div className="chat-body">
-                    <div className="message bot-message">
-                        <img
-                            src="/tallyrus2white.png"
-                            alt="Tallybot Logo"
-                            className="bot-avatar"
-                            fill="#fff"
-                            width="50"
-                            height="50"
-                        ></img>
-                        <div className="message-text">
-                            Hello there!
-                            <br />
-                            How can I help you today?
+                    {messages.map((message, index) => (
+                        <div
+                            key={index}
+                            className={`message ${message.type}-message ${
+                                message.isLoading ? 'thinking' : ''
+                            }`}
+                        >
+                            {message.type === 'bot' && (
+                                <img
+                                    src="/tallyrus2white.png"
+                                    alt="Tallybot Logo"
+                                    className="bot-avatar"
+                                    width="50"
+                                    height="50"
+                                />
+                            )}
+                            <div className="message-text">
+                                {message.isLoading ? (
+                                    <div className="thinking-indicator">
+                                        <div className="dot"></div>
+                                        <div className="dot"></div>
+                                        <div className="dot"></div>
+                                    </div>
+                                ) : (
+                                    message.content
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    ))}
                 </div>
 
                 <div className="chat-footer">
@@ -223,6 +210,7 @@ const Chatbot = () => {
                             placeholder="Message..."
                             className="message-input"
                             required
+                            disabled={isLoading}
                         />
                         <div className="chat-controls">
                             <div className="file-upload-wrapper">
@@ -237,6 +225,7 @@ const Chatbot = () => {
                                     type="button"
                                     id="file-upload"
                                     className="material-symbols-rounded"
+                                    disabled={isLoading}
                                 >
                                     attach_file
                                 </button>
@@ -244,6 +233,7 @@ const Chatbot = () => {
                                     type="button"
                                     id="file-cancel"
                                     className="material-symbols-rounded"
+                                    disabled={isLoading}
                                 >
                                     close
                                 </button>
@@ -252,6 +242,7 @@ const Chatbot = () => {
                                 type="submit"
                                 id="send-message"
                                 className="material-symbols-rounded"
+                                disabled={isLoading}
                             >
                                 arrow_upward
                             </button>

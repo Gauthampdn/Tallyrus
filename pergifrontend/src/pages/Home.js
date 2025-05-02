@@ -85,16 +85,18 @@ const Home = ({
 }) => {
     const { toast } = useToast()
     const navigate = useNavigate()
+    const { user } = useAuthContext()
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [selectedClassroom, setSelectedClassroom] = useState(null)
+    const [currClassrooms, setCurrClassrooms] = useState([])
+    const [apiInput, setApiInput] = useState('')
     const joinForm = useForm({
         resolver: zodResolver(joinFormSchema),
     })
     const createForm = useForm({
         resolver: zodResolver(createClassSchema),
     })
-    const [apiInput, setApiInput] = useState('')
 
     const onSubmit = async (data) => {
         try {
@@ -128,9 +130,6 @@ const Home = ({
             console.error('Error joining classroom:', error)
         }
     }
-
-    const { user } = useAuthContext()
-    const [currClassrooms, setCurrClassrooms] = useState([])
 
     const handleGoToClass = (classroomId, assignmentId = null) => {
         const path = assignmentId
@@ -296,8 +295,9 @@ const Home = ({
 
     const handleApiSubmit = async (e) => {
         e.preventDefault()
+        const message = e.target.value
         try {
-            console.log('Submitting API request with input:', apiInput)
+            console.log('Submitting API request with input:', message)
             const response = await fetch(
                 `${process.env.REACT_APP_API_BACKEND}/openai/function-call`,
                 {
@@ -307,7 +307,7 @@ const Home = ({
                     },
                     credentials: 'include',
                     mode: 'cors',
-                    body: JSON.stringify({ userInput: apiInput }),
+                    body: JSON.stringify({ userInput: message }),
                 }
             )
 
@@ -319,7 +319,6 @@ const Home = ({
             const data = await response.json()
             console.log('Function call response:', data)
 
-            // Refresh the classroom list after successful creation
             // Refresh the classroom list after successful creation
             console.log('Fetching updated classroom list...')
             const classroomsResponse = await fetch(
@@ -345,7 +344,7 @@ const Home = ({
                 description:
                     data.message || 'Your input was processed successfully',
             })
-            setApiInput('')
+            return data
         } catch (error) {
             console.error('Error in handleApiSubmit:', error)
             toast({
@@ -353,6 +352,7 @@ const Home = ({
                 description: error.message,
                 variant: 'destructive',
             })
+            throw error
         }
     }
 
@@ -679,7 +679,7 @@ const Home = ({
             </AlertDialog>
 
             {/* Floating API Input */}
-            <Chatbot />
+            <Chatbot onApiSubmit={handleApiSubmit} />
 
             <Toaster />
         </div>
