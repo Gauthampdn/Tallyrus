@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuthContext } from '../hooks/useAuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import Chatbot from '../components/Chatbot'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -318,6 +319,7 @@ const Home = ({
             const data = await response.json()
             console.log('Function call response:', data)
 
+            // Refresh the classroom list after successful creation
             // Refresh the classroom list after successful creation
             console.log('Fetching updated classroom list...')
             const classroomsResponse = await fetch(
@@ -677,30 +679,7 @@ const Home = ({
             </AlertDialog>
 
             {/* Floating API Input */}
-            <div className="fixed bottom-8 right-8 z-50">
-                <form
-                    onSubmit={handleApiSubmit}
-                    className="flex items-center gap-2 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200"
-                >
-                    <Input
-                        type="text"
-                        value={apiInput}
-                        onChange={(e) => setApiInput(e.target.value)}
-                        placeholder="Enter your command..."
-                        className="w-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-                    />
-                    <Button
-                        type="submit"
-                        size="icon"
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                    >
-                        <FontAwesomeIcon
-                            icon={faPaperPlane}
-                            className="w-4 h-4"
-                        />
-                    </Button>
-                </form>
-            </div>
+            <Chatbot />
 
             <Toaster />
         </div>
