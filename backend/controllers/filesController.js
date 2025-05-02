@@ -1,21 +1,18 @@
 // Import necessary modules and configurations
-const aws = require('aws-sdk');
-const mongoose = require("mongoose");
+const aws = require('aws-sdk')
+const mongoose = require('mongoose')
 
-const Classroom = require("../models/classroomModel");
-const User = require("../models/userModel");
-const Assignment = require("../models/assignmentModel");
-const { parseRubricWithGPT4 } = require('./openaiController');
+const Classroom = require('../models/classroomModel')
+const User = require('../models/userModel')
+const Assignment = require('../models/assignmentModel')
+const { parseRubricWithGPT4 } = require('./openaiController')
 
-const {
-  S3
-} = require('@aws-sdk/client-s3');
+const { S3 } = require('@aws-sdk/client-s3')
 
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+const multer = require('multer')
+const multerS3 = require('multer-s3')
 
-
-require('dotenv').config();
+require('dotenv').config()
 
 // AWS S3 configuration
 // JS SDK v3 does not support global configuration.
@@ -25,358 +22,391 @@ require('dotenv').config();
 // Codemod has attempted to pass values to each service client in this file.
 // You may need to update clients outside of this file, if they use global config.
 aws.config.update({
-  secretAccessKey: process.env.AWSS3_SECRETKEY,
-  accessKeyId: process.env.AWSS3_ACCESSKEY,
-  region: process.env.AWSS3_BUCKETREGION
-});
+    secretAccessKey: process.env.AWSS3_SECRETKEY,
+    accessKeyId: process.env.AWSS3_ACCESSKEY,
+    region: process.env.AWSS3_BUCKETREGION,
+})
 
-const BUCKET = process.env.AWSS3_BUCKETNAME;
+const BUCKET = process.env.AWSS3_BUCKETNAME
 
 const s3 = new S3({
-  credentials: {
-    secretAccessKey: process.env.AWSS3_SECRETKEY,
-    accessKeyId: process.env.AWSS3_ACCESSKEY
-  },
+    credentials: {
+        secretAccessKey: process.env.AWSS3_SECRETKEY,
+        accessKeyId: process.env.AWSS3_ACCESSKEY,
+    },
 
-  region: process.env.AWSS3_BUCKETREGION
-});
+    region: process.env.AWSS3_BUCKETREGION,
+})
 
 // Multer configuration for file uploads
 // Multer configuration for file uploads
 
 const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: BUCKET,
-    contentDisposition: "inline",
-    key: function (req, file, cb) {
-      // Create a date string
-      const date = new Date();
-      const dateString = date.toISOString().replace(/:/g, '-'); // Replace colons to avoid file system issues
+    storage: multerS3({
+        s3: s3,
+        bucket: BUCKET,
+        contentDisposition: 'inline',
+        key: function (req, file, cb) {
+            // Create a date string
+            const date = new Date()
+            const dateString = date.toISOString().replace(/:/g, '-') // Replace colons to avoid file system issues
 
-      // Concatenate date string with original file name
-      const uniqueFileName = `${dateString}-${file.originalname}`;
-      console.log("Unique file name is: ", uniqueFileName);
+            // Concatenate date string with original file name
+            const uniqueFileName = `${dateString}-${file.originalname}`
+            console.log('Unique file name is: ', uniqueFileName)
 
-      // Pass the new file name to the callback
-      cb(null, uniqueFileName);
-    }
-  })
-});
-
-
+            // Pass the new file name to the callback
+            cb(null, uniqueFileName)
+        },
+    }),
+})
 
 // Exported controller functions
 const uploadFile = async (req, res, next) => {
-  const assignmentId = req.params.id;
-  const user_id = req.user.id;
+    const assignmentId = req.params.id
+    const user_id = req.user.id
 
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded.' });
-
-  }
-
-  const pdfURL = req.file.location;
-  const pdfKey = req.file.key;
-
-
-  console.log("the pdfurl is:", pdfURL)
-  if (!pdfURL || !pdfURL.endsWith('.pdf')) {
-    console.log("the file is not a pdf")
-    return res.status(400).json({ error: "Only PDF submissions are allowed" });
-  }
-
-  console.log(req.file);
-
-
-  if (req.user.authority !== "student") {
-    console.log("not a student");
-    return res.status(403).json({ error: "Only students can submit assignments" });
-  }
-
-  try {
-    console.log("in try")
-
-    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      console.log("not valid id");
-      return res.status(404).json({ error: "No such Template and invalid ID" });
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' })
     }
 
-    // Find the assignment
-    const assignment = await Assignment.findById(assignmentId);
-    if (!assignment) {
-      console.log("Assignment not found");
+    const pdfURL = req.file.location
+    const pdfKey = req.file.key
 
-      return res.status(404).json({ error: "Assignment not found" });
+    console.log('the pdfurl is:', pdfURL)
+    if (!pdfURL || !pdfURL.endsWith('.pdf')) {
+        console.log('the file is not a pdf')
+        return res
+            .status(400)
+            .json({ error: 'Only PDF submissions are allowed' })
     }
 
-    // Check if the user is a student in the classroom of the assignment
-    const classroom = await Classroom.findOne({ _id: assignment.classId, students: user_id });
-    if (!classroom) {
-      console.log("Not authorized to submit to this assignment");
-      return res.status(403).json({ error: "Not authorized to submit to this assignment" });
+    console.log(req.file)
+
+    if (req.user.authority !== 'student') {
+        console.log('not a student')
+        return res
+            .status(403)
+            .json({ error: 'Only students can submit assignments' })
     }
 
-    console.log("passes all checks")
+    try {
+        console.log('in try')
 
-    const submissionIndex = assignment.submissions.findIndex(sub => sub.studentId === user_id);
-
-    let submission;
-    if (submissionIndex !== -1) {
-      // Existing submission found, delete the existing file from S3
-      const existingPdfKey = assignment.submissions[submissionIndex].pdfKey;
-      if (existingPdfKey) {
-        try {
-          await s3.deleteObject({ Bucket: BUCKET, Key: existingPdfKey });
-          console.log(`Successfully deleted existing file: ${existingPdfKey}`);
-        } catch (error) {
-          console.error(`Error deleting existing file: ${existingPdfKey}`, error);
-          return res.status(500).json({ error: "Failed to delete the existing submission file." });
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            console.log('not valid id')
+            return res
+                .status(404)
+                .json({ error: 'No such Template and invalid ID' })
         }
-      }
-    
-      // Update existing submission
-      submission = assignment.submissions[submissionIndex];
-      submission.dateSubmitted = new Date();
-      submission.pdfURL = req.file.location;
-      submission.pdfKey = req.file.key;
-      submission.status = "submitted";
-      submission.feedback = 'NOT GRADED YET';
-    
-      assignment.submissions[submissionIndex] = submission;
-    
-    } else {
-      // Create a new submission
-      submission = {
-        studentName: req.user.name,
-        studentId: user_id,
-        studentEmail: req.user.email,
-        dateSubmitted: new Date(),
-        status: 'submitted',
-        pdfURL: req.file.location,
-        pdfKey: req.file.key 
-      };
-      assignment.submissions.push(submission);
+
+        // Find the assignment
+        const assignment = await Assignment.findById(assignmentId)
+        if (!assignment) {
+            console.log('Assignment not found')
+
+            return res.status(404).json({ error: 'Assignment not found' })
+        }
+
+        // Check if the user is a student in the classroom of the assignment
+        const classroom = await Classroom.findOne({
+            _id: assignment.classId,
+            students: user_id,
+        })
+        if (!classroom) {
+            console.log('Not authorized to submit to this assignment')
+            return res
+                .status(403)
+                .json({ error: 'Not authorized to submit to this assignment' })
+        }
+
+        console.log('passes all checks')
+
+        const submissionIndex = assignment.submissions.findIndex(
+            (sub) => sub.studentId === user_id
+        )
+
+        let submission
+        if (submissionIndex !== -1) {
+            // Existing submission found, delete the existing file from S3
+            const existingPdfKey =
+                assignment.submissions[submissionIndex].pdfKey
+            if (existingPdfKey) {
+                try {
+                    await s3.deleteObject({
+                        Bucket: BUCKET,
+                        Key: existingPdfKey,
+                    })
+                    console.log(
+                        `Successfully deleted existing file: ${existingPdfKey}`
+                    )
+                } catch (error) {
+                    console.error(
+                        `Error deleting existing file: ${existingPdfKey}`,
+                        error
+                    )
+                    return res
+                        .status(500)
+                        .json({
+                            error: 'Failed to delete the existing submission file.',
+                        })
+                }
+            }
+
+            // Update existing submission
+            submission = assignment.submissions[submissionIndex]
+            submission.dateSubmitted = new Date()
+            submission.pdfURL = req.file.location
+            submission.pdfKey = req.file.key
+            submission.status = 'submitted'
+            submission.feedback = 'NOT GRADED YET'
+
+            assignment.submissions[submissionIndex] = submission
+        } else {
+            // Create a new submission
+            submission = {
+                studentName: req.user.name,
+                studentId: user_id,
+                studentEmail: req.user.email,
+                dateSubmitted: new Date(),
+                status: 'submitted',
+                pdfURL: req.file.location,
+                pdfKey: req.file.key,
+            }
+            assignment.submissions.push(submission)
+        }
+
+        await assignment.save()
+
+        res.status(201).json(submission)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-    
-
-    await assignment.save();
-
-    res.status(201).json(submission);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-
-};
+}
 
 const uploadTeacherFile = async (req, res, next) => {
-  console.log("here",req.files);
-  const assignmentId = req.params.id;
-  const user_id = req.user.id;
+    console.log('here', req.files)
+    const assignmentId = req.params.id
+    const user_id = req.user.id
 
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ message: 'No files uploaded.' });
-  }
-
-  if (req.user.authority !== "teacher") {
-    return res.status(403).json({ error: "Only teachers can upload files" });
-  }
-
-  try {
-    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      return res.status(404).json({ error: "Invalid assignment ID" });
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded.' })
     }
 
-    // Find the assignment
-    const assignment = await Assignment.findById(assignmentId);
-    if (!assignment) {
-      return res.status(404).json({ error: "Assignment not found" });
+    if (req.user.authority !== 'teacher') {
+        return res.status(403).json({ error: 'Only teachers can upload files' })
     }
 
-    // Check if the user is a teacher of the classroom of the assignment
-    const classroom = await Classroom.findOne({ _id: assignment.classId, teachers: user_id });
-    if (!classroom) {
-      return res.status(403).json({ error: "Not authorized to upload files for this assignment" });
+    try {
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ error: 'Invalid assignment ID' })
+        }
+
+        // Find the assignment
+        const assignment = await Assignment.findById(assignmentId)
+        if (!assignment) {
+            return res.status(404).json({ error: 'Assignment not found' })
+        }
+
+        // Check if the user is a teacher of the classroom of the assignment
+        const classroom = await Classroom.findOne({
+            _id: assignment.classId,
+            teachers: user_id,
+        })
+        if (!classroom) {
+            return res
+                .status(403)
+                .json({
+                    error: 'Not authorized to upload files for this assignment',
+                })
+        }
+        console.log('Starting push')
+        // Iterate through each file and upload it
+        for (const file of req.files) {
+            const fileData = {
+                studentName: file.key, // You might want to extract the student name and ID from the file key
+                studentId: file.key, // You might want to extract the student name and ID from the file key
+                pdfURL: file.location,
+                pdfKey: file.key,
+                dateSubmitted: new Date(),
+                status: 'submitted',
+            }
+
+            // Update the assignment with the uploaded file
+            console.log('PUSHING: ', fileData)
+            assignment.submissions.push(fileData)
+            await assignment.save()
+        }
+        console.log(assignment.submissions)
+        // Save the updated assignment to the database
+
+        res.status(201).json({
+            message: 'Files uploaded successfully',
+            files: assignment.submissions,
+        })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-    console.log("Starting push")
-    // Iterate through each file and upload it
-    for (const file of req.files) {
-      const fileData = {
-        studentName: file.key, // You might want to extract the student name and ID from the file key
-        studentId: file.key, // You might want to extract the student name and ID from the file key
-        pdfURL: file.location,
-        pdfKey: file.key,
-        dateSubmitted: new Date(),
-        status: 'submitted'
-      };
-
-      // Update the assignment with the uploaded file
-      console.log("PUSHING: ", fileData)
-      assignment.submissions.push(fileData);
-      await assignment.save();
-
-    }
-    console.log(assignment.submissions);
-    // Save the updated assignment to the database
-
-    res.status(201).json({ message: 'Files uploaded successfully', files: assignment.submissions });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-
-
-
+}
 
 const listFiles = async (req, res) => {
-  let r = await s3.listObjectsV2({ Bucket: BUCKET });
-  let x = r.Contents.map(item => item.Key);
-  res.send(x);
-};
+    let r = await s3.listObjectsV2({ Bucket: BUCKET })
+    let x = r.Contents.map((item) => item.Key)
+    res.send(x)
+}
 
 const downloadFile = async (req, res) => {
-  const filename = req.params.filename;
-  try {
-    const data = await s3.getObject({ Bucket: BUCKET, Key: filename });
+    const filename = req.params.filename
+    try {
+        const data = await s3.getObject({ Bucket: BUCKET, Key: filename })
 
-    // Set headers to display file in browser
-    res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Content-Type', data.ContentType); // Sets the correct content type
+        // Set headers to display file in browser
+        res.setHeader('Content-Disposition', 'inline')
+        res.setHeader('Content-Type', data.ContentType) // Sets the correct content type
 
-    // Pipe the Body (readable stream) directly to the response
-    data.Body.pipe(res);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error downloading file.');
-  }
-};
-
-
-
+        // Pipe the Body (readable stream) directly to the response
+        data.Body.pipe(res)
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Error downloading file.')
+    }
+}
 
 const deleteFile = async (req, res) => {
-  const filename = req.params.filename;
+    const filename = req.params.filename
 
-  try {
-    await Assignment.updateMany(
-      { 'submissions.pdfKey': filename },
-      { $pull: { submissions: { pdfKey: filename } } }
-    );
-    await s3.deleteObject({ Bucket: BUCKET, Key: filename });
-  }
-  catch (error) {
-    console.error(error);
-    res.status(500).send('Error deleting file.');
-  }
-  res.send('File Deleted Successfully');
-};
+    try {
+        await Assignment.updateMany(
+            { 'submissions.pdfKey': filename },
+            { $pull: { submissions: { pdfKey: filename } } }
+        )
+        await s3.deleteObject({ Bucket: BUCKET, Key: filename })
+    } catch (error) {
+        console.error(error)
+        res.status(500).send('Error deleting file.')
+    }
+    res.send('File Deleted Successfully')
+}
 
 const uploadRubric = async (req, res) => {
-  const assignmentId = req.params.id;
-  const user_id = req.user.id;
+    const assignmentId = req.params.id
+    const user_id = req.user.id
 
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded.' });
-  }
-
-  if (req.user.authority !== "teacher") {
-    return res.status(403).json({ error: "Only teachers can upload rubrics" });
-  }
-
-  try {
-    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      return res.status(404).json({ error: "Invalid assignment ID" });
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' })
     }
 
-    // Find the assignment
-    const assignment = await Assignment.findById(assignmentId);
-    if (!assignment) {
-      return res.status(404).json({ error: "Assignment not found" });
+    if (req.user.authority !== 'teacher') {
+        return res
+            .status(403)
+            .json({ error: 'Only teachers can upload rubrics' })
     }
 
-    // Check if the user is a teacher of the classroom of the assignment
-    const classroom = await Classroom.findOne({ _id: assignment.classId, teachers: user_id });
-    if (!classroom) {
-      return res.status(403).json({ error: "Not authorized to upload rubric for this assignment" });
+    try {
+        if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(404).json({ error: 'Invalid assignment ID' })
+        }
+
+        // Find the assignment
+        const assignment = await Assignment.findById(assignmentId)
+        if (!assignment) {
+            return res.status(404).json({ error: 'Assignment not found' })
+        }
+
+        // Check if the user is a teacher of the classroom of the assignment
+        const classroom = await Classroom.findOne({
+            _id: assignment.classId,
+            teachers: user_id,
+        })
+        if (!classroom) {
+            return res
+                .status(403)
+                .json({
+                    error: 'Not authorized to upload rubric for this assignment',
+                })
+        }
+
+        // Get the file URL
+        const rubricURL = req.file.location
+
+        // Call the OpenAI API to parse the rubric
+        const parsedRubric = await parseRubricWithGPT4(rubricURL)
+
+        // Update the assignment with the new rubric
+        assignment.rubric = parsedRubric
+        await assignment.save()
+
+        res.status(201).json({
+            message: 'Rubric uploaded and parsed successfully',
+            rubric: parsedRubric,
+        })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
     }
-
-    // Get the file URL
-    const rubricURL = req.file.location;
-
-    // Call the OpenAI API to parse the rubric
-    const parsedRubric = await parseRubricWithGPT4(rubricURL);
-
-    // Update the assignment with the new rubric
-    assignment.rubric = parsedRubric;
-    await assignment.save();
-
-    res.status(201).json({ message: 'Rubric uploaded and parsed successfully', rubric: parsedRubric });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+}
 
 // New function to handle teacher's old graded essay uploads
 const uploadOldEssays = async (req, res, next) => {
-  console.log("called");
-  const user_id = req.user.id;
+    console.log('called')
+    const user_id = req.user.id
 
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ message: 'No files uploaded.' });
-  }
-
-  if (req.user.authority !== "teacher") {
-    return res.status(403).json({ error: "Only teachers can upload old graded essays" });
-  }
-
-  try {
-    // Find the teacher's user document using the id field instead of _id
-    const teacher = await User.findOne({ id: user_id });
-
-    if (!teacher) {
-      return res.status(404).json({ error: "Teacher not found" });
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded.' })
     }
 
-    // Iterate through each file and prepare data for storage
-    const uploadedFiles = [];
-    for (const file of req.files) {
-      const fileData = {
-        studentName: `Old Graded Essay by ${req.user.name}`,
-        pdfURL: file.location,
-        pdfKey: file.key,
-        dateSubmitted: new Date(),
-        status: 'graded',
-        isOldGradedEssay: true // Marking the file as an old graded essay
-      };
-
-      // Store the file data in the teacher's uploadedFiles array
-      teacher.uploadedFiles.push(fileData);
-
-      // Also add it to the response data
-      uploadedFiles.push(fileData);
+    if (req.user.authority !== 'teacher') {
+        return res
+            .status(403)
+            .json({ error: 'Only teachers can upload old graded essays' })
     }
 
-    // Save the updated teacher document to the database
-    await teacher.save();
+    try {
+        // Find the teacher's user document using the id field instead of _id
+        const teacher = await User.findOne({ id: user_id })
 
-    res.status(201).json({ message: 'Files uploaded and saved successfully', files: uploadedFiles });
-  } catch (error) {
-    console.error("Error uploading old graded essays:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
+        if (!teacher) {
+            return res.status(404).json({ error: 'Teacher not found' })
+        }
 
+        // Iterate through each file and prepare data for storage
+        const uploadedFiles = []
+        for (const file of req.files) {
+            const fileData = {
+                studentName: `Old Graded Essay by ${req.user.name}`,
+                pdfURL: file.location,
+                pdfKey: file.key,
+                dateSubmitted: new Date(),
+                status: 'graded',
+                isOldGradedEssay: true, // Marking the file as an old graded essay
+            }
 
+            // Store the file data in the teacher's uploadedFiles array
+            teacher.uploadedFiles.push(fileData)
+
+            // Also add it to the response data
+            uploadedFiles.push(fileData)
+        }
+
+        // Save the updated teacher document to the database
+        await teacher.save()
+
+        res.status(201).json({
+            message: 'Files uploaded and saved successfully',
+            files: uploadedFiles,
+        })
+    } catch (error) {
+        console.error('Error uploading old graded essays:', error)
+        res.status(500).json({ error: error.message })
+    }
+}
 
 module.exports = {
-  uploadFile,
-  listFiles,
-  downloadFile,
-  deleteFile,
-  upload, // Export the multer configuration
-  uploadTeacherFile,
-  uploadRubric,
-  uploadOldEssays
-};
+    uploadFile,
+    listFiles,
+    downloadFile,
+    deleteFile,
+    upload, // Export the multer configuration
+    uploadTeacherFile,
+    uploadRubric,
+    uploadOldEssays,
+}

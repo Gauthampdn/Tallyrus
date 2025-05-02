@@ -13,6 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1528.0",
+    "axios": "^1.9.0",
+    "axios-cookie-jar": "^1.2.1",
     "bcrypt": "^5.1.0",
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
@@ -34,6 +36,7 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.0.379",
     "pdfreader": "^3.0.2",
+    "tough-cookie": "^5.1.2",
     "validator": "^13.9.0"
   }
 }

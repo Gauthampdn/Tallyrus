@@ -55,8 +55,10 @@ const getClassroomsForUser = async (req, res) => {
       return res.status(400).json({ error: "Invalid user authority" });
     }
 
+    console.log("Found classrooms:", classrooms);
     res.status(200).json(classrooms);
   } catch (error) {
+    console.error("Error in getClassroomsForUser:", error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -185,6 +187,7 @@ const deleteClassroom = async (req, res) => {
   const user_id = req.user.id; // ID of the user making the request
 
   console.log("Trying to delete classroom", classroomId);
+  console.log("User ID:", user_id);
 
   // Check if the user is a teacher
   if (req.user.authority !== "teacher") {
@@ -199,7 +202,9 @@ const deleteClassroom = async (req, res) => {
     }
 
     // Check if the user is a teacher in the classroom
-    if (!classroom.teachers.includes(user_id)) {
+    console.log("Classroom teachers:", classroom.teachers);
+    console.log("User ID to check:", user_id);
+    if (!classroom.teachers.includes(user_id.toString())) {
       return res.status(403).json({ error: "Not authorized to delete this classroom" });
     }
 
@@ -214,9 +219,8 @@ const deleteClassroom = async (req, res) => {
           try {
             await s3.deleteObject({ Bucket: BUCKET, Key: filename })
           } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: "Error in Deleting file" });
-            // Note: Consider accumulating errors and continuing rather than stopping on the first error
+            console.error("Error deleting file:", error);
+            // Continue with deletion even if file deletion fails
           }
           console.log("Deleted file:", filename);
 

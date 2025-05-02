@@ -1,4 +1,4 @@
-
+// server.js
 // environment vars
 require("dotenv").config()
 
@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth")
 const classroomRoutes = require("./routes/classroom")
 const assignmentRoutes = require("./routes/assignment")
 const filesRoutes = require("./routes/files")
+const stripeRoutes = require("./routes/stripe")
 const profileRoutes = require('./routes/ProfileRoute');
 
 
@@ -22,6 +23,13 @@ const cors = require('cors');
 // express app
 const app = express()
 
+// Special route for Stripe webhooks needs to be defined before express.json middleware
+app.post('/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const stripeRoutes = require('./routes/stripe');
+  const { handleWebhook } = require('./controllers/stripeController');
+  return handleWebhook(req, res);
+});
+
 // middleware
 app.use(express.json()) // to get req body
 
@@ -32,21 +40,15 @@ app.use(cors({
 
 app.use(session({
   secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
   cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    secure: false,       // true en producción con HTTPS
-    httpOnly: true,
-    sameSite: 'lax'      // muy importante si usas localhost frontend + backend
-  }
+    maxAge: 7 * 24 * 60 * 60 * 1000, // days hours minutes seconds milli
+  },
+  resave: false,
+  saveUninitialized: true,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
 }));
 
-app.use((req, res, next) => {
-  console.log('User on session:', req.user);
-  next();
-});
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -62,7 +64,9 @@ app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)
 app.use("/files", filesRoutes)
+app.use("/stripe", stripeRoutes)
 app.use('/profile', profileRoutes);
+
 
 
 // connect to db
@@ -78,4 +82,5 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 // listening on port 
+
 
