@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext } from "../hooks/useAuthContext";
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
+import Chatbot from "../components/Chatbot";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -258,179 +259,186 @@ const Home = ({ startTour, stepIndex, setStepIndex, isCreateModalOpen, setIsCrea
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       <Navbar />
-      <div className="flex justify-between items-center m-8 ">
-        <h1 className='text-4xl font-bold'>Your Classrooms</h1>
-        <div className="flex space-x-4">
-          {user && user.authority === "teacher" && (
-            <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <AlertDialogTrigger asChild>
-                <Button className="create-class-btn text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
-                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                  CREATE CLASS +
-                </Button>
-              </AlertDialogTrigger>
-            </AlertDialog>
-          )}
-          {user && user.authority === "student" && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className='text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600'>
-                  <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                  JOIN CLASS +
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="transition ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-105 bg-gray-800 text-gray-100">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold text-indigo-400">Join Class</AlertDialogTitle>
-                </AlertDialogHeader>
-                <Form {...joinForm}>
-                  <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
-                    <FormField
-                      control={joinForm.control}
-                      name="joinCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Join Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter class join code" {...field} className="bg-gray-700 text-gray-100" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="text-gray-400">Cancel</AlertDialogCancel>
-                      <Button type="submit" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
-                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                        Join
-                      </Button>
-                    </AlertDialogFooter>
-                  </form>
-                </Form>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+      <div className=" container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center m-8 ">
+          <h1 className='text-4xl font-bold'>Your Classrooms</h1>
+          <div className="flex space-x-4">
+            {user && user.authority === "teacher" && (
+              <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button className="create-class-btn text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                    CREATE CLASS +
+                  </Button>
+                </AlertDialogTrigger>
+              </AlertDialog>
+            )}
+            {user && user.authority === "student" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className='text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600'>
+                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                    JOIN CLASS +
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="transition ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-105 bg-gray-800 text-gray-100">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-xl font-bold text-indigo-400">Join Class</AlertDialogTitle>
+                  </AlertDialogHeader>
+                  <Form {...joinForm}>
+                    <form onSubmit={joinForm.handleSubmit(onSubmit)} className="space-y-8">
+                      <FormField
+                        control={joinForm.control}
+                        name="joinCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Join Code</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter class join code" {...field} className="bg-gray-700 text-gray-100" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="text-gray-400">Cancel</AlertDialogCancel>
+                        <Button type="submit" className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                          Join
+                        </Button>
+                      </AlertDialogFooter>
+                    </form>
+                  </Form>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className='flex flex-wrap m-4'>
-      {user && user.authority === "teacher" && (
-          <Card
-            className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="flex flex-col items-center">
-                <FontAwesomeIcon icon={faPlus} size="3x" className="mb-2" />
-                <span className="text-lg font-bold">New Class</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        {currClassrooms && currClassrooms.map((classroom) => (
-          <Card
-            key={classroom._id}
-            className={`min-w-1/4 w-1/4 min-h-[200px] m-4 text-black cursor-pointer`}
-
-          >
-            <CardHeader>
-              <div className='flex justify-between'>
-                <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
-                <div className='flex gap-3'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 bg-gray-700 text-gray-100">
-                      <DropdownMenuLabel>Options</DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-gray-600" />
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem onSelect={() => handleEditClassroom(classroom)} className="hover:bg-gray-600">
-                          <FontAwesomeIcon icon={faPen} className="mr-2" />
-                          Edit Classroom
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)} className="hover:bg-gray-600">
-                          <FontAwesomeIcon icon={faTrash} className="mr-2" />
-                          Delete Classroom
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button
-                    onClick={() => handleGoToClass(classroom._id)}
-                    className="bg-green-600"
-                  > Enter Class</Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>{classroom.description}</CardDescription>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
-            </CardFooter>
-          </Card>
-        ))}
-
-
-
-      </div>
-
-      {/* Edit Class Modal */}
-      <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <AlertDialogContent className="bg-gray-800 text-gray-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold">Edit Class</AlertDialogTitle>
-          </AlertDialogHeader>
-          <Form {...createForm}>
-            <form
-              onSubmit={createForm.handleSubmit(handleEditSubmit)}
-              className="space-y-8 fill-class-info"
+        <div className='flex flex-wrap m-4'>
+        {user && user.authority === "teacher" && (
+            <Card
+              className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
+              onClick={() => setIsCreateModalOpen(true)}
             >
-              <FormField
-                control={createForm.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={selectedClassroom?.title}
-                        {...field}
-                        className="bg-gray-700 text-gray-100"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={selectedClassroom?.description}
-                        {...field}
-                        className="bg-gray-700 text-gray-100"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <AlertDialogFooter>
-                <AlertDialogCancel className="text-gray-800">Cancel</AlertDialogCancel>
-                <Button type="submit" className="flex gap-2 justify-between items-center bg-indigo-600 ">
-                  <FontAwesomeIcon icon={faPen} className="" />
-                  Update
-                </Button>
-              </AlertDialogFooter>
-            </form>
-          </Form>
-        </AlertDialogContent>
-      </AlertDialog>
+              <CardContent className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center">
+                  <FontAwesomeIcon icon={faPlus} size="3x" className="mb-2" />
+                  <span className="text-lg font-bold">New Class</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {currClassrooms && currClassrooms.map((classroom) => (
+            <Card
+              key={classroom._id}
+              className={`min-w-1/4 w-1/4 min-h-[200px] m-4 text-black cursor-pointer`}
 
+            >
+              <CardHeader>
+                <div className='flex justify-between'>
+                  <CardTitle className="text-xl font-bold">{classroom.title}</CardTitle>
+                  <div className='flex gap-3'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="" className="material-symbols-outlined ml-2 bg-indigo-600">apps</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 bg-gray-700 text-gray-100">
+                        <DropdownMenuLabel>Options</DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-gray-600" />
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem onSelect={() => handleEditClassroom(classroom)} className="hover:bg-gray-600">
+                            <FontAwesomeIcon icon={faPen} className="mr-2" />
+                            Edit Classroom
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDeleteClassroom(classroom._id)} className="hover:bg-gray-600">
+                            <FontAwesomeIcon icon={faTrash} className="mr-2" />
+                            Delete Classroom
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      onClick={() => handleGoToClass(classroom._id)}
+                      className="bg-green-600"
+                    > Enter Class</Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>{classroom.description}</CardDescription>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <span className="text-sm font-bold">Class Code: {classroom.joincode}</span>
+              </CardFooter>
+            </Card>
+          ))}
+
+
+
+        </div>
+
+        {/* Edit Class Modal */}
+        <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <AlertDialogContent className="bg-gray-800 text-gray-100">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-bold">Edit Class</AlertDialogTitle>
+            </AlertDialogHeader>
+            <Form {...createForm}>
+              <form
+                onSubmit={createForm.handleSubmit(handleEditSubmit)}
+                className="space-y-8 fill-class-info"
+              >
+                <FormField
+                  control={createForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={selectedClassroom?.title}
+                          {...field}
+                          className="bg-gray-700 text-gray-100"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={selectedClassroom?.description}
+                          {...field}
+                          className="bg-gray-700 text-gray-100"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="text-gray-800">Cancel</AlertDialogCancel>
+                  <Button type="submit" className="flex gap-2 justify-between items-center bg-indigo-600 ">
+                    <FontAwesomeIcon icon={faPen} className="" />
+                    Update
+                  </Button>
+                </AlertDialogFooter>
+              </form>
+            </Form>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Add Chatbot */}
+        <div className="mt-8">
+            <Chatbot />
+        </div>
+
+      </div>
       <Toaster />
     </div>
   );
