@@ -130,6 +130,10 @@ const Home = ({
   const { user, isLoading } = useAuthContext();
   const [currClassrooms, setCurrClassrooms] = useState([]);
 
+  const handleClassroomUpdate = (classrooms) => {
+    setCurrClassrooms(classrooms);
+  };
+
   const handleGoToClass = (classroomId, assignmentId = null) => {
     const path = assignmentId
       ? `/classroom/${classroomId}/${assignmentId}`
@@ -432,7 +436,7 @@ const Home = ({
         </div>
 
         <div className="flex flex-wrap m-4">
-          {user && user.authority === "teacher" && (
+          {/* {user && user.authority === "teacher" && (
             <Card
               className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
               onClick={() => setIsCreateModalOpen(true)}
@@ -444,7 +448,7 @@ const Home = ({
                 </div>
               </CardContent>
             </Card>
-          )}
+          )} */}
           {currClassrooms &&
             currClassrooms.map((classroom) => (
               <Card
@@ -578,7 +582,7 @@ const Home = ({
 
         {/* Add Chatbot */}
         <div className="mt-8">
-          <Chatbot />
+          <Chatbot onClassroomUpdate={handleClassroomUpdate} />
         </div>
       </div>
       <Toaster />
