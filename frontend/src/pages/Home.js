@@ -306,79 +306,82 @@ const Home = ({
         <div className="flex justify-between items-center m-8 ">
           <h1 className="text-4xl font-bold">Your Classrooms</h1>
           <div className="flex space-x-4">
-            {user && user.authority === "teacher" && (
-              <AlertDialog
-                open={isCreateModalOpen}
-                onOpenChange={setIsCreateModalOpen}
-              >
-                <AlertDialogTrigger asChild>
-                  <Button className="create-class-btn text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
-                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                    CREATE CLASS +
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-gray-800 text-gray-100">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-xl font-bold text-indigo-400">
-                      Create New Class
-                    </AlertDialogTitle>
-                  </AlertDialogHeader>
-                  <Form {...createForm}>
-                    <form
-                      onSubmit={createForm.handleSubmit(handleCreateSubmit)}
-                      className="space-y-8"
-                    >
-                      <FormField
-                        control={createForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Title</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter class title"
-                                {...field}
-                                className="bg-gray-700 text-gray-100"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter class description"
-                                {...field}
-                                className="bg-gray-700 text-gray-100"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="text-gray-400">
-                          Cancel
-                        </AlertDialogCancel>
-                        <Button
-                          type="submit"
-                          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-                        >
-                          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                          Create
-                        </Button>
-                      </AlertDialogFooter>
-                    </form>
-                  </Form>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+            {user &&
+              user.authority === "teacher" &&
+              currClassrooms &&
+              currClassrooms.length > 0 && (
+                <AlertDialog
+                  open={isCreateModalOpen}
+                  onOpenChange={setIsCreateModalOpen}
+                >
+                  <AlertDialogTrigger asChild>
+                    <Button className="create-class-btn text-md font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600">
+                      <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                      CREATE CLASS +
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-gray-800 text-gray-100">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl font-bold text-indigo-400">
+                        Create New Class
+                      </AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <Form {...createForm}>
+                      <form
+                        onSubmit={createForm.handleSubmit(handleCreateSubmit)}
+                        className="space-y-8"
+                      >
+                        <FormField
+                          control={createForm.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Title</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter class title"
+                                  {...field}
+                                  className="bg-gray-700 text-gray-100"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter class description"
+                                  {...field}
+                                  className="bg-gray-700 text-gray-100"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="text-gray-400">
+                            Cancel
+                          </AlertDialogCancel>
+                          <Button
+                            type="submit"
+                            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                          >
+                            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                            Create
+                          </Button>
+                        </AlertDialogFooter>
+                      </form>
+                    </Form>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             {user && user.authority === "student" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -436,20 +439,108 @@ const Home = ({
         </div>
 
         <div className="flex flex-wrap m-4">
-          {/* {user && user.authority === "teacher" && (
-            <Card
-              className="min-w-1/4 w-1/4 min-h-[200px] m-4 border-2 border-white text-white-600 bg-zinc-900 cursor-pointer hover:bg-zinc-700 transition-all"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <CardContent className="flex items-center justify-center h-full">
-                <div className="flex flex-col items-center">
-                  <FontAwesomeIcon icon={faPlus} size="3x" className="mb-2" />
-                  <span className="text-lg font-bold">New Class</span>
+          {currClassrooms && currClassrooms.length === 0 ? (
+            <div className="w-full flex flex-col items-center justify-center py-16 px-4">
+              <div className="text-center max-w-2xl">
+                <div className="mb-6">
+                  <FontAwesomeIcon
+                    icon={faPlus}
+                    className="text-6xl text-indigo-500 mb-4 animate-bounce"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          )} */}
-          {currClassrooms &&
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Ready to Start Your Teaching Journey?
+                </h2>
+                <p className="text-gray-400 text-lg mb-8">
+                  Create your first classroom and begin sharing knowledge with
+                  your students. It's time to make learning more engaging and
+                  interactive!
+                </p>
+                {user && user.authority === "teacher" && (
+                  <AlertDialog
+                    open={isCreateModalOpen}
+                    onOpenChange={setIsCreateModalOpen}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <Button className="px-8 py-6 text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                        Create Your First Classroom
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-800 text-gray-100">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-bold text-indigo-400">
+                          Create New Class
+                        </AlertDialogTitle>
+                      </AlertDialogHeader>
+                      <Form {...createForm}>
+                        <form
+                          onSubmit={createForm.handleSubmit(handleCreateSubmit)}
+                          className="space-y-8"
+                        >
+                          <FormField
+                            control={createForm.control}
+                            name="title"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Title</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter class title"
+                                    {...field}
+                                    className="bg-gray-700 text-gray-100"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={createForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter class description"
+                                    {...field}
+                                    className="bg-gray-700 text-gray-100"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="text-gray-400">
+                              Cancel
+                            </AlertDialogCancel>
+                            <Button
+                              type="submit"
+                              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                            >
+                              <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                              Create
+                            </Button>
+                          </AlertDialogFooter>
+                        </form>
+                      </Form>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+                {user && user.authority === "student" && (
+                  <Button
+                    onClick={() => setIsJoinModalOpen(true)}
+                    className="px-8 py-6 text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                    Join Your First Classroom
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
             currClassrooms.map((classroom) => (
               <Card
                 key={classroom._id}
@@ -515,7 +606,8 @@ const Home = ({
                   </span>
                 </CardFooter>
               </Card>
-            ))}
+            ))
+          )}
         </div>
 
         {/* Edit Class Modal */}
