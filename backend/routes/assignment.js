@@ -8,8 +8,8 @@ const {
   deleteAssignment,
   getSubmissions,
   updateAssignmentRubric,
-  updateSubmission
-   // import the createSubmission function
+  updateSubmission,
+  createSubmissionComment
 } = require("../controllers/assignmentController")
 
 const requireAuth = require("../middleware/requireAuth")
@@ -31,6 +31,9 @@ router.delete("/:id", deleteAssignment)
 router.get("/submissions/:id", getSubmissions) // new route for submitting assignments
 
 router.patch('/:assignmentId/submissions/:submissionId', updateSubmission);
+
+// Add comment to a submission
+router.post('/:assignmentId/submissions/:submissionId/comments', createSubmissionComment);
 
 router.patch("/:id", updateAssignmentRubric)
 

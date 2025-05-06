@@ -335,7 +335,48 @@ const updateSubmission = async (req, res) => {
   }
 };
 
+const createSubmissionComment = async (req, res) => {
+  const { assignmentId, submissionId } = req.params;
+  const { text } = req.body;
+  const user_id = req.user.id;
 
+  if (!text) {
+    return res.status(400).json({ error: "Comment text is required" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(assignmentId) || !mongoose.Types.ObjectId.isValid(submissionId)) {
+    return res.status(400).json({ error: "Invalid assignment or submission ID" });
+  }
+
+  try {
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    // Find the specific submission
+    const submission = assignment.submissions.id(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    // Create the new comment
+    const newComment = {
+      text,
+      author: req.user.name || req.user.email,
+      authorId: user_id,
+      // createdAt will be automatically set by the schema default
+    };
+
+    // Add the comment to the submission's comments array
+    submission.comments.push(newComment);
+    await assignment.save();
+
+    res.status(200).json(assignment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   getAssignment,
@@ -344,5 +385,6 @@ module.exports = {
   deleteAssignment,
   getSubmissions,
   updateAssignmentRubric,
-  updateSubmission
+  updateSubmission,
+  createSubmissionComment
 };
