@@ -317,6 +317,45 @@ body.show-chatbot .chatbot-popup {
   display: block;
 }
 
+.mic-button {
+  height: 35px;
+  width: 35px;
+  border: none;
+  cursor: pointer;
+  color: #16a34a;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  transition: all 0.2s ease;
+}
+
+.mic-button:hover:not(:disabled) {
+  color: #15803d;
+  background: #f1f1ff;
+}
+
+.mic-button.listening {
+  color: #fff;
+  background: #16a34a;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(22, 163, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
 @media (max-width: 520px) {
   #chatbot-toggler {
     right: 20px;
