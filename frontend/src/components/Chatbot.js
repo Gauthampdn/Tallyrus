@@ -1,14 +1,89 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Chatbot.css";
-import { MessageSquare, X, Send } from "lucide-react";
+import { MessageSquare, X, Send, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Chatbot = ({ onClassroomUpdate }) => {
   const { toast } = useToast();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content: `Hello there!
+Welcome to Tallyrus Assistant!
+I’m here to help you manage your courses with ease. 
+Ask me to:
+  • Create a classroom for you with a classname and (optional) description
+  • Add assignments directly to an existing classroom`
+    }
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = "en-US";
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join("");
+        setInput(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+        toast({
+          title: "Error",
+          description: "Failed to start voice recognition. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognitionRef.current.onend = () => {
+        if (isListening) {
+          recognitionRef.current.start();
+        }
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleMic = () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Not Supported",
+        description:
+          "Voice recognition is not supported in your browser. Please use Chrome.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setInput("");
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   const toggleChatbot = () => {
     setIsOpen(!isOpen);
@@ -49,6 +124,7 @@ const Chatbot = ({ onClassroomUpdate }) => {
           { role: "assistant", content: data.chatResponse },
         ]);
 
+        setIsLoading(false);
         // Immediately fetch updated classrooms after any response
         try {
           console.log("Fetching updated classroom list...");
@@ -97,6 +173,12 @@ const Chatbot = ({ onClassroomUpdate }) => {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("show-chatbot");
+    };
+  }, []);
+
   return (
     <>
       <button id="chatbot-toggler" onClick={toggleChatbot}>
@@ -132,7 +214,10 @@ const Chatbot = ({ onClassroomUpdate }) => {
             >
               {msg.role === "assistant" && (
                 <div className="bot-avatar">
-                  <MessageSquare className="h-full w-full text-white p-1" />
+                  <img
+                    src="/tallyrus2white.png"
+                    alt="Tallyrus Logo"
+                  />
                 </div>
               )}
               <div className="message-text">{msg.content}</div>
@@ -141,7 +226,10 @@ const Chatbot = ({ onClassroomUpdate }) => {
           {isLoading && (
             <div className="message bot-message thinking">
               <div className="bot-avatar">
-                <MessageSquare className="h-full w-full text-white p-1" />
+                <img
+                    src="/tallyrus2white.png"
+                    alt="Tallyrus Logo"
+                  />
               </div>
               <div className="message-text">
                 <div className="thinking-indicator">
@@ -161,11 +249,25 @@ const Chatbot = ({ onClassroomUpdate }) => {
               className="message-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder={
+                isListening ? "Listening..." : "Type your message..."
+              }
               disabled={isLoading}
               required
             />
             <div className="chat-controls">
+              <button
+                type="button"
+                onClick={toggleMic}
+                className={`mic-button ${isListening ? "listening" : ""}`}
+                disabled={isLoading}
+              >
+                {isListening ? (
+                  <MicOff className="h-5 w-5" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
+              </button>
               <button
                 type="submit"
                 id="send-message"
