@@ -5,7 +5,17 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Chatbot = ({ onClassroomUpdate }) => {
   const { toast } = useToast();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content: `Hello there!
+Welcome to Tallyrus Assistant!
+I’m here to help you manage your courses with ease. 
+Ask me to:
+  • Create a classroom for you with a classname and (optional) description
+  • Add assignments directly to an existing classroom`
+    }
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -114,6 +124,7 @@ const Chatbot = ({ onClassroomUpdate }) => {
           { role: "assistant", content: data.chatResponse },
         ]);
 
+        setIsLoading(false);
         // Immediately fetch updated classrooms after any response
         try {
           console.log("Fetching updated classroom list...");
@@ -162,6 +173,12 @@ const Chatbot = ({ onClassroomUpdate }) => {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("show-chatbot");
+    };
+  }, []);
+
   return (
     <>
       <button id="chatbot-toggler" onClick={toggleChatbot}>
@@ -197,7 +214,10 @@ const Chatbot = ({ onClassroomUpdate }) => {
             >
               {msg.role === "assistant" && (
                 <div className="bot-avatar">
-                  <MessageSquare className="h-full w-full text-white p-1" />
+                  <img
+                    src="/tallyrus2white.png"
+                    alt="Tallyrus Logo"
+                  />
                 </div>
               )}
               <div className="message-text">{msg.content}</div>
@@ -206,7 +226,10 @@ const Chatbot = ({ onClassroomUpdate }) => {
           {isLoading && (
             <div className="message bot-message thinking">
               <div className="bot-avatar">
-                <MessageSquare className="h-full w-full text-white p-1" />
+                <img
+                    src="/tallyrus2white.png"
+                    alt="Tallyrus Logo"
+                  />
               </div>
               <div className="message-text">
                 <div className="thinking-indicator">
