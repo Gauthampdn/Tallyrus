@@ -673,9 +673,11 @@ const Home = ({
         </AlertDialog>
 
         {/* Add Chatbot */}
-        <div className="mt-8">
-          <Chatbot onClassroomUpdate={handleClassroomUpdate} />
-        </div>
+        {user?.authority === "teacher" && (
+          <div className="mt-8">
+            <Chatbot onClassroomUpdate={handleClassroomUpdate} />
+          </div>
+        )}
       </div>
       <Toaster />
     </div>
