@@ -57,6 +57,18 @@ const submissionSchema = new Schema({
     type: [feedbackCriteriaSchema],
     default: []
   },
+  comments: {
+    type: [{
+      text: String,
+      author: String,
+      authorId: String,
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    default: []
+  },
   pdfURL: {
     type: String,
   },

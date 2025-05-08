@@ -414,8 +414,10 @@ const fetchOldGradedEssays = async (teacherId) => {
 
 const gradeall = async (req, res) => {
   const assignmentId = req.params.id;
+  console.log("Starting gradeall process for assignment:", assignmentId);
 
   if (req.user.authority !== "teacher") {
+    console.log("Unauthorized grading attempt by non-teacher user");
     return res
       .status(403)
       .json({ error: "Only teachers can grade assignments" });
@@ -423,25 +425,55 @@ const gradeall = async (req, res) => {
 
   try {
     const assignment = await Assignment.findById(assignmentId);
+    console.log("Found assignment:", {
+      id: assignment._id,
+      name: assignment.name,
+      submissionsCount: assignment.submissions.length,
+    });
 
     if (!assignment) {
+      console.log("Assignment not found:", assignmentId);
       return res.status(404).json({ error: "Assignment not found" });
     }
 
     for (let submission of assignment.submissions) {
       if (submission.status !== "graded") {
+        console.log("Marking submission for grading:", {
+          submissionId: submission._id,
+          studentName: submission.studentName,
+          previousStatus: submission.status,
+        });
         submission.status = "grading";
       }
     }
     await assignment.save();
+    console.log("Updated all submission statuses to grading");
 
     const gradingPromises = assignment.submissions.map(async (submission) => {
       if (submission.status === "grading") {
+        console.log("Processing submission:", {
+          submissionId: submission._id,
+          studentName: submission.studentName,
+          pdfURL: submission.pdfURL,
+        });
+
         try {
           let extractedText = "";
           if (submission.pdfURL.endsWith(".pdf")) {
+            console.log(
+              "Attempting to extract text from PDF:",
+              submission.pdfURL
+            );
             extractedText = await getTextFromPDF(submission.pdfURL);
+            console.log("PDF text extraction result:", {
+              success: !!extractedText,
+              textLength: extractedText ? extractedText.length : 0,
+              first100Chars: extractedText
+                ? extractedText.substring(0, 100)
+                : null,
+            });
           } else {
+            console.log("Unsupported file format:", submission.pdfURL);
             submission.status = "error";
             submission.feedback = [
               {
@@ -455,6 +487,7 @@ const gradeall = async (req, res) => {
           }
 
           if (!extractedText) {
+            console.log("Failed to extract text from file");
             submission.status = "error";
             submission.feedback = [
               {
@@ -467,6 +500,7 @@ const gradeall = async (req, res) => {
             return submission;
           }
 
+          console.log("Preparing to grade submission with rubric");
           const rubricString = rubricToString(assignment.rubric);
           const messages = [
             { role: "user", content: gradingInstructions },
@@ -474,9 +508,15 @@ const gradeall = async (req, res) => {
             { role: "user", content: extractedText },
           ];
 
+          console.log("Sending to LLM for grading");
           const gradingResponse = await llm.invoke(messages);
+          console.log("Received grading response:", {
+            success: !!gradingResponse,
+            hasContent: !!gradingResponse?.content,
+          });
 
           if (!gradingResponse) {
+            console.log("Failed to get grading response from LLM");
             submission.status = "error";
             submission.feedback = [
               {
@@ -487,21 +527,28 @@ const gradeall = async (req, res) => {
               },
             ];
           } else {
+            console.log("Successfully graded submission");
             const feedback = gradingResponse.content;
             submission.feedback = parseFeedback(feedback);
             submission.status = "graded";
           }
 
-          const user = await User.findById(req.user.id);
+          // Use _id instead of id for MongoDB query
+          const user = await User.findById(req.user._id);
           if (user.numGraded === undefined) {
             user.numGraded = 0;
           }
           user.numGraded++;
           await user.save();
+          console.log("Updated user grading count:", user.numGraded);
 
           return submission;
         } catch (error) {
-          console.error("Error grading submission:", error);
+          console.error("Error grading submission:", {
+            submissionId: submission._id,
+            error: error.message,
+            stack: error.stack,
+          });
           submission.status = "error";
           submission.feedback = [
             {
@@ -517,7 +564,13 @@ const gradeall = async (req, res) => {
       return submission;
     });
 
+    console.log("Waiting for all grading promises to complete");
     const gradedSubmissions = await Promise.all(gradingPromises);
+    console.log("All submissions processed:", {
+      total: gradedSubmissions.length,
+      graded: gradedSubmissions.filter((s) => s.status === "graded").length,
+      errors: gradedSubmissions.filter((s) => s.status === "error").length,
+    });
 
     for (let submission of gradedSubmissions) {
       await assignment.save();
@@ -525,7 +578,10 @@ const gradeall = async (req, res) => {
 
     res.json({ message: "All submissions graded successfully" });
   } catch (error) {
-    console.error("Error grading assignments:", error);
+    console.error("Error in gradeall:", {
+      error: error.message,
+      stack: error.stack,
+    });
     res.status(500).send("Error grading assignments");
   }
 };

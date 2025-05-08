@@ -72,7 +72,7 @@ const Assignment = () => {
   const [currentComments, setCurrentComments] = useState('');
   const [currentScore, setCurrentScore] = useState(0); // State for the text box score
   const [isSaving, setIsSaving] = useState(false);
-
+  const [commentText, setCommentText] = useState('');
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -878,7 +878,52 @@ const Assignment = () => {
     }
   };
   
-  
+  const handleAddComment = async () => {
+    if (!commentText.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Comment cannot be empty",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_BACKEND}/assignments/${assignment._id}/submissions/${selectedSubmission._id}/comments`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          mode: 'cors',
+          body: JSON.stringify({ text: commentText })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to add comment');
+      }
+
+      const updatedAssignment = await response.json();
+      setAssignment(updatedAssignment);
+      setSelectedSubmission(updatedAssignment.submissions.find(sub => sub._id === selectedSubmission._id));
+      setCommentText(''); // Clear the comment input
+
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add comment",
+      });
+    }
+  };
 
   return (
     <div className="bg-zinc-900 text-white min-h-screen">
@@ -1018,6 +1063,52 @@ const Assignment = () => {
                 ) : (
                   <p>No file selected</p>
                 )}
+                                <Card className="mt-6 bg-white text-neutral-900">
+                  <CardHeader>
+                    <CardTitle>Comments</CardTitle>
+                    <CardDescription>Add comments to this submission</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Existing comments */}
+                      {selectedSubmission.comments && selectedSubmission.comments.map((comment, index) => (
+                        <div key={index} className="p-3 rounded-lg bg-black text-white">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="font-semibold">{comment.author}</span>
+                            <span className="text-sm text-gray-400">
+                              {new Date(comment.createdAt).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: 'numeric',
+                                hour12: true,
+                                timeZone: 'America/Los_Angeles'
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm">{comment.text}</p>
+                        </div>
+                      ))}
+
+                      {/* New comment input */}
+                      <div className="flex gap-2">
+                        <Textarea
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          placeholder="Add a comment..."
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={handleAddComment}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          Add Comment
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               <div className="md:flex-1 p-4">
@@ -1051,6 +1142,8 @@ const Assignment = () => {
                     </Card>
                   ))}
                 </div>
+
+
               </div>
 
               <AlertDialog open={editName}>
