@@ -113,7 +113,7 @@ const getAllUsers = async (req, res) => {
 
       // Check if the authenticated user's email is in the allowed list
       if (!allowedEmails.includes(req.user.email)) {
-        res.status(403).json({ error: "Forbidden: You are not authorized to access this resource" });
+        return res.status(403).json({ error: "Forbidden: You are not authorized to access this resource" });
       }
 
       // Fetch all users and sort them in descending order based on numGraded
