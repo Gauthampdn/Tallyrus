@@ -7,6 +7,8 @@ pipeline {
 
     environment {
         NODE_ENV = 'test'
+        GOOGLE_CLIENT_ID = credentials('GOOGLE_CLIENT_ID')
+        GOOGLE_CLIENT_SECRET = credentials('GOOGLE_CLIENT_SECRET')
     }
 
     stages {
@@ -27,7 +29,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 dir('backend') {
-                    sh 'npm test'
+                    sh 'npm test -- --reporters=default --reporters=jest-junit'
                 }
             }
             post {
