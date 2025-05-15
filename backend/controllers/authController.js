@@ -1,52 +1,51 @@
 const User = require("../models/userModel");
 const passport = require("passport");
-var GoogleStrategy = require('passport-google-oauth2').Strategy;
-
+var GoogleStrategy = require("passport-google-oauth2").Strategy;
 
 require("dotenv").config();
 
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://bcknd.tallyrus.com/auth/redirect/google", // somehow this is appending /undefined after ENV so i hardcoded it
-  passReqToCallback: true
-},
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:4000/auth/redirect/google", // somehow this is appending /undefined after ENV so i hardcoded it
+      passReqToCallback: true,
+    },
 
+    async function (request, accessToken, refreshToken, profile, done) {
+      try {
+        console.log("trying to find user");
 
+        // Find a user in the database based on their Google ID.
+        let user = await User.findOne({ id: profile.id });
 
-  async function (request, accessToken, refreshToken, profile, done) {
-    try {
-      console.log("trying to find user")
+        // If the user doesn't exist, create a new one.
+        if (!user) {
+          console.log("trying to make user");
 
-      // Find a user in the database based on their Google ID.
-      let user = await User.findOne({ id: profile.id });
+          const currentTime = new Date(); // Get the current time
 
-      // If the user doesn't exist, create a new one.
-      if (!user) {
-        console.log("trying to make user")
+          user = new User({
+            email: profile.email,
+            id: profile.id,
+            picture: profile.picture,
+            name: profile.given_name,
+            authority: "student",
+            numGraded: 0,
+          });
+          await user.save();
+          console.log("made new user");
+        }
 
-        const currentTime = new Date(); // Get the current time
-
-        user = new User({
-          email: profile.email,
-          id: profile.id,
-          picture: profile.picture,
-          name: profile.given_name,
-          authority: "teacher",
-          numGraded: 0
-        });
-        await user.save();
-        console.log("made new user")
-
+        // Return the user object for Passport to manage.
+        return done(null, user);
+      } catch (err) {
+        return done(err);
       }
-
-      // Return the user object for Passport to manage.
-      return done(null, user);
-    } catch (err) {
-      return done(err);
     }
-  }));
-
+  )
+);
 
 passport.serializeUser(function (user, done) {
   // Serialize the user's ID into the session.
@@ -63,32 +62,35 @@ passport.deserializeUser(async function (id, done) {
   }
 });
 
-const getAuth = passport.authenticate("google", { scope: ["email", "profile"] });
+const getAuth = passport.authenticate("google", {
+  scope: ["email", "profile"],
+});
 
 const redirectGoogle = passport.authenticate("google", {
-  successRedirect: "https://tallyrus.com/app",
-  failureRedirect: "https://tallyrus.com/login",
+  successRedirect: "http://localhost:3000/app",
+  failureRedirect: "http://localhost:3000/login",
 });
 
 const logout = (req, res) => {
   req.logout(() => {
     req.session.destroy(() => {
-      res.clearCookie('connect.sid');
-      res.redirect('https://tallyrus.com');
+      res.clearCookie("connect.sid");
+      res.redirect("http://localhost:3000/login");
     });
   });
-}
+};
 
 const getGoogleUser = async (req, res) => {
   if (req.isAuthenticated()) {
-    console.log("req is authenticated")
+    console.log("req is authenticated");
     res.json(req.user);
+  } else {
+    console.log("user not authenticated" + req.user);
+    res
+      .status(401)
+      .json({ error: "Unauthorized access since you are not logged in" });
   }
-  else {
-    console.log("user not authenticated" + req.user)
-    res.status(401).json({ error: "Unauthorized access since you are not logged in" });
-  }
-}
+};
 
 const switchAuthority = async (req, res) => {
   if (req.isAuthenticated()) {
@@ -96,9 +98,11 @@ const switchAuthority = async (req, res) => {
       const user = await User.findById(req.user._id);
       user.authority = user.authority === "teacher" ? "student" : "teacher";
       await user.save();
-      res.json( user );
+      res.json(user);
     } catch (err) {
-      res.status(500).json({ error: "An error occurred while switching authority" });
+      res
+        .status(500)
+        .json({ error: "An error occurred while switching authority" });
     }
   } else {
     res.status(401).json({ error: "Unauthorized access" });
@@ -109,11 +113,13 @@ const getAllUsers = async (req, res) => {
   if (req.isAuthenticated()) {
     try {
       // Retrieve the allowed emails from the environment variable and split them into an array
-      const allowedEmails = process.env.ALLOWED_EMAILS.split(',');
+      const allowedEmails = process.env.ALLOWED_EMAILS.split(",");
 
       // Check if the authenticated user's email is in the allowed list
       if (!allowedEmails.includes(req.user.email)) {
-        return res.status(403).json({ error: "Forbidden: You are not authorized to access this resource" });
+        res.status(403).json({
+          error: "Forbidden: You are not authorized to access this resource",
+        });
       }
 
       // Fetch all users and sort them in descending order based on numGraded
@@ -131,12 +137,11 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-
 module.exports = {
   getAuth,
   redirectGoogle,
   logout,
   getGoogleUser,
   switchAuthority,
-  getAllUsers
-}
+  getAllUsers,
+};
