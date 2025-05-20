@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "jest --runInBand",
+    "coverage": "jest --coverage",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },

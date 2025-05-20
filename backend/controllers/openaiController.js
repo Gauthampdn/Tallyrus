@@ -1128,4 +1128,5 @@ module.exports = {
   testLangSmith,
   handleFunctionCall,
   potential,
+  formatAIScore,
 };
