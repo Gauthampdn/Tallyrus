@@ -7,6 +7,7 @@ require("dotenv").config();
 const { ChatOpenAI } = require("@langchain/openai");
 const { llm, functions } = require("../utils/langsmith");
 const { incrementGraded } = require("./authController");
+const { sendGradingNotification } = require("../utils/snsNotifier");
 const testLangSmith = async (req, res) => {
   try {
     console.log("Testing LangSmith integration with direct LLM call");
@@ -572,6 +573,38 @@ const gradeall = async (req, res) => {
       errors: gradedSubmissions.filter((s) => s.status === "error").length,
     });
 
+    // Send notifications for each graded submission
+    for (const submission of gradedSubmissions) {
+      if (submission.status === "graded") {
+        try {
+          console.log("Sending notification for submission:", {
+            submissionId: submission._id,
+            studentName: submission.studentName,
+            teacherEmail: req.user.email,
+          });
+
+          await sendGradingNotification(
+            req.user.email,
+            submission.studentName,
+            assignment.name,
+            submission.feedback.reduce((acc, f) => acc + f.score, 0) /
+              submission.feedback.length
+          );
+          console.log(
+            "Successfully sent notification for submission:",
+            submission._id
+          );
+        } catch (error) {
+          console.error("Failed to send notification for submission:", {
+            submissionId: submission._id,
+            error: error.message,
+            stack: error.stack,
+          });
+          // Continue with other submissions even if notification fails
+        }
+      }
+    }
+
     for (let submission of gradedSubmissions) {
       await assignment.save();
     }
@@ -589,7 +622,7 @@ const gradeall = async (req, res) => {
 const gradeSubmission = async (req, res) => {
   const { assignmentId } = req.params;
   const { text } = req.body;
-  const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
+  const aiDetectionToken = process.env.AIDETECT;
 
   if (!text) {
     return res.status(400).json({ error: "No text provided" });
@@ -597,6 +630,11 @@ const gradeSubmission = async (req, res) => {
 
   try {
     const assignment = await Assignment.findById(assignmentId);
+    console.log("Found assignment for grading:", {
+      id: assignment._id,
+      name: assignment.name,
+      classId: assignment.classId,
+    });
 
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
@@ -637,6 +675,53 @@ const gradeSubmission = async (req, res) => {
     submission.status = "graded";
     submission.feedback = parseFeedback(feedback);
     await assignment.save();
+
+    // Send notification for the graded submission
+    try {
+      console.log("Attempting to send notification for graded submission");
+      console.log("Looking up teacher with classId:", assignment.classId);
+
+      const teacher = await User.findById(assignment.classId);
+      console.log("Found teacher:", {
+        id: teacher?._id,
+        email: teacher?.email,
+        name: teacher?.name,
+      });
+
+      if (teacher && teacher.email) {
+        console.log("Sending notification with params:", {
+          teacherEmail: teacher.email,
+          studentName: submission.studentName,
+          assignmentName: assignment.name,
+          averageScore:
+            submission.feedback.reduce((acc, f) => acc + f.score, 0) /
+            submission.feedback.length,
+        });
+
+        await sendGradingNotification(
+          teacher.email,
+          submission.studentName,
+          assignment.name,
+          submission.feedback.reduce((acc, f) => acc + f.score, 0) /
+            submission.feedback.length
+        );
+        console.log(
+          "Successfully sent notification for submission:",
+          submission._id
+        );
+      } else {
+        console.log(
+          "Could not send notification - teacher or teacher email not found"
+        );
+      }
+    } catch (error) {
+      console.error("Failed to send notification:", {
+        error: error.message,
+        stack: error.stack,
+        submissionId: submission._id,
+      });
+      // Continue even if notification fails
+    }
 
     res.json({ feedback });
   } catch (error) {
