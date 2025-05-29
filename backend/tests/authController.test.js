@@ -98,4 +98,5 @@ describe("authController", () => {
       expect(User.find).not.toHaveBeenCalled();
     });
   });
+  
 });

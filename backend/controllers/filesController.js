@@ -57,7 +57,7 @@ const upload = multer({
 
       // Concatenate date string with original file name
       const uniqueFileName = `${dateString}-${file.originalname}`;
-      console.log("Unique file name is: ", uniqueFileName);
+      //console.log("Unique file name is: ", uniqueFileName);
 
       // Pass the new file name to the callback
       cb(null, uniqueFileName);
