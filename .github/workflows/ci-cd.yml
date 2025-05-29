@@ -1,0 +1,101 @@
+name: Tallyrus CI/CD
+
+on:
+  push:
+    branches: [test, main]
+  pull_request:
+    branches: [test, main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Debug Information
+        run: |
+          echo "Running on branch: ${{ github.ref }}"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Workflow triggered by: ${{ github.actor }}"
+          echo "Google Client ID available: ${{ secrets.GOOGLE_CLIENT_ID != '' }}"
+          echo "Google Client Secret available: ${{ secrets.GOOGLE_CLIENT_SECRET != '' }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run Tests
+        working-directory: ./backend
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: npm test
+
+  create-pr:
+    needs: test
+    if: github.ref == 'refs/heads/test' && success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+
+      - name: Debug PR Creation
+        run: |
+          echo "Creating PR from test to main"
+          echo "Current branch: ${{ github.ref }}"
+          echo "PAT Token available: ${{ secrets.PAT_TOKEN != '' }}"
+          git status
+          git log --oneline -n 5
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+      - name: Sync Test Branch
+        run: |
+          git fetch origin test
+          git checkout test
+          git reset --hard origin/test
+          git clean -fd
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          base: main
+          branch: test
+          title: "Deploy Test Changes to Main"
+          body: |
+            This PR was automatically created after successful tests.
+
+            Changes from test branch are ready to be merged to main.
+
+            Please review the changes before merging.
+
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          labels: |
+            automated pr
+            deployment
+          delete-branch: false
+          push-to-fork: ""
