@@ -52,7 +52,7 @@ jobs:
 
       - name: Debug PR Creation
         run: |
-          echo "Creating PR from test to deployment"
+          echo "Creating PR from test to main"
           echo "Current branch: ${{ github.ref }}"
           echo "GitHub Token available: ${{ secrets.GITHUB_TOKEN != '' }}"
 
@@ -60,13 +60,13 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: deployment
+          base: main
           head: test
-          title: "Deploy Test Changes to Deployment"
+          title: "Deploy Test Changes to Main"
           body: |
             This PR was automatically created after successful tests.
 
-            Changes from test branch are ready to be deployed.
+            Changes from test branch are ready to be merged to main.
 
             Please review the changes before merging.
 
