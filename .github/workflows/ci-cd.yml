@@ -49,22 +49,25 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/test' && success()
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Debug PR Creation
         run: |
           echo "Creating PR from test to main"
           echo "Current branch: ${{ github.ref }}"
-          echo "GitHub Token available: ${{ secrets.GITHUB_TOKEN != '' }}"
+          echo "PAT Token available: ${{ secrets.PAT_TOKEN != '' }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           base: main
           branch: test
           title: "Deploy Test Changes to Main"
