@@ -24,6 +24,8 @@ jobs:
           echo "Running on branch: ${{ github.ref }}"
           echo "Event name: ${{ github.event_name }}"
           echo "Workflow triggered by: ${{ github.actor }}"
+          echo "Google Client ID available: ${{ secrets.GOOGLE_CLIENT_ID != '' }}"
+          echo "Google Client Secret available: ${{ secrets.GOOGLE_CLIENT_SECRET != '' }}"
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -38,6 +40,9 @@ jobs:
 
       - name: Run Tests
         working-directory: ./backend
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: npm test
 
   create-pr:

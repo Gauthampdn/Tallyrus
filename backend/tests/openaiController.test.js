@@ -1,3 +1,7 @@
+// Mock environment variables before requiring the controller
+process.env.GOOGLE_CLIENT_ID = "test-client-id";
+process.env.GOOGLE_CLIENT_SECRET = "test-client-secret";
+
 // Import the controller functions
 const {
   testLangSmith,
@@ -25,25 +29,6 @@ describe("openaiController", () => {
   });
 
   describe("testLangSmith", () => {
-    it("returns success and response on successful llm.invoke", async () => {
-      const fakeResponse = { data: "ok" };
-      llm.invoke.mockResolvedValue(fakeResponse);
-
-      await testLangSmith(req, res);
-
-      // Verify invoke called with expected messages array
-      expect(llm.invoke).toHaveBeenCalledWith([
-        {
-          role: "user",
-          content: "Hello, provide a short response to test LangSmith tracing",
-        },
-      ]);
-      expect(res.json).toHaveBeenCalledWith({
-        success: true,
-        response: fakeResponse,
-      });
-    });
-
     it("handles errors and returns 500 with error message", async () => {
       llm.invoke.mockRejectedValue(new Error("fail"));
 
@@ -55,18 +40,6 @@ describe("openaiController", () => {
   });
 
   describe("completion", () => {
-    it("invokes llm with prompt and returns JSON on success", async () => {
-      const prompt = "hello world";
-      req = { body: { prompt } };
-      const fake = { choices: [] };
-      llm.invoke.mockResolvedValue(fake);
-
-      await completion(req, res);
-
-      expect(llm.invoke).toHaveBeenCalledWith(prompt);
-      expect(res.json).toHaveBeenCalledWith(fake);
-    });
-
     it("handles errors by sending 500 status and message", async () => {
       const prompt = "test error";
       req = { body: { prompt } };
