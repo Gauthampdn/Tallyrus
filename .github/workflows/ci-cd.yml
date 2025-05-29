@@ -1,4 +1,4 @@
-name: School Project CI/CD
+name: Tallyrus CI/CD
 
 on:
   push:
