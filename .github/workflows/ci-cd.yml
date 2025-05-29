@@ -1,0 +1,77 @@
+name: School Project CI/CD
+
+on:
+  push:
+    branches: [test, main]
+  pull_request:
+    branches: [test, main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Debug Information
+        run: |
+          echo "Running on branch: ${{ github.ref }}"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Workflow triggered by: ${{ github.actor }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run Tests
+        working-directory: ./backend
+        run: npm test
+
+  create-pr:
+    needs: test
+    if: github.ref == 'refs/heads/test' && success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug PR Creation
+        run: |
+          echo "Creating PR from test to deployment"
+          echo "Current branch: ${{ github.ref }}"
+          echo "GitHub Token available: ${{ secrets.GITHUB_TOKEN != '' }}"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: deployment
+          head: test
+          title: "Deploy Test Changes to Deployment"
+          body: |
+            This PR was automatically created after successful tests.
+
+            Changes from test branch are ready to be deployed.
+
+            Please review the changes before merging.
+
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          labels: |
+            automated pr
+            deployment
+          delete-branch: false

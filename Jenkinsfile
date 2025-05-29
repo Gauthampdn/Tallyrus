@@ -9,6 +9,7 @@ pipeline {
         NODE_ENV = 'test'
         GOOGLE_CLIENT_ID = credentials('GOOGLE_CLIENT_ID')
         GOOGLE_CLIENT_SECRET = credentials('GOOGLE_CLIENT_SECRET')
+        GIT_CREDENTIALS = credentials('git-credentials')
     }
 
     stages {
@@ -35,6 +36,39 @@ pipeline {
             post {
                 always {
                     junit 'backend/junit.xml'
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                branch 'main'  // Only deploy when changes are on main branch
+                expression { 
+                    return currentBuild.result == 'SUCCESS' 
+                }
+            }
+            steps {
+                script {
+                    // Configure git with credentials
+                    sh '''
+                        git config --global user.email "jenkins@example.com"
+                        git config --global user.name "Jenkins"
+                    '''
+                    
+                    // Switch to production branch and merge changes
+                    sh '''
+                        git checkout prod
+                        git merge main --no-edit
+                        git push origin prod
+                    '''
+                }
+            }
+            post {
+                success {
+                    echo 'Successfully deployed to production!'
+                }
+                failure {
+                    echo 'Failed to deploy to production!'
                 }
             }
         }
