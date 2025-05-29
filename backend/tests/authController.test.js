@@ -42,16 +42,24 @@ describe("authController", () => {
   });
 
   describe("getGoogleUser", () => {
-    it("should return user if authenticated", async () => {
-      const req = { isAuthenticated: () => true, user: { name: "Test" } };
+    it("returns user JSON when authenticated", async () => {
+      req.isAuthenticated = jest.fn().mockReturnValue(true);
+      req.user = { id: "u1", email: "test@example.com" };
+
       await getGoogleUser(req, res);
-      expect(res.json).toHaveBeenCalledWith({ name: "Test" });
+
+      expect(res.json).toHaveBeenCalledWith(req.user);
     });
 
-    it("should return 401 if not authenticated", async () => {
-      const req = { isAuthenticated: () => false, user: null };
+    it("returns 401 when not authenticated", async () => {
+      req.isAuthenticated = jest.fn().mockReturnValue(false);
+
       await getGoogleUser(req, res);
+
       expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Unauthorized access since you are not logged in",
+      });
     });
   });
 

@@ -4,8 +4,8 @@ describe("requireAuth middleware", () => {
   let req, res, next;
 
   beforeEach(() => {
-    req  = { isAuthenticated: jest.fn(), user: { id: "u1" } };
-    res  = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    req = { isAuthenticated: jest.fn(), user: { id: "u1" } };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     next = jest.fn();
   });
 
@@ -29,7 +29,7 @@ describe("requireAuth middleware", () => {
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Unauthorized access since you are not logged in"
+      error: "Unauthorized access since you are not logged in",
     });
   });
 });

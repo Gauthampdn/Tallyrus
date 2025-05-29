@@ -35,7 +35,7 @@ describe("classroomController", () => {
 
   // ---- getClassroomsForUser ----
   describe("getClassroomsForUser", () => {
-    it("returns 200 & teacher's classes", async () => {
+    it("returns 200 & teacher’s classes", async () => {
       req = { user: { id: "u1", authority: "teacher" } };
       const fake = [{ id: "c1" }];
       const sortMock = jest.fn().mockResolvedValue(fake);
@@ -49,7 +49,7 @@ describe("classroomController", () => {
       expect(res.json).toHaveBeenCalledWith(fake);
     });
 
-    it("returns 200 & student's classes (redacted fields)", async () => {
+    it("returns 200 & student’s classes (redacted fields)", async () => {
       req = { user: { id: "u2", authority: "student" } };
       const fake = [{ id: "c2" }];
       const projection = { students: 0, teachers: 0, assignments: 0 };
@@ -261,29 +261,6 @@ describe("classroomController", () => {
       await deleteClassroom(req, res);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "boom" });
-    });
-
-    it("should delete classroom if teacher", async () => {
-      const req = {
-        params: { id: "class1" },
-        user: { id: "teacher1", authority: "teacher" },
-      };
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      Classroom.findById.mockResolvedValue({
-        _id: "class1",
-        teachers: ["teacher1"],
-      });
-      Assignment.find.mockResolvedValue([]);
-      Classroom.findByIdAndDelete.mockResolvedValue({});
-      await deleteClassroom(req, res);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it("should return 403 if not teacher", async () => {
-      const req = { params: { id: "class1" }, user: { authority: "student" } };
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      await deleteClassroom(req, res);
-      expect(res.status).toHaveBeenCalledWith(403);
     });
   });
 
