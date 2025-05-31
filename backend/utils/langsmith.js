@@ -18,7 +18,7 @@ console.log("Tracer initialized, creating LLM with callbacks");
 // Create LLM instance with the tracer callback and function calling support
 const llm = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
-  modelName: "gpt-3.5-turbo-0125",
+  modelName: "gpt-4o",
   temperature: 0,
   callbacks: [tracer],
   maxTokens: 300,

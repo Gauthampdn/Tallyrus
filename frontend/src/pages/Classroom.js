@@ -174,6 +174,7 @@ const Classroom = () => {
   const [loading, setLoading] = useState(false);
   const [refreshIntervalId, setRefreshIntervalId] = useState(null);
   const { classroomId, assignmentId } = useParams();
+  const [isHandwriting, setIsHandwriting] = useState(false);
 
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -297,6 +298,7 @@ const Classroom = () => {
     Array.from(teacherFiles).forEach(file => {
       formData.append('files', file);
     });
+    formData.append('isHandwriting', isHandwriting); // Add handwriting status
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload-teacher/${assignmentId}`, {
@@ -319,7 +321,6 @@ const Classroom = () => {
       // Automatically trigger grading for all assignments
       await handleGradeAll(assignmentId);
       fetchSubmissions();
-
 
     } catch (error) {
       console.error("There was a problem with the file upload:", error);
@@ -487,45 +488,83 @@ const Classroom = () => {
 
   const handleGrade = async (assignmentId) => {
     if (!file) {
-        console.log("No file selected");
+        console.log("No file selected for grading");
         return;
     }
-    console.log("Starting potential grade process...");
-    console.log("File selected:", file.name);
+    console.log("Starting potential grade process...", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        isHandwriting: isHandwriting
+    });
 
     try {
-        console.log("Beginning text extraction from PDF...");
-        
-        // Use the new pdfToText function instead of getTextFromPdf
-        const text = await pdfToText(file);
-        console.log("Text extracted successfully, length:", text.length);
-        console.log("First 100 characters of extracted text:", text.substring(0, 100));
+        // First upload the file to get the URL
+        console.log("Uploading file to get URL");
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
 
-        console.log("Sending request to backend for grading...");
-        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/potential/${assignmentId}`, {
+        const uploadResponse = await fetch(`${process.env.REACT_APP_API_BACKEND}/files/upload/${assignmentId}`, {
+            method: 'POST',
+            body: uploadFormData,
+            credentials: 'include',
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file');
+        }
+
+        const uploadData = await uploadResponse.json();
+        console.log("File uploaded successfully:", uploadData);
+
+        // Now send the grading request with the file URL
+        console.log("Sending grading request with file URL");
+        const response = await fetch(`${process.env.REACT_APP_API_BACKEND}/openai/gradehandwriting/${assignmentId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ text }),
+            body: JSON.stringify({
+                pdfPath: uploadData.filePath,
+                isHandwriting: isHandwriting
+            }),
             credentials: 'include',
         });
 
+        console.log("Received response from backend:", {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+        });
+
         if (!response.ok) {
-            console.error("Backend response not OK:", response.status, response.statusText);
+            console.error("Backend response not OK:", {
+                status: response.status,
+                statusText: response.statusText
+            });
             throw new Error('Network response was not ok');
         }
 
-        console.log("Response received from backend");
+        console.log("Parsing response data");
         const data = await response.json();
-        console.log("Feedback received:", data.feedback);
+        console.log("Response data:", {
+            hasFeedback: !!data.feedback,
+            feedbackLength: data.feedback?.length,
+            hasExtractedText: !!data.extractedText,
+            extractedTextLength: data.extractedText?.length
+        });
+
         setFeedback(data.feedback);
+        console.log("Feedback state updated");
     } catch (error) {
-        console.error("Error in grading process:", error);
+        console.error("Error in grading process:", {
+            error: error.message,
+            stack: error.stack
+        });
         toast({
             variant: "destructive",
-            title: "Error extracting text",
-            description: "Failed to extract text from the PDF. Please try again or use a different file.",
+            title: "Error processing submission",
+            description: "Failed to process the PDF. Please try again or use a different file.",
         });
     }
   };
@@ -809,6 +848,16 @@ const Classroom = () => {
                         <div className="max-w-sm">
                           <Label htmlFor="pdf">Upload your PDF</Label>
                           <Input id="pdf" type="file" accept=".pdf" onChange={handleFileChange} className="bg-gray-700 text-gray-100" />
+                          <div className="flex items-center space-x-2 mt-4">
+                            <Checkbox 
+                              id="handwriting" 
+                              checked={isHandwriting}
+                              onCheckedChange={(checked) => setIsHandwriting(checked)}
+                            />
+                            <Label htmlFor="handwriting" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              This is a handwritten submission
+                            </Label>
+                          </div>
                           <Button className="mt-8 bg-indigo-600 hover:bg-indigo-700" onClick={() => handleSubmit(selectedAssignment._id)}>Submit</Button>
                           <br />
                           <br />
@@ -955,8 +1004,16 @@ const Classroom = () => {
                                       </li>
                                     ))}
                                   </ul>
-
-
+                                  <div className="flex items-center space-x-2 mt-4">
+                                    <Checkbox 
+                                      id="teacher-handwriting" 
+                                      checked={isHandwriting}
+                                      onCheckedChange={(checked) => setIsHandwriting(checked)}
+                                    />
+                                    <Label htmlFor="teacher-handwriting" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                      These are handwritten submissions
+                                    </Label>
+                                  </div>
                                 </DialogDescription>
                                 <DialogFooter>
                                   <Button

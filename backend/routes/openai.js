@@ -10,7 +10,8 @@ const {
   gradeSubmission, 
   parseRubricWithGPT4,
   potential,
-  handleFunctionCall
+  handleFunctionCall,
+  gradeHandwriting
 } = require("../controllers/openaiController")
 
 
@@ -18,6 +19,7 @@ const requireAuth = require("../middleware/requireAuth")
 
 router.post("/gradesubmission/:assignmentId", gradeSubmission);
 router.post("/potential/:assignmentId", potential);
+router.post("/gradehandwriting/:assignmentId", gradeHandwriting);
 router.get("/gradeall/:id", gradeall);
 router.get("/test", test);
 router.get("/extract", extractText);

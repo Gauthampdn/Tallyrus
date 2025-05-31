@@ -7,6 +7,11 @@ require("dotenv").config();
 const { ChatOpenAI } = require("@langchain/openai");
 const { llm, functions } = require("../utils/langsmith");
 const { incrementGraded } = require("./authController");
+const { OpenAI } = require("openai");
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 const testLangSmith = async (req, res) => {
   try {
     console.log("Testing LangSmith integration with direct LLM call");
@@ -412,6 +417,180 @@ const fetchOldGradedEssays = async (teacherId) => {
   }
 };
 
+const processHandwrittenPDF = async (pdfPath) => {
+  try {
+    console.log("Starting handwritten PDF processing for:", pdfPath);
+    
+    // Get the full URL for the PDF
+    const pdfUrl = `${process.env.REACT_APP_API_BACKEND}/${pdfPath}`;
+    console.log("PDF URL:", pdfUrl);
+
+    console.log("Sending request to OpenAI Vision API...");
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Please extract and transcribe all the text from this handwritten document. Preserve the structure and formatting as much as possible." },
+            {
+              type: "image_url",
+              image_url: {
+                url: pdfUrl,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 4096,
+    });
+
+    console.log("Full Vision API Response:", {
+      model: response.model,
+      id: response.id,
+      choices: response.choices.map(choice => ({
+        message: {
+          role: choice.message.role,
+          content: choice.message.content,
+          contentLength: choice.message.content?.length
+        },
+        finish_reason: choice.finish_reason
+      })),
+      usage: response.usage,
+      created: response.created
+    });
+
+    const extractedText = response.choices[0].message.content;
+    console.log("Extracted Text Preview:", {
+      length: extractedText.length,
+      first100Chars: extractedText.substring(0, 100),
+      last100Chars: extractedText.substring(extractedText.length - 100)
+    });
+
+    return extractedText;
+  } catch (error) {
+    console.error("Error in processHandwrittenPDF:", {
+      error: error.message,
+      stack: error.stack,
+      pdfPath,
+      errorDetails: error.response?.data || error.response || error
+    });
+    throw error;
+  }
+};
+
+const gradeHandwriting = async (req, res) => {
+  try {
+    console.log("Starting gradeHandwriting process");
+    const { assignmentId } = req.params;
+    const { pdfPath, isHandwriting } = req.body;
+
+    console.log("Request details:", {
+      assignmentId,
+      pdfPath,
+      isHandwriting,
+      hasFile: !!req.file
+    });
+
+    if (!pdfPath) {
+      console.log("No PDF path provided");
+      return res.status(400).json({ error: "No PDF provided" });
+    }
+
+    const assignment = await Assignment.findById(assignmentId);
+    console.log("Found assignment:", {
+      id: assignment?._id,
+      name: assignment?.name,
+      hasRubric: !!assignment?.rubric
+    });
+
+    if (!assignment) {
+      console.log("Assignment not found:", assignmentId);
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    // Find the specific submission
+    const submission = assignment.submissions.find(
+      (sub) => sub.studentId === req.user._id
+    );
+
+    console.log("Found submission:", {
+      submissionId: submission?._id,
+      studentName: submission?.studentName,
+      status: submission?.status
+    });
+
+    if (!submission) {
+      console.log("Submission not found for user:", req.user._id);
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    // Set the submission status to 'grading'
+    submission.status = "grading";
+    await assignment.save();
+    console.log("Updated submission status to grading");
+
+    // Process the handwritten PDF using Vision API
+    console.log("Starting Vision API processing");
+    const extractedText = await processHandwrittenPDF(pdfPath);
+    console.log("Text extraction complete:", {
+      textLength: extractedText.length,
+      preview: extractedText.substring(0, 100)
+    });
+
+    const rubricString = rubricToString(assignment.rubric);
+    console.log("Rubric string generated, length:", rubricString.length);
+
+    // Add handwriting context to the grading instructions
+    const handwritingInstructions = `${gradingInstructions}
+    Note: This submission is handwritten. Please be more lenient with formatting and structure, 
+    focusing on the content and ideas rather than perfect formatting. Consider the challenges 
+    of handwriting when evaluating the work.`;
+
+    console.log("Preparing messages for LLM");
+    const messages = [
+      { role: "user", content: isHandwriting ? handwritingInstructions : gradingInstructions },
+      { role: "user", content: rubricString },
+      { role: "user", content: extractedText },
+    ];
+
+    console.log("Sending to LLM for grading");
+    const gradingResponse = await llm.invoke(messages);
+    console.log("Received LLM response:", {
+      hasResponse: !!gradingResponse,
+      hasChoices: !!gradingResponse?.choices,
+      choicesLength: gradingResponse?.choices?.length
+    });
+
+    if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+      console.log("Failed to get valid response from LLM");
+      return res.status(500).json({ error: "Failed to grade submission" });
+    }
+
+    const feedback = gradingResponse.choices[0].message.content;
+    console.log("Generated feedback:", {
+      feedbackLength: feedback.length,
+      preview: feedback.substring(0, 100)
+    });
+
+    // Set the submission status to 'graded' and save the feedback
+    submission.status = "graded";
+    submission.feedback = parseFeedback(feedback);
+    submission.isHandwriting = isHandwriting;
+    await assignment.save();
+    console.log("Saved graded submission");
+
+    res.json({ feedback, extractedText });
+  } catch (error) {
+    console.error("Error in gradeHandwriting:", {
+      error: error.message,
+      stack: error.stack,
+      assignmentId: req.params.assignmentId
+    });
+    res.status(500).send("Error grading submission");
+  }
+};
+
 const gradeall = async (req, res) => {
   const assignmentId = req.params.id;
   console.log("Starting gradeall process for assignment:", assignmentId);
@@ -455,6 +634,7 @@ const gradeall = async (req, res) => {
           submissionId: submission._id,
           studentName: submission.studentName,
           pdfURL: submission.pdfURL,
+          isHandwriting: submission.isHandwriting
         });
 
         try {
@@ -464,7 +644,14 @@ const gradeall = async (req, res) => {
               "Attempting to extract text from PDF:",
               submission.pdfURL
             );
-            extractedText = await getTextFromPDF(submission.pdfURL);
+            
+            // Use Vision API for handwritten submissions
+            if (submission.isHandwriting) {
+              extractedText = await processHandwrittenPDF(submission.pdfURL);
+            } else {
+              extractedText = await getTextFromPDF(submission.pdfURL);
+            }
+            
             console.log("PDF text extraction result:", {
               success: !!extractedText,
               textLength: extractedText ? extractedText.length : 0,
@@ -502,8 +689,17 @@ const gradeall = async (req, res) => {
 
           console.log("Preparing to grade submission with rubric");
           const rubricString = rubricToString(assignment.rubric);
+          
+          // Add handwriting context to the grading instructions if needed
+          const gradingInstructionsWithContext = submission.isHandwriting 
+            ? `${gradingInstructions}
+               Note: This submission is handwritten. Please be more lenient with formatting and structure, 
+               focusing on the content and ideas rather than perfect formatting. Consider the challenges 
+               of handwriting when evaluating the work.`
+            : gradingInstructions;
+
           const messages = [
-            { role: "user", content: gradingInstructions },
+            { role: "user", content: gradingInstructionsWithContext },
             { role: "user", content: rubricString },
             { role: "user", content: extractedText },
           ];
@@ -1128,4 +1324,5 @@ module.exports = {
   testLangSmith,
   handleFunctionCall,
   potential,
+  gradeHandwriting,
 };
