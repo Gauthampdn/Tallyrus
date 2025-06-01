@@ -25,7 +25,7 @@ jest.mock("../controllers/openaiController", () => ({
 }));
 
 // Import dependencies after mocks
-const mongoose = require("mongoose"); // only here once
+const mongoose = require("mongoose");
 const { S3 } = require("@aws-sdk/client-s3");
 const s3 = new S3();
 const Classroom = require("../models/classroomModel");
@@ -36,7 +36,11 @@ const {
   deleteFile,
   uploadFile,
   uploadRubric,
+  uploadTeacherFile,
+  downloadFile,
+  uploadOldEssays,
 } = require("../controllers/filesController");
+const User = require("../models/userModel");
 
 let req, res;
 beforeEach(() => {
@@ -100,7 +104,7 @@ describe("filesController", () => {
       expect(res.json).toHaveBeenCalledWith({ message: "No file uploaded." });
     });
 
-    it("returns 400 if uploaded file is not a PDF", async () => {
+     it("returns 400 if uploaded file is not a PDF", async () => {
       await uploadFile(
         { params: { id: "x" }, file: { location: "file.txt", key: "file.txt" }, user: { authority: "student", id: "u1" } },
         res
@@ -144,7 +148,6 @@ describe("filesController", () => {
       Assignment.findById.mockResolvedValue({ classId: "c1", submissions: [] });
       Classroom.findOne.mockResolvedValue(null);
       await uploadFile(req, res);
-
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({ error: "Not authorized to submit to this assignment" });
     });
@@ -219,7 +222,6 @@ describe("filesController", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "boom" });
     });
   });
-
 
   describe("uploadRubric", () => {
     it("returns 400 when no file provided", async () => {
@@ -310,7 +312,7 @@ describe("filesController", () => {
       });
     });
 
-    it('uploads files and returns 201 with a success message and the submissions array', async () => {
+     it('uploads files and returns 201 with a success message and the submissions array', async () => {
       // Arrange: make the ID valid, user a teacher, and two fake files
       mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
       req.params.id     = 'assignment123';

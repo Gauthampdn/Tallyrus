@@ -1,51 +1,68 @@
 const mongoose = require("mongoose");
-const { getAssignment } = require("../controllers/assignmentController");
+const {
+  getAssignment,
+  getAssignments,
+  createAssignment,
+  deleteAssignment,
+  getSubmissions,
+  updateAssignmentRubric,
+  updateSubmission,
+  createSubmissionComment,
+} = require("../controllers/assignmentController");
 const Assignment = require("../models/assignmentModel");
+const Classroom = require("../models/classroomModel");
 
 jest.mock("../models/assignmentModel");
+jest.mock("../models/classroomModel");
 
-describe("getAssignment controller", () => {
+describe("assignmentController", () => {
   let req, res;
 
   beforeEach(() => {
-    req = { params: { id: "abc123" } };
+    jest.resetAllMocks();
+    req = {
+      params: {},
+      body: {},
+      user: { id: "u1", authority: "student" },
+    };
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      json: jest.fn().mockReturnThis(),
+      send: jest.fn(),
     };
-    // default: treat every ID as valid
-    jest.spyOn(mongoose.Types.ObjectId, "isValid").mockReturnValue(true);
   });
 
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
+  describe("getAssignment", () => {
+    it("returns 404 if ID is invalid", async () => {
+      req.params.id = "invalid";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(false);
 
-  it("returns 404 if ID is invalid", async () => {
-    mongoose.Types.ObjectId.isValid.mockReturnValue(false);
+      await getAssignment(req, res);
 
-    await getAssignment(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "No such Template and invalid ID",
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "No such Template and invalid ID",
+      });
     });
-  });
 
-  it("returns 404 if no assignment found", async () => {
-    Assignment.findById.mockResolvedValue(null);
+    it("returns 404 if no assignment found", async () => {
+      req.params.id = "validId";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+      Assignment.findById.mockResolvedValue(null);
 
-    await getAssignment(req, res);
+      await getAssignment(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: "Assignment not found" });
-  });
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Assignment not found" });
+    });
 
-  it("returns 200 and the assignment when found", async () => {
-    const fake = { id: "abc123", name: "Test" };
-    Assignment.findById.mockResolvedValue(fake);
+    it("returns 200 and assignment when found", async () => {
+      req.params.id = "validId";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+      const mockAssignment = { _id: "validId", title: "Test Assignment" };
+      Assignment.findById.mockResolvedValue(mockAssignment);
 
-    await getAssignment(req, res);
+      await getAssignment(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockAssignment);
@@ -114,14 +131,14 @@ describe("getAssignment controller", () => {
       req.user.id = "studentId";
       mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
       const mockClassroom = { _id: "validId" };
-      const mockAssignmentDoc = {
+       const mockAssignmentDoc = {
         toObject: () => ({
           _id: "a1",
           submissions: [
             { studentId: "studentId", score: 90 },
-            { studentId: "otherId",   score: 85 },
+            { studentId: "otherId", score: 85 },
           ],
-        }),
+           }),
         submissions: [
           { studentId: "studentId", score: 90 },
           { studentId: "otherId",   score: 85 },
@@ -145,30 +162,30 @@ describe("getAssignment controller", () => {
     });
 
     it("returns all submissions for teachers", async () => {
-      req.params.classId = "validId";
-      req.user.authority = "teacher";
-      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
-      const mockClassroom = { _id: "validId" };
-      const mockAssignments = [
-        {
-          _id: "a1",
-          submissions: [
-            { studentId: "student1", score: 90 },
-            { studentId: "student2", score: 85 },
-          ],
-        },
-      ];
+    req.params.classId = "validId";
+    req.user.authority = "teacher";
+    mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+    const mockClassroom = { _id: "validId" };
+    const mockAssignments = [
+      {
+        _id: "a1",
+        submissions: [
+          { studentId: "student1", score: 90 },
+          { studentId: "student2", score: 85 },
+        ],
+      },
+    ];
 
-      Classroom.findById.mockResolvedValue(mockClassroom);
-      Assignment.find.mockResolvedValue(mockAssignments);
+    Classroom.findById.mockResolvedValue(mockClassroom);
+    Assignment.find.mockResolvedValue(mockAssignments);
 
-      await getAssignments(req, res);
+    await getAssignments(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(mockAssignments);
-    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(mockAssignments);
+  });
 
-    it("returns filtered and mapped assignments for a student (using toObject)", async () => {
+  it("returns filtered and mapped assignments for a student (using toObject)", async () => {
       // Arrange
       req.params.classId = "class1";
       req.user.authority = "student";
@@ -225,7 +242,7 @@ describe("getAssignment controller", () => {
     });
   });
 
-  describe("createAssignment", () => {
+   describe("createAssignment", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await createAssignment(req, res);
@@ -286,7 +303,7 @@ describe("getAssignment controller", () => {
       expect(res.json).toHaveBeenCalledWith(mockAssignment);
     });
 
-    it("returns 201 and the new assignment on success", async () => {
+     it("returns 201 and the new assignment on success", async () => {
       // Arrange
       req.user.authority = "teacher";
       req.user.id = "teacher1";
@@ -342,7 +359,7 @@ describe("getAssignment controller", () => {
     });
   });
 
-  describe("deleteAssignment", () => {
+   describe("deleteAssignment", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await deleteAssignment(req, res);
@@ -406,7 +423,7 @@ describe("getAssignment controller", () => {
       });
     });
 
-    it("deletes the assignment and returns 200 with a success message", async () => {
+     it("deletes the assignment and returns 200 with a success message", async () => {
       // Arrange
       req.user.authority = "teacher";
       req.user.id        = "teacher1";
@@ -460,7 +477,7 @@ describe("getAssignment controller", () => {
 
   });
 
-  describe("updateAssignmentRubric", () => {
+   describe("updateAssignmentRubric", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await updateAssignmentRubric(req, res);
@@ -561,7 +578,7 @@ describe("getAssignment controller", () => {
     });
   });
 
-  describe("updateSubmission", () => {
+   describe("updateSubmission", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await updateSubmission(req, res);
@@ -614,7 +631,7 @@ describe("getAssignment controller", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Submission not found" });
     });
 
-    it("updates submission successfully", async () => {
+       it("updates submission successfully", async () => {
       req.user.authority = "teacher";
       req.params.assignmentId = "validId";
       req.params.submissionId = "validId";
@@ -862,7 +879,7 @@ describe("getAssignment controller", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Submission not found" });
     });
 
-    it('handles a save error by returning 500', async () => {
+     it('handles a save error by returning 500', async () => {
       const existingSubmission = {
         _id: 'sub456',
         comments: []
