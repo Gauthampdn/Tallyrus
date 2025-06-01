@@ -60,6 +60,32 @@ beforeEach(() => {
 });
 
 describe("filesController", () => {
+  describe("multer upload configuration", () => {
+    it("prepends an ISO-date string (colons replaced by ‘-’) to the original filename", () => {
+      // Arrange: force Date.toISOString() to return a fixed timestamp
+      const fixedIso = "2020-01-02T03:04:05.000Z";
+      jest.spyOn(Date.prototype, "toISOString").mockReturnValue(fixedIso);
+
+      // Require the multer instance exported from filesController
+      const { upload } = require("./controllers/filesController");
+      // The storage engine created by multerS3 should expose our `key` function
+      const storageEngine = upload.storage;
+      const fakeReq = {};
+      const fakeFile = { originalname: "hello.pdf" };
+      const cb = jest.fn();
+
+      // Act: invoke the key function directly
+      storageEngine.key(fakeReq, fakeFile, cb);
+
+      // Assert: colons in ISO string become dashes, and originalname is appended
+      const dateString = fixedIso.replace(/:/g, "-");
+      expect(cb).toHaveBeenCalledWith(null, `${dateString}-hello.pdf`);
+
+      // Cleanup: restore the original toISOString
+      Date.prototype.toISOString.mockRestore();
+    });
+  });
+
   describe("listFiles", () => {
     it("sends an array of S3 keys", async () => {
       const contents = [{ Key: "a.pdf" }, { Key: "b.pdf" }];
@@ -75,6 +101,20 @@ describe("filesController", () => {
   });
 
   describe("deleteFile", () => {
+    it("returns 500 if deleting the file causes an exception", async () => {
+      // Arrange: set a filename and force updateMany to throw
+      req.params.filename = "file1.pdf";
+      Assignment.updateMany.mockRejectedValue(new Error("database error"));
+      // We don’t even need to mock s3.deleteObject here, since updateMany already throws.
+
+      // Act
+      await deleteFile(req, res);
+
+      // Assert: catch-block fires, logs error, and sends a 500 with the correct message
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith("Error deleting file.");
+    });
+
     it("removes submission references and deletes from S3", async () => {
       req.params.filename = "file1.pdf";
       Assignment.updateMany.mockResolvedValue({});
@@ -221,6 +261,45 @@ describe("filesController", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "boom" });
     });
+
+    it("still returns 201 when gradeSubmission rejects (exercises background‐grading catch)", async () => {
+      // Arrange: valid student upload scenario
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+      req.params.id = "id";
+      req.file = { location: "test.pdf", key: "test.pdf" };
+      // Assignment has no submissions yet
+      const assignment = { classId: "c1", submissions: [], save: jest.fn() };
+      Assignment.findById.mockResolvedValue(assignment);
+      Classroom.findOne.mockResolvedValue({ _id: "c1", students: ["u1"] });
+      // Make gradeSubmission reject so that its .catch branch runs
+      openaiCtrl.gradeSubmission.mockRejectedValue(new Error("background‐fail"));
+
+      // Spy on console.error to verify that the catch block fires
+      const consoleErrSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      // Act
+      await uploadFile(req, res);
+
+      // Assert: a new submission was still created
+      expect(assignment.submissions).toHaveLength(1);
+      const sub = assignment.submissions[0];
+      expect(sub.pdfURL).toBe("test.pdf");
+      expect(sub.pdfKey).toBe("test.pdf");
+      expect(sub.status).toBe("grading");
+      // Expect the assignment to have been saved
+      expect(assignment.save).toHaveBeenCalled();
+      // The controller should have called gradeSubmission
+      expect(openaiCtrl.gradeSubmission).toHaveBeenCalled();
+      // Because gradeSubmission rejected, its .catch should log this specific error
+      expect(consoleErrSpy).toHaveBeenCalledWith(
+        "Error in background grading:",
+        expect.any(Error)
+      );
+      // And the HTTP response still goes out as 201
+      expect(res.status).toHaveBeenCalledWith(201);
+
+      consoleErrSpy.mockRestore();
+    });
   });
 
   describe("uploadRubric", () => {
@@ -258,6 +337,93 @@ describe("filesController", () => {
         message: "Rubric uploaded and parsed successfully",
         rubric: parsed,
       });
+    });
+
+    it("returns 403 if user is not a teacher", async () => {
+      // Arrange: user is a student, but a file is present
+      req.params.id = "someId";
+      req.user.authority = "student";
+      req.file = { location: "rubric.pdf" };
+
+      // Act
+      await uploadRubric(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: "Only teachers can upload rubrics" });
+    });
+
+    it("returns 404 for invalid assignment ID", async () => {
+      // Arrange: user is a teacher, but ID fails validation
+      req.params.id = "invalidId";
+      req.user.authority = "teacher";
+      req.file = { location: "rubric.pdf" };
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(false);
+
+      // Act
+      await uploadRubric(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Invalid assignment ID" });
+    });
+
+    it("returns 404 if assignment not found", async () => {
+      // Arrange: valid ID, but Assignment.findById returns null
+      req.params.id = "validId";
+      req.user.authority = "teacher";
+      req.file = { location: "rubric.pdf" };
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+      Assignment.findById.mockResolvedValue(null);
+
+      // Act
+      await uploadRubric(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Assignment not found" });
+    });
+
+    it("returns 403 if teacher is not in the classroom", async () => {
+      // Arrange: valid ID, assignment exists, but Classroom.findOne returns null
+      req.params.id = "validId";
+      req.user.authority = "teacher";
+      // default req.user.id is "u1" from beforeEach
+      req.file = { location: "rubric.pdf" };
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      const fakeAssignment = { classId: "class123", rubric: null, save: jest.fn() };
+      Assignment.findById.mockResolvedValue(fakeAssignment);
+      Classroom.findOne.mockResolvedValue(null);
+
+      // Act
+      await uploadRubric(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Not authorized to upload rubric for this assignment",
+      });
+    });
+
+    it("returns 500 if something throws inside the try block", async () => {
+      // Arrange: valid teacher, valid ID, and a file present
+      req.user.authority = "teacher";
+      req.params.id = "validId";
+      req.file = { location: "rubric.pdf" };
+
+      // Make the ID look valid
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      // Force Assignment.findById to throw
+      Assignment.findById.mockRejectedValue(new Error("database failure"));
+
+      // Act
+      await uploadRubric(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: "database failure" });
     });
   });
 
@@ -469,6 +635,54 @@ describe("filesController", () => {
         status: "graded",
         isOldGradedEssay: true,
       });
+    });
+
+    it("returns 201 and the correct JSON payload when essays upload succeeds", async () => {
+      // Arrange: user is a teacher with one file in req.files
+      req.user.authority = "teacher";
+      req.user.name = "Test Teacher";
+      req.user.id = "teacher123";
+      req.files = [
+        { location: "https://example.com/essay1.pdf", key: "essay1.pdf" },
+        { location: "https://example.com/essay2.pdf", key: "essay2.pdf" }
+      ];
+
+      // Set up a mock teacher document with an empty uploadedFiles array
+      const mockTeacher = {
+        uploadedFiles: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+      User.findOne.mockResolvedValue(mockTeacher);
+
+      // Act
+      await uploadOldEssays(req, res);
+
+      // Assert: status 201, and JSON body contains the exact message + files array
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Files uploaded and saved successfully",
+        files: mockTeacher.uploadedFiles
+      });
+
+      // Also verify that each fileData object landed in mockTeacher.uploadedFiles
+      expect(mockTeacher.uploadedFiles).toHaveLength(2);
+      expect(mockTeacher.uploadedFiles[0]).toMatchObject({
+        studentName: "Old Graded Essay by Test Teacher",
+        pdfURL: "https://example.com/essay1.pdf",
+        pdfKey: "essay1.pdf",
+        status: "graded",
+        isOldGradedEssay: true
+      });
+      expect(mockTeacher.uploadedFiles[1]).toMatchObject({
+        studentName: "Old Graded Essay by Test Teacher",
+        pdfURL: "https://example.com/essay2.pdf",
+        pdfKey: "essay2.pdf",
+        status: "graded",
+        isOldGradedEssay: true
+      });
+
+      // Finally, ensure we actually saved the modified teacher document
+      expect(mockTeacher.save).toHaveBeenCalled();
     });
   });
 });
