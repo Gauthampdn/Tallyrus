@@ -27,6 +27,15 @@ jest.mock("../controllers/openaiController", () => ({
 // Import dependencies after mocks
 const mongoose = require("mongoose");
 const { S3 } = require("@aws-sdk/client-s3");
+let capturedKeyFn;
+jest.mock("multer-s3", () => {
+  return jest.fn((opts) => {
+    // multer-s3 is called immediately at module load, so opts.key is our production function
+    capturedKeyFn = opts.key;
+    // Return a dummy “storage engine”; we don’t actually need to implement _handleFile here
+    return {};
+  });
+});
 const s3 = new S3();
 const Classroom = require("../models/classroomModel");
 const Assignment = require("../models/assignmentModel");
@@ -60,32 +69,27 @@ beforeEach(() => {
 });
 
 describe("filesController", () => {
-  describe("multer upload configuration", () => {
-    it("prepends an ISO-date string (colons replaced by ‘-’) to the original filename", () => {
-      // Arrange: force Date.toISOString() to return a fixed timestamp
-      const fixedIso = "2020-01-02T03:04:05.000Z";
+   describe("multer upload configuration (mocked multer-s3)", () => {
+    it("replaces colons with '-' in the ISO date and prepends it to the original filename", () => {
+      // force Date.toISOString() to return a fixed string
+      const fixedIso = "2025-06-01T17:00:00.000Z";
       jest.spyOn(Date.prototype, "toISOString").mockReturnValue(fixedIso);
 
-      // Require the multer instance exported from filesController
-      const { upload } = require("./controllers/filesController");
-      // The storage engine created by multerS3 should expose our `key` function
-      const storageEngine = upload.storage;
+      // fake req/file and a spy for cb
       const fakeReq = {};
-      const fakeFile = { originalname: "hello.pdf" };
+      const fakeFile = { originalname: "report.pdf" };
       const cb = jest.fn();
 
-      // Act: invoke the key function directly
-      storageEngine.key(fakeReq, fakeFile, cb);
+      // call the exact key() that was passed into multerS3
+      capturedKeyFn(fakeReq, fakeFile, cb);
 
-      // Assert: colons in ISO string become dashes, and originalname is appended
-      const dateString = fixedIso.replace(/:/g, "-");
-      expect(cb).toHaveBeenCalledWith(null, `${dateString}-hello.pdf`);
+      const expectedDateString = fixedIso.replace(/:/g, "-");
+      expect(cb).toHaveBeenCalledWith(null, `${expectedDateString}-report.pdf`);
 
-      // Cleanup: restore the original toISOString
       Date.prototype.toISOString.mockRestore();
     });
   });
-
+  
   describe("listFiles", () => {
     it("sends an array of S3 keys", async () => {
       const contents = [{ Key: "a.pdf" }, { Key: "b.pdf" }];

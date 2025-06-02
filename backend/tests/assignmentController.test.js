@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { S3 } = require("@aws-sdk/client-s3");
 const {
   getAssignment,
   getAssignments,
@@ -162,30 +163,30 @@ describe("assignmentController", () => {
     });
 
     it("returns all submissions for teachers", async () => {
-    req.params.classId = "validId";
-    req.user.authority = "teacher";
-    mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
-    const mockClassroom = { _id: "validId" };
-    const mockAssignments = [
-      {
-        _id: "a1",
-        submissions: [
-          { studentId: "student1", score: 90 },
-          { studentId: "student2", score: 85 },
-        ],
-      },
-    ];
+      req.params.classId = "validId";
+      req.user.authority = "teacher";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+      const mockClassroom = { _id: "validId" };
+      const mockAssignments = [
+        {
+          _id: "a1",
+          submissions: [
+            { studentId: "student1", score: 90 },
+            { studentId: "student2", score: 85 },
+          ],
+        },
+      ];
 
-    Classroom.findById.mockResolvedValue(mockClassroom);
-    Assignment.find.mockResolvedValue(mockAssignments);
+      Classroom.findById.mockResolvedValue(mockClassroom);
+      Assignment.find.mockResolvedValue(mockAssignments);
 
-    await getAssignments(req, res);
+      await getAssignments(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(mockAssignments);
-  });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockAssignments);
+    });
 
-  it("returns filtered and mapped assignments for a student (using toObject)", async () => {
+    it("returns filtered and mapped assignments for a student (using toObject)", async () => {
       // Arrange
       req.params.classId = "class1";
       req.user.authority = "student";
@@ -240,9 +241,96 @@ describe("assignmentController", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "failure" });
     });
+
+    it("returns modifiedAssignments (filtered submissions) for a student in the class", async () => {
+      // Arrange
+      req.params.id = "validClassId";
+      req.user.authority = "student";
+      req.user.id = "stu123";
+      // Always treat any string as a valid ObjectId for this test
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      // Mock Classroom.findOne so that the student is found in the class
+      Classroom.findOne.mockResolvedValue({ _id: "validClassId", students: ["stu123"] });
+
+      // Create a fake Mongoose document with .toObject() and .submissions array
+      const fakeDoc = {
+        toObject: () => ({
+          _id: "a1",
+          title: "HW1",
+          submissions: [
+            { studentId: "stu123", score: 100 },
+            { studentId: "otherStu", score: 50 },
+          ],
+        }),
+        submissions: [
+          { studentId: "stu123", score: 100 },
+          { studentId: "otherStu", score: 50 },
+        ],
+      };
+      // Assignment.find(...).sort({ … }) returns a Promise that resolves to an array
+      Assignment.find.mockImplementation(() => ({
+        sort: jest.fn().mockResolvedValue([fakeDoc]),
+      }));
+
+      // Act
+      await getAssignments(req, res);
+
+      // Assert
+      // We expect only the "stu123" submission to survive in the returned object array
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([
+        {
+          _id: "a1",
+          title: "HW1",
+          submissions: [{ studentId: "stu123", score: 100 }],
+        },
+      ]);
+    });
+
+    it("returns all assignments (unfiltered) for a teacher in the class", async () => {
+      // Arrange
+      req.params.id = "validClassId";
+      req.user.authority = "teacher";
+      req.user.id = "teach123";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      // Mock Classroom.findOne so that the teacher is found in the class
+      Classroom.findOne.mockResolvedValue({ _id: "validClassId", teachers: ["teach123"] });
+
+      // Create a plain JS object (no .toObject()) since teachers get the raw array back
+      const assignmentObj1 = {
+        _id: "a1",
+        title: "HW1",
+        submissions: [
+          { studentId: "stu1", score: 80 },
+          { studentId: "stu2", score: 90 },
+        ],
+      };
+      const assignmentObj2 = {
+        _id: "a2",
+        title: "HW2",
+        submissions: [
+          { studentId: "stuA", score: 70 },
+        ],
+      };
+
+      // Mock Assignment.find().sort() to return a Promise that resolves to our array
+      Assignment.find.mockImplementation(() => ({
+        sort: jest.fn().mockResolvedValue([assignmentObj1, assignmentObj2]),
+      }));
+
+      // Act
+      await getAssignments(req, res);
+
+      // Assert
+      // Since authority === "teacher", it should return the entire assignments array
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([assignmentObj1, assignmentObj2]);
+    });
   });
 
-   describe("createAssignment", () => {
+  describe("createAssignment", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await createAssignment(req, res);
@@ -303,7 +391,7 @@ describe("assignmentController", () => {
       expect(res.json).toHaveBeenCalledWith(mockAssignment);
     });
 
-     it("returns 201 and the new assignment on success", async () => {
+    it("returns 201 and the new assignment on success", async () => {
       // Arrange
       req.user.authority = "teacher";
       req.user.id = "teacher1";
@@ -333,7 +421,7 @@ describe("assignmentController", () => {
       // Assert
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(fakeAssignment);
-    });
+   });
 
     it("returns 500 if Assignment.create throws", async () => {
       // Arrange
@@ -359,7 +447,7 @@ describe("assignmentController", () => {
     });
   });
 
-   describe("deleteAssignment", () => {
+  describe("deleteAssignment", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await deleteAssignment(req, res);
@@ -423,7 +511,7 @@ describe("assignmentController", () => {
       });
     });
 
-     it("deletes the assignment and returns 200 with a success message", async () => {
+    it("deletes the assignment and returns 200 with a success message", async () => {
       // Arrange
       req.user.authority = "teacher";
       req.user.id        = "teacher1";
@@ -475,9 +563,94 @@ describe("assignmentController", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Something went wrong" });
     });
 
+    it("calls s3.deleteObject for submissions with pdfURL and deletes the assignment", async () => {
+      // Arrange
+      req.user.authority = "teacher";
+      req.user.id = "u1";
+      req.params.id = "a1";
+
+      // Create an assignment with two submissions: one has a pdfURL, the other does not
+      const mockAssignment = {
+        _id: "a1",
+        classId: "c1",
+        submissions: [
+          { pdfURL: "http://example.com/file1.pdf", pdfKey: "file1.pdf" },
+          { pdfURL: null, pdfKey: "file2.pdf" }
+        ],
+      };
+
+      // Stub Assignment.findById to return our mock
+      Assignment.findById.mockResolvedValue(mockAssignment);
+      // Stub Classroom.findOne so the user is authorized
+      Classroom.findOne.mockResolvedValue({ _id: "c1", teachers: ["u1"] });
+      // Spy on S3.prototype.deleteObject to simulate a successful deletion
+      const deleteObjectSpy = jest
+        .spyOn(S3.prototype, "deleteObject")
+        .mockResolvedValue({}); // resolves without throwing
+      // Stub the final deletion call
+      Assignment.findByIdAndDelete = jest.fn().mockResolvedValue(mockAssignment);
+
+      // Act
+      await deleteAssignment(req, res);
+
+      // Assert
+      // - deleteObject should have been called exactly once (only the submission with pdfURL)
+      expect(deleteObjectSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ Key: "file1.pdf" })
+      );
+      // - after deleting files, the assignment itself is deleted
+      expect(Assignment.findByIdAndDelete).toHaveBeenCalledWith("a1");
+      // - and a 200/JSON response is sent
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Assignment and associated files deleted successfully",
+      });
+
+      // Restore the spy so it doesn't bleed into other tests
+      deleteObjectSpy.mockRestore();
+    });
+
+    it("handles s3.deleteObject errors by sending a 500 response", async () => {
+      // Arrange
+      req.user.authority = "teacher";
+      req.user.id = "u1";
+      req.params.id = "a1";
+
+      // One submission that does have a pdfURL
+      const mockAssignment = {
+        _id: "a1",
+        classId: "c1",
+        submissions: [
+          { pdfURL: "http://example.com/file1.pdf", pdfKey: "file1.pdf" }
+        ],
+      };
+
+      Assignment.findById.mockResolvedValue(mockAssignment);
+      Classroom.findOne.mockResolvedValue({ _id: "c1", teachers: ["u1"] });
+      // Now mock deleteObject to reject, simulating an S3 error
+      const deleteObjectSpy = jest
+        .spyOn(S3.prototype, "deleteObject")
+        .mockRejectedValue(new Error("AWS failure"));
+      // We still stub findByIdAndDelete to avoid throwing further errors after the loop
+      Assignment.findByIdAndDelete = jest.fn().mockResolvedValue(mockAssignment);
+
+      // Act
+      await deleteAssignment(req, res);
+
+      // Assert
+      // - deleteObject was called with the correct Key
+      expect(deleteObjectSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ Key: "file1.pdf" })
+      );
+      // - because deleteObject threw, the controller should send a 500 error
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith("Error deleting file.");
+
+      deleteObjectSpy.mockRestore();
+    });
   });
 
-   describe("updateAssignmentRubric", () => {
+  describe("updateAssignmentRubric", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await updateAssignmentRubric(req, res);
@@ -578,7 +751,7 @@ describe("assignmentController", () => {
     });
   });
 
-   describe("updateSubmission", () => {
+  describe("updateSubmission", () => {
     it("returns 403 if user is not a teacher", async () => {
       req.user.authority = "student";
       await updateSubmission(req, res);
@@ -631,7 +804,7 @@ describe("assignmentController", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Submission not found" });
     });
 
-       it("updates submission successfully", async () => {
+    it("updates submission successfully", async () => {
       req.user.authority = "teacher";
       req.params.assignmentId = "validId";
       req.params.submissionId = "validId";
@@ -879,7 +1052,7 @@ describe("assignmentController", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Submission not found" });
     });
 
-     it('handles a save error by returning 500', async () => {
+    it('handles a save error by returning 500', async () => {
       const existingSubmission = {
         _id: 'sub456',
         comments: []
@@ -923,6 +1096,75 @@ describe("assignmentController", () => {
       expect(res.json).toHaveBeenCalledWith(
         mockAssignment.submissions[0].comments[0]
       );
+    });
+
+    it("returns 404 if submission not found (using submissions.id)", async () => {
+      // Arrange
+      req.body = { text: "Test comment" };
+      // Use valid‐looking ObjectId strings so mongoose.Types.ObjectId.isValid(...) → true
+      req.params.assignmentId = "507f1f77bcf86cd799439011";
+      req.params.submissionId  = "507f191e810c19729de860ea";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      // Build a fake assignment whose `submissions.id(...)` will return null
+      const submissionsMock = { id: jest.fn().mockReturnValue(null) };
+      const mockAssignment = {
+        _id: req.params.assignmentId,
+        submissions: submissionsMock,
+      };
+      Assignment.findById.mockResolvedValue(mockAssignment);
+
+      // Act
+      await createSubmissionComment(req, res);
+
+      // Assert
+      expect(submissionsMock.id).toHaveBeenCalledWith(req.params.submissionId);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Submission not found" });
+    });
+
+    it("adds a new comment to an existing submission and returns the updated assignment", async () => {
+      // Arrange
+      req.body = { text: "Looks good!" };
+      req.params.assignmentId = "507f1f77bcf86cd799439011";
+      req.params.submissionId  = "507f191e810c19729de860ea";
+      mongoose.Types.ObjectId.isValid = jest.fn().mockReturnValue(true);
+
+      // Create a fake submission with an initially empty comments array
+      const submissionMock = { comments: [] };
+      const submissionsMock = { id: jest.fn().mockReturnValue(submissionMock) };
+
+      // Create a fake assignment object
+      const assignmentMock = {
+        _id: req.params.assignmentId,
+        submissions: submissionsMock,
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      // Stub Assignment.findById to return our fake assignment
+      Assignment.findById.mockResolvedValue(assignmentMock);
+
+      // Act
+      await createSubmissionComment(req, res);
+
+      // Assert
+      // 1) submissions.id(...) was called with the right submissionId
+      expect(submissionsMock.id).toHaveBeenCalledWith(req.params.submissionId);
+
+      // 2) A new comment object was pushed onto submission.comments
+      expect(submissionMock.comments.length).toBe(1);
+      expect(submissionMock.comments[0]).toMatchObject({
+        text: "Looks good!",
+        // assuming controller also attaches user: req.user.id (if implemented),
+        // you could check for that here. If not, at least check text is correct.
+      });
+
+      // 3) assignment.save() was called once
+      expect(assignmentMock.save).toHaveBeenCalled();
+
+      // 4) The response was a 200 with the entire assignment object
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(assignmentMock);
     });
   });
 });
