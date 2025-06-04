@@ -624,117 +624,63 @@ const gradeall = async (req, res) => {
   }
 };
 
+
 const gradeSubmission = async (req, res) => {
-  const { assignmentId } = req.params;
-  const { text } = req.body;
-  const aiDetectionToken = process.env.AIDETECT;
+    const { assignmentId } = req.params;
+    const { text } = req.body;
+    const aiDetectionToken = process.env.AIDETECT; // Replace with your actual token
 
-  if (!text) {
-    return res.status(400).json({ error: "No text provided" });
-  }
-
-  try {
-    const assignment = await Assignment.findById(assignmentId);
-    console.log("Found assignment for grading:", {
-      id: assignment._id,
-      name: assignment.name,
-      classId: assignment.classId,
-    });
-
-    if (!assignment) {
-      return res.status(404).json({ error: "Assignment not found" });
+    if (!text) {
+        return res.status(400).json({ error: "No text provided" });
     }
 
-    // Find the specific submission
-    const submission = assignment.submissions.find(
-      (sub) => sub.studentId === req.user._id
-    );
-
-    if (!submission) {
-      return res.status(404).json({ error: "Submission not found" });
-    }
-
-    // Set the submission status to 'grading'
-    submission.status = "grading";
-    await assignment.save();
-
-    const rubricString = rubricToString(assignment.rubric);
-
-    const messages = [
-      { role: "user", content: gradingInstructions },
-      { role: "user", content: rubricString },
-      { role: "user", content: text },
-    ];
-    const gradingResponse = await llm.invoke(messages);
-    if (
-      !gradingResponse ||
-      !gradingResponse.choices ||
-      gradingResponse.choices.length === 0
-    ) {
-      return res.status(500).json({ error: "Failed to grade submission" });
-    }
-
-    const feedback = gradingResponse.choices[0].message.content;
-
-    // Set the submission status to 'graded' and save the feedback
-    submission.status = "graded";
-    submission.feedback = parseFeedback(feedback);
-    await assignment.save();
-
-    // Send notification for the graded submission
     try {
-      console.log("Attempting to send notification for graded submission");
-      console.log("Looking up teacher with classId:", assignment.classId);
+        const assignment = await Assignment.findById(assignmentId);
 
-      const teacher = await User.findById(assignment.classId);
-      console.log("Found teacher:", {
-        id: teacher?._id,
-        email: teacher?.email,
-        name: teacher?.name,
-      });
+        if (!assignment) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
 
-      if (teacher && teacher.email) {
-        console.log("Sending notification with params:", {
-          teacherEmail: teacher.email,
-          studentName: submission.studentName,
-          assignmentName: assignment.name,
-          averageScore:
-            submission.feedback.reduce((acc, f) => acc + f.score, 0) /
-            submission.feedback.length,
+        // Find the specific submission
+        const submission = assignment.submissions.find(sub => sub.studentId === req.user._id);
+
+        if (!submission) {
+            return res.status(404).json({ error: "Submission not found" });
+        }
+
+        // Set the submission status to 'grading'
+        submission.status = 'grading';
+        await assignment.save();
+
+        const rubricString = rubricToString(assignment.rubric);
+
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            max_tokens: 3000,
+            messages: [
+                { role: "user", content: gradingInstructions },
+                { role: "user", content: rubricString },
+                { role: "user", content: text }
+            ]
         });
 
-        await sendGradingNotification(
-          teacher.email,
-          submission.studentName,
-          assignment.name,
-          submission.feedback.reduce((acc, f) => acc + f.score, 0) /
-            submission.feedback.length
-        );
-        console.log(
-          "Successfully sent notification for submission:",
-          submission._id
-        );
-      } else {
-        console.log(
-          "Could not send notification - teacher or teacher email not found"
-        );
-      }
+        if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+            return res.status(500).json({ error: "Failed to grade submission" });
+        }
+
+        const feedback = gradingResponse.choices[0].message.content;
+
+        // Set the submission status to 'graded' and save the feedback
+        submission.status = 'graded';
+        submission.feedback = parseFeedback(feedback);
+        await assignment.save();
+
+        res.json({ feedback });
     } catch (error) {
-      console.error("Failed to send notification:", {
-        error: error.message,
-        stack: error.stack,
-        submissionId: submission._id,
-      });
-      // Continue even if notification fails
+        console.error("Error grading submission:", error);
+        res.status(500).send('Error grading submission');
     }
-
-    res.json({ feedback });
-  } catch (error) {
-    console.error("Error grading submission:", error);
-    res.status(500).send("Error grading submission");
-  }
 };
-
 const extractText = async (req, res) => {
   try {
     const result = await getTextFromPDF("https://example.com/sample.pdf");
@@ -1185,28 +1131,47 @@ const handleFunctionCall = async (req, res) => {
   }
 };
 
-const potential = async (req, res) => {
-  try {
-    const { assignmentId } = req.params;
-    const assignment = await Assignment.findById(assignmentId);
 
-    if (!assignment) {
-      return res.status(404).json({ error: "Assignment not found" });
+
+const potential = async (req, res) => {
+    const { assignmentId } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+        return res.status(400).json({ error: "No text provided" });
     }
 
-    // Use the existing grade function with the assignment's rubric and essay
-    const result = await grade(
-      assignment.rubric,
-      assignment.essay,
-      gradingInstructions
-    );
+    try {
+        const assignment = await Assignment.findById(assignmentId);
 
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error in potential grading:", error);
-    res.status(500).json({ error: error.message });
-  }
+        if (!assignment) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
+
+        const rubricString = rubricToString(assignment.rubric);
+
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            max_tokens: 3000,
+            messages: [
+                { role: "user", content: gradingInstructions },
+                { role: "user", content: rubricString },
+                { role: "user", content: text }
+            ]
+        });
+
+        if (!gradingResponse || !gradingResponse.choices || gradingResponse.choices.length === 0) {
+            return res.status(500).json({ error: "Failed to grade submission" });
+        }
+
+        const feedback = gradingResponse.choices[0].message.content;
+        res.json({ feedback });
+    } catch (error) {
+        console.error("Error getting potential grade:", error);
+        res.status(500).send('Error getting potential grade');
+    }
 };
+
 
 module.exports = {
   completion,
