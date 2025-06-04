@@ -9,7 +9,8 @@ const {
   gradeall,
   gradeSubmission, 
   parseRubricWithGPT4,
-  potential
+  potential,
+  handleFunctionCall
 } = require("../controllers/openaiController")
 
 
@@ -22,6 +23,9 @@ router.get("/test", test);
 router.get("/extract", extractText);
 
 router.use(requireAuth) // requires authentication and then calls next. if no authentication then it throws an error
+
+router.post('/function-call', requireAuth,  handleFunctionCall)
+
 
 router.post("/completion", completion)
 

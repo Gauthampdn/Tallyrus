@@ -24,3 +24,5 @@ To set up the Tallyrus codebase, follow these steps:
      - On macOS, run `npm startmac`.
 
 You're all set!
+
+#mcp test

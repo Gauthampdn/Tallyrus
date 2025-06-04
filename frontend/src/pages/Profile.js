@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Navbar from 'components/Navbar'; // Adjust the import path as necessary
-import Matter from 'matter-js';
-import MatterWrap from 'matter-wrap';
+import React, { useEffect, useRef, useState } from "react";
+import Navbar from "components/Navbar"; // Adjust the import path as necessary
+import Matter from "matter-js";
+import MatterWrap from "matter-wrap";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { usePremium } from "../hooks/usePremium";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faCrown, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+
 
 const Profile = () => {
   const { user, isLoading } = useAuthContext();
@@ -24,9 +25,8 @@ const Profile = () => {
 
   useEffect(() => {
     handleResize(); // Initial call to set dimensions
-    
 
-    console.log("getting oranges")
+    console.log("getting oranges");
     if (user) {
       setNumGraded(user.numGraded);
     }
@@ -42,19 +42,28 @@ const Profile = () => {
   };
 
   useEffect(() => {
-
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     handleResize(); // Initial call to set dimensions
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   useEffect(() => {
     if (dimensions.width === 0 || dimensions.height === 0) return;
 
-    const { Engine, Render, Runner, Composite, Composites, Common, MouseConstraint, Mouse, Bodies } = Matter;
+    const {
+      Engine,
+      Render,
+      Runner,
+      Composite,
+      Composites,
+      Common,
+      MouseConstraint,
+      Mouse,
+      Bodies,
+    } = Matter;
 
     try {
       Matter.use(MatterWrap);
@@ -73,8 +82,8 @@ const Profile = () => {
         height: dimensions.height,
         showAngleIndicator: false,
         wireframes: false,
-        background: 'transparent' // Ensure background is set to transparent
-      }
+        background: "transparent", // Ensure background is set to transparent
+      },
     });
 
     Render.run(render);
@@ -85,35 +94,63 @@ const Profile = () => {
     let thickness = 40;
 
     Composite.add(world, [
-      Bodies.rectangle(dimensions.width / 2, dimensions.height, dimensions.width, thickness, { isStatic: true, render: { fillStyle: '#6c757d' } }), // Bottom wall
-      Bodies.rectangle(dimensions.width, dimensions.height / 2, thickness, dimensions.height, { isStatic: true, render: { fillStyle: '#6c757d' } }), // Right wall
-      Bodies.rectangle(0, dimensions.height / 2, thickness, dimensions.height, { isStatic: true, render: { fillStyle: '#6c757d' } }) // Left wall
+      Bodies.rectangle(
+        dimensions.width / 2,
+        dimensions.height,
+        dimensions.width,
+        thickness,
+        { isStatic: true, render: { fillStyle: "#6c757d" } }
+      ), // Bottom wall
+      Bodies.rectangle(
+        dimensions.width,
+        dimensions.height / 2,
+        thickness,
+        dimensions.height,
+        { isStatic: true, render: { fillStyle: "#6c757d" } }
+      ), // Right wall
+      Bodies.rectangle(0, dimensions.height / 2, thickness, dimensions.height, {
+        isStatic: true,
+        render: { fillStyle: "#6c757d" },
+      }), // Left wall
     ]);
 
-    const fruitTexture = '/orange.png';
+    const fruitTexture = "/orange.png";
 
     const numberOfCircles = numGraded; // Change this number to get any number of circles
     const columns = Math.ceil(Math.sqrt(numberOfCircles));
     const rows = Math.ceil(numberOfCircles / columns);
 
-    const stack = Composites.stack(20, -200, columns, rows, 1, 1, function (x, y, column, row) {
-      if (column * rows + row < numberOfCircles) {
-        const radius = Common.random(10, 15);
-        const scale = radius / 45 * 0.1; // Calculate the scale based on radius
-        const fruitOptions = {
-          render: {
-            sprite: {
-              texture: fruitTexture,
-              xScale: scale,
-              yScale: scale
-            }
-          }
-        };
-        return Bodies.circle(x, y, radius, { ...fruitOptions, restitution: 0, friction: 0.1, mass:0.1 });
-      } else {
-        return null;
+    const stack = Composites.stack(
+      20,
+      -200,
+      columns,
+      rows,
+      1,
+      1,
+      function (x, y, column, row) {
+        if (column * rows + row < numberOfCircles) {
+          const radius = Common.random(10, 15);
+          const scale = (radius / 45) * 0.1; // Calculate the scale based on radius
+          const fruitOptions = {
+            render: {
+              sprite: {
+                texture: fruitTexture,
+                xScale: scale,
+                yScale: scale,
+              },
+            },
+          };
+          return Bodies.circle(x, y, radius, {
+            ...fruitOptions,
+            restitution: 0,
+            friction: 0.1,
+            mass: 0.1,
+          });
+        } else {
+          return null;
+        }
       }
-    });
+    );
 
     Composite.add(world, stack);
 
@@ -124,9 +161,9 @@ const Profile = () => {
       constraint: {
         stiffness: 0.2,
         render: {
-          visible: false
-        }
-      }
+          visible: false,
+        },
+      },
     });
 
     Composite.add(world, mouseConstraint);
@@ -135,7 +172,7 @@ const Profile = () => {
 
     Render.lookAt(render, {
       min: { x: 0, y: 0 },
-      max: { x: dimensions.width, y: dimensions.height }
+      max: { x: dimensions.width, y: dimensions.height },
     });
 
     return () => {
@@ -154,7 +191,12 @@ const Profile = () => {
         <Navbar />
         <div className="flex justify-center items-center h-[calc(100vh-64px)]">
           <div className="text-center">
-            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="mb-4 text-indigo-500" />
+            <FontAwesomeIcon
+              icon={faSpinner}
+              spin
+              size="3x"
+              className="mb-4 text-indigo-500"
+            />
             <p className="text-lg">Loading profile data...</p>
           </div>
         </div>
@@ -167,7 +209,7 @@ const Profile = () => {
   }
   
   const handleUploadNavigation = () => {
-    navigate('/upload-old-essays'); // Adjust the route as necessary
+    navigate("/upload-old-essays"); // Adjust the route as necessary
   };
 
   const handleSubscribe = async () => {
@@ -273,6 +315,6 @@ const Profile = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Profile;

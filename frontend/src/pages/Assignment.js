@@ -1111,6 +1111,7 @@ const Assignment = () => {
                       </div>
                     </CardContent>
                   </Card>
+
               </div>
 
               <div className="md:flex-1 p-4">
@@ -1145,6 +1146,8 @@ const Assignment = () => {
                   ))}
 
                 </div>
+
+
               </div>
 
               <AlertDialog open={editName}>
