@@ -36,6 +36,22 @@ const userSchema = new Schema({
     type: String,
     enum: ['teacher', 'student']
   },
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  stripeCustomerId: {
+    type: String,
+    default: null
+  },
+  stripeSubscriptionId: {
+    type: String,
+    default: null
+  },
+  premiumExpiresAt: {
+    type: Date,
+    default: null
+  },
   numGraded: {
     type: Number,
     default: 0

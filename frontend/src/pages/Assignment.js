@@ -77,6 +77,21 @@ import {
 } from "@/components/ui/dialog";
 
 const Assignment = () => {
+  const [assignment, setAssignment] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [editName, setEditName] = useState(false);
+  const [name, setName] = useState('');
+  const [searchText, setSearchText] = useState("");
+  const [editFeedbackModal, setEditFeedbackModal] = useState(false);
+  const [currentCriteria, setCurrentCriteria] = useState(null);
+  const [currentComments, setCurrentComments] = useState('');
+  const [currentScore, setCurrentScore] = useState(0); // State for the text box score
+  const [isSaving, setIsSaving] = useState(false);
+  const [commentText, setCommentText] = useState('');
+
   const tailwindColors = [
     "bg-red-100",
     "bg-yellow-100",
@@ -108,19 +123,6 @@ const Assignment = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuthContext();
-
-  const [assignment, setAssignment] = useState(null);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [editName, setEditName] = useState(false);
-  const [name, setName] = useState("");
-  const [searchText, setSearchText] = useState("");
-  const [editFeedbackModal, setEditFeedbackModal] = useState(false);
-  const [currentCriteria, setCurrentCriteria] = useState(null);
-  const [currentComments, setCurrentComments] = useState("");
-  const [currentScore, setCurrentScore] = useState(0); // State for the text box score
-  const [isSaving, setIsSaving] = useState(false);
-  const [commentText, setCommentText] = useState("");
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -1231,6 +1233,7 @@ const Assignment = () => {
                 ) : (
                   <p>No file selected</p>
                 )}
+
                 <Card className="mt-6 bg-white text-neutral-900">
                   <CardHeader>
                     <CardTitle>Comments</CardTitle>
@@ -1270,24 +1273,26 @@ const Assignment = () => {
                           </div>
                         ))}
 
-                      {/* New comment input */}
-                      <div className="flex gap-2">
-                        <Textarea
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Add a comment..."
-                          className="flex-1"
-                        />
-                        <Button
-                          onClick={handleAddComment}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          Add Comment
-                        </Button>
+                        {/* New comment input */}
+                        <div className="flex gap-2">
+                          <Textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Add a comment..."
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={handleAddComment}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          >
+                            Add Comment
+                          </Button>
+                        </div>
+
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
               </div>
 
               <div className="md:flex-1 p-4">
@@ -1365,6 +1370,7 @@ const Assignment = () => {
                       </CardContent>
                     </Card>
                   ))}
+
                 </div>
               </div>
 
