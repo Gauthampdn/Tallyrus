@@ -4,10 +4,18 @@ const User = require("../models/userModel");
 const Assignment = require("../models/assignmentModel");
 // const mammoth = require("mammoth");
 require("dotenv").config();
+const OpenAI = require('openai');
+
 const { ChatOpenAI } = require("@langchain/openai");
 const { llm, functions } = require("../utils/langsmith");
 const { incrementGraded } = require("./authController");
 const { sendGradingNotification } = require("../utils/snsNotifier");
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+
 const testLangSmith = async (req, res) => {
   try {
     console.log("Testing LangSmith integration with direct LLM call");
@@ -210,15 +218,16 @@ function parseFeedback(gradingResponse) {
 
   return parsedFeedback;
 }
-
 const parseRubricWithGPT4 = async (rubricURL) => {
-  try {
-    const extractedText = await getTextFromPDF(rubricURL);
-    console.log(extractedText);
-    const messages = [
-      {
-        role: "system",
-        content: `
+    try {
+        const extractedText = await getTextFromPDF(rubricURL);
+        console.log(extractedText);
+        const gradingResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            max_tokens: 3000,
+            messages: [
+                {
+                    role: "system", content: `
 
                     You are a JSON rubric formatting expert. I need you to convert any rubric provided to you into a specific JSON array format
                     
@@ -294,47 +303,43 @@ const parseRubricWithGPT4 = async (rubricURL) => {
                         }
                     ]
 
-                `,
-      },
-      {
-        role: "user",
-        content: `Parse the following rubric text into a structured format.
+                ` },
+                {
+                    role: "user", content: `Parse the following rubric text into a structured format.
 
                     rubric:
-                        ${extractedText}`,
-      },
-    ];
-    const gradingResponse = await llm.invoke(messages);
-    if (
-      gradingResponse &&
-      gradingResponse.choices &&
-      gradingResponse.choices.length > 0
-    ) {
-      console.log(gradingResponse.choices[0].message.content);
-      return convertToRubricSchema(gradingResponse.choices[0].message.content);
-    } else {
-      throw new Error("Failed to get a valid response from GPT-4");
+                        ${extractedText}`
+                }
+            ]
+        });
+
+        if (gradingResponse && gradingResponse.choices && gradingResponse.choices.length > 0) {
+            console.log(gradingResponse.choices[0].message.content)
+            return convertToRubricSchema(gradingResponse.choices[0].message.content);
+        } else {
+            throw new Error("Failed to get a valid response from GPT-4");
+        }
+    } catch (error) {
+        console.error("Error parsing rubric:", error);
+        throw new Error("Failed to parse rubric");
     }
-  } catch (error) {
-    console.error("Error parsing rubric:", error);
-    throw new Error("Failed to parse rubric");
-  }
 };
 
 function convertToRubricSchema(gptOutput) {
-  if (!gptOutput) return [];
+    if (!gptOutput) return [];
 
-  // Extract the JSON part from the output using regex
-  const jsonMatch = gptOutput.match(/```(?:json)?([\s\S]*?)```/);
-  if (!jsonMatch || jsonMatch.length < 2) return [];
+    // Extract the JSON part from the output using regex
+    const jsonMatch = gptOutput.match(/```(?:json)?([\s\S]*?)```/);
+    if (!jsonMatch || jsonMatch.length < 2) return [];
 
-  const jsonContent = jsonMatch[1].trim();
+    const jsonContent = jsonMatch[1].trim();
 
-  // Parse the JSON content
-  const rubrics = JSON.parse(jsonContent);
+    // Parse the JSON content
+    const rubrics = JSON.parse(jsonContent);
 
-  return rubrics;
+    return rubrics;
 }
+
 
 const grade = async (rubric, essay, gradingPrompt, teacherId) => {
   // Convert rubric to a string format suitable for grading
