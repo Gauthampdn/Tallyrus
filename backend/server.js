@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth")
 const classroomRoutes = require("./routes/classroom")
 const assignmentRoutes = require("./routes/assignment")
 const filesRoutes = require("./routes/files")
+const stripeRoutes = require("./routes/stripe")
 
 
 const session = require('express-session');
@@ -20,6 +21,13 @@ const cors = require('cors');
 
 // express app
 const app = express()
+
+// Special route for Stripe webhooks needs to be defined before express.json middleware
+app.post('/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const stripeRoutes = require('./routes/stripe');
+  const { handleWebhook } = require('./controllers/stripeController');
+  return handleWebhook(req, res);
+});
 
 // middleware
 app.use(express.json()) // to get req body
@@ -55,6 +63,7 @@ app.use("/openai", openaiRoutes)
 app.use("/classroom", classroomRoutes)
 app.use("/assignments", assignmentRoutes)
 app.use("/files", filesRoutes)
+app.use("/stripe", stripeRoutes)
 
 
 // connect to db

@@ -41,27 +41,9 @@ import {
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const Assignment = () => {
-  const tailwindColors = [
-    'bg-red-100', 'bg-yellow-100', 'bg-green-100', 'bg-blue-100',
-    'bg-indigo-100', 'bg-purple-100', 'bg-pink-100', 'bg-orange-100',
-    'bg-teal-100', 'bg-lime-100', 'bg-amber-100', 'bg-emerald-100',
-    'bg-cyan-100', 'bg-sky-100', 'bg-violet-100', 'bg-fuchsia-100',
-    'bg-rose-100'
-  ];
-  
-  const getRandomColor = () => {
-    return tailwindColors[Math.floor(Math.random() * tailwindColors.length)];
-  };
-  
-  const { toast } = useToast();
-
-  const contentRef = createRef();
-
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const { user } = useAuthContext();
-
   const [assignment, setAssignment] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [open, setOpen] = useState(false);
   const [editName, setEditName] = useState(false);
@@ -73,6 +55,26 @@ const Assignment = () => {
   const [currentScore, setCurrentScore] = useState(0); // State for the text box score
   const [isSaving, setIsSaving] = useState(false);
   const [commentText, setCommentText] = useState('');
+
+  const tailwindColors = [
+    'bg-red-100', 'bg-yellow-100', 'bg-green-100', 'bg-blue-100',
+    'bg-indigo-100', 'bg-purple-100', 'bg-pink-100', 'bg-orange-100',
+    'bg-teal-100', 'bg-lime-100', 'bg-amber-100', 'bg-emerald-100',
+    'bg-cyan-100', 'bg-sky-100', 'bg-violet-100', 'bg-fuchsia-100',
+    'bg-rose-100'
+  ];
+
+  const getRandomColor = () => {
+    return tailwindColors[Math.floor(Math.random() * tailwindColors.length)];
+  };
+
+  const { toast } = useToast();
+
+  const contentRef = createRef();
+
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuthContext();
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -1063,52 +1065,53 @@ const Assignment = () => {
                 ) : (
                   <p>No file selected</p>
                 )}
-                                <Card className="mt-6 bg-white text-neutral-900">
-                  <CardHeader>
-                    <CardTitle>Comments</CardTitle>
-                    <CardDescription>Add comments to this submission</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Existing comments */}
-                      {selectedSubmission.comments && selectedSubmission.comments.map((comment, index) => (
-                        <div key={index} className="p-3 rounded-lg bg-black text-white">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-semibold">{comment.author}</span>
-                            <span className="text-sm text-gray-400">
-                              {new Date(comment.createdAt).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true,
-                                timeZone: 'America/Los_Angeles'
-                              })}
-                            </span>
+                                  <Card className="mt-6 bg-white text-neutral-900">
+                    <CardHeader>
+                      <CardTitle>Comments</CardTitle>
+                      <CardDescription>Add comments to this submission</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {/* Existing comments */}
+                        {selectedSubmission.comments && selectedSubmission.comments.map((comment, index) => (
+                          <div key={index} className="p-3 rounded-lg bg-black text-white">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-semibold">{comment.author}</span>
+                              <span className="text-sm text-gray-400">
+                                {new Date(comment.createdAt).toLocaleString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: 'numeric',
+                                  hour12: true,
+                                  timeZone: 'America/Los_Angeles'
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-sm">{comment.text}</p>
                           </div>
-                          <p className="text-sm">{comment.text}</p>
-                        </div>
-                      ))}
+                        ))}
 
-                      {/* New comment input */}
-                      <div className="flex gap-2">
-                        <Textarea
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Add a comment..."
-                          className="flex-1"
-                        />
-                        <Button 
-                          onClick={handleAddComment}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          Add Comment
-                        </Button>
+                        {/* New comment input */}
+                        <div className="flex gap-2">
+                          <Textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Add a comment..."
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={handleAddComment}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          >
+                            Add Comment
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
               </div>
 
               <div className="md:flex-1 p-4">
@@ -1141,6 +1144,7 @@ const Assignment = () => {
                       </CardContent>
                     </Card>
                   ))}
+
                 </div>
 
 
