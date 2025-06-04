@@ -18,6 +18,7 @@ import Rubric from 'pages/Rubric';
 import Profile from 'pages/Profile';
 import UploadOldEssays from 'pages/Upload'; // Import the new component
 import Dashboard from 'pages/Dashboard';
+import PaymentSuccess from 'pages/PaymentSuccess';
 
 
 const RedirectToFreeDetector = () => {
@@ -151,6 +152,7 @@ const App = () => {
             <Route path="/upload-old-essays" element={user && user.authority === 'teacher' ? <UploadOldEssays /> : <Navigate to="/app" />} />
             <Route path="/freedetector420b5dce52947e504f5db18e5eb418ca.html" element={<RedirectToFreeDetector />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/payment-success" element={user ? <PaymentSuccess /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes> 
         </div>
