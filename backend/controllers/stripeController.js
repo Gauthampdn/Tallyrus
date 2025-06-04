@@ -256,6 +256,17 @@ const cancelSubscription = async (req, res) => {
       return res.status(400).json({ error: 'No active subscription found' });
     }
 
+    // First retrieve the subscription to check its status
+    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+    
+    if (subscription.status === 'canceled') {
+      return res.status(400).json({ error: 'Subscription is already canceled' });
+    }
+
+    if (subscription.cancel_at_period_end) {
+      return res.status(400).json({ error: 'Subscription is already scheduled for cancellation' });
+    }
+
     // Cancel at period end instead of immediately
     await stripe.subscriptions.update(user.stripeSubscriptionId, {
       cancel_at_period_end: true
@@ -264,6 +275,9 @@ const cancelSubscription = async (req, res) => {
     res.status(200).json({ message: 'Subscription will be canceled at the end of the billing period' });
   } catch (error) {
     console.error('Error canceling subscription:', error);
+    if (error.type === 'StripeInvalidRequestError') {
+      return res.status(400).json({ error: error.message });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 };
