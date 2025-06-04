@@ -6,3 +6,4 @@ pergifrontend/.env
 pergifrontend/node_modules/
 backend/pythonserver/.env
 backend/pythonserver.zip
+backend/coverage/

@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --runInBand",
+    "coverage": "jest --coverage",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
@@ -12,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.812.0",
+    "@aws-sdk/client-sns": "^3.812.0",
     "@emailjs/browser": "^4.4.1",
     "@langchain/openai": "^0.5.10",
     "aws-sdk": "^2.1528.0",
@@ -23,6 +26,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "jest": "^29.7.0",
     "jsonwebtoken": "^9.0.1",
     "langchain": "^0.3.24",
     "mammoth": "^1.7.2",
@@ -39,5 +43,8 @@
     "pdfreader": "^3.0.2",
     "stripe": "^18.1.0",
     "validator": "^13.9.0"
+  },
+  "devDependencies": {
+    "jest-junit": "^16.0.0"
   }
 }
